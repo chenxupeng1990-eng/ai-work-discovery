@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fixtureDataset } from "../../src/data/fixtures";
+import { fixtureDataset } from "../fixtures/content";
 import {
   getFeatured,
   getRecent,

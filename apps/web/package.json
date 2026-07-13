@@ -6,6 +6,7 @@
     "dev": "astro dev",
     "build": "astro check && astro build",
     "check": "astro check",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
@@ -37,6 +38,7 @@
     "jsdom": "latest",
     "tsx": "latest",
     "typescript": "latest",
-    "vitest": "latest"
+    "vitest": "latest",
+    "yaml": "^2.9.0"
   }
 }

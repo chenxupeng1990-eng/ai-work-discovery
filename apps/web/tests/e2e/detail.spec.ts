@@ -1,10 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { readFileSync } from "node:fs";
-import { PublicDatasetSchema } from "../../src/lib/schema";
+import { generatedDataset } from "../fixtures/generated-dataset";
 
-const dataset = PublicDatasetSchema.parse(JSON.parse(
-  readFileSync(new URL("../../public/data/content.json", import.meta.url), "utf8"),
-));
+const dataset = generatedDataset;
 const agentsItem = dataset.items.find((item) => item.slug === "agents-md-team-configuration")!;
 const bridgeItem = dataset.items.find((item) => item.slug === "feishu-bridge-team-entry")!;
 

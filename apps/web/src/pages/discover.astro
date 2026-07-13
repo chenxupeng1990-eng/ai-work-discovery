@@ -1,10 +1,9 @@
 ---
-import publicDataset from "../../public/data/content.json";
 import { DiscoveryExplorer } from "../components/DiscoveryExplorer";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { PublicDatasetSchema } from "../lib/schema";
+import { publicDataset } from "../lib/public-dataset";
 
-const { items } = PublicDatasetSchema.parse(publicDataset);
+const { items } = publicDataset;
 ---
 
 <BaseLayout

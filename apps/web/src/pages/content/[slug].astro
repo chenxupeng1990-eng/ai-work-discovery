@@ -2,24 +2,20 @@
 import ContentCard from "../../components/ContentCard.astro";
 import { CopyBlockView } from "../../components/CopyBlock";
 import FeishuDocumentCard from "../../components/FeishuDocumentCard.astro";
-import publicDataset from "../../../public/data/content.json";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getRelated } from "../../lib/content";
-import { PublicDatasetSchema, type ContentItem } from "../../lib/schema";
-
-const dataset = PublicDatasetSchema.parse(publicDataset);
+import { publicDataset } from "../../lib/public-dataset";
+import type { ContentItem } from "../../lib/schema";
 
 export function getStaticPaths() {
-  const dataset = PublicDatasetSchema.parse(publicDataset);
-
-  return dataset.items.map((item) => ({
+  return publicDataset.items.map((item) => ({
     params: { slug: item.slug },
     props: { item },
   }));
 }
 
 const { item } = Astro.props as { item: ContentItem };
-const related = getRelated(dataset.items, item, 3);
+const related = getRelated(publicDataset.items, item, 3);
 const copyBlocks = [...item.copyBlocks].sort((left, right) => left.order - right.order);
 ---
 

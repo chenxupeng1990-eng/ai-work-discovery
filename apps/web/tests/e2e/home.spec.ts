@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { fixtureDataset } from "../../src/data/fixtures";
+import { generatedDataset } from "../fixtures/generated-dataset";
 
 test("homepage exposes shared navigation and one main landmark", async ({ page }) => {
   await page.goto("/");
@@ -63,7 +63,7 @@ test("homepage prioritizes bounded discovery content over a rigid course", async
 test("AI signals section renders only AI Signal content", async ({ page }) => {
   await page.goto("/");
 
-  const expectedSignalUrls = fixtureDataset.items
+  const expectedSignalUrls = generatedDataset.items
     .filter((item) => item.type === "AI Signal")
     .sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt))
     .slice(0, 4)

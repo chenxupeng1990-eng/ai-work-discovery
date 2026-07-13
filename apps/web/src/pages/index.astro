@@ -3,11 +3,11 @@ import AISignals from "../components/AISignals.astro";
 import ContentCard from "../components/ContentCard.astro";
 import FeaturedSpotlight from "../components/FeaturedSpotlight.astro";
 import ReadyToUse from "../components/ReadyToUse.astro";
-import { fixtureDataset } from "../data/fixtures";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { getFeatured, getRecent } from "../lib/content";
+import { publicDataset } from "../lib/public-dataset";
 
-const items = fixtureDataset.items;
+const items = publicDataset.items;
 const featured = getFeatured(items);
 const spotlight = featured[0];
 const worthTrying = [

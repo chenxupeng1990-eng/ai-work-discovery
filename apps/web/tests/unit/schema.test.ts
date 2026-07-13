@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { fixtureDataset } from "../../src/data/fixtures";
+import { fixtureDataset } from "../fixtures/content";
 import generatedDataset from "../../src/generated/content.json";
 import { PublicDatasetSchema } from "../../src/lib/schema";
 
@@ -170,13 +170,11 @@ describe("PublicDatasetSchema", () => {
     expect(signals.every((item) => Boolean(item.originalUrl))).toBe(true);
   });
 
-  it("keeps the public content JSON synchronized with fixtures", () => {
-    const publicDataPath = resolve("public/data/content.json");
+  it("keeps the generated content JSON synchronized with fixtures", () => {
+    const generatedDataPath = resolve("src/generated/content.json");
 
-    expect(existsSync(publicDataPath)).toBe(true);
-    expect(PublicDatasetSchema.parse(JSON.parse(readFileSync(publicDataPath, "utf8")))).toEqual(
-      fixtureDataset,
-    );
+    expect(existsSync(generatedDataPath)).toBe(true);
+    expect(PublicDatasetSchema.parse(JSON.parse(readFileSync(generatedDataPath, "utf8")))).toEqual(fixtureDataset);
   });
 
   it("uses interface screenshots instead of the Feishu auth QR code", () => {

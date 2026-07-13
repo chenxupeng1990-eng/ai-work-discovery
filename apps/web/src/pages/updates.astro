@@ -1,10 +1,9 @@
 ---
-import publicDataset from "../../public/data/content.json";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { PublicDatasetSchema, type ContentItem } from "../lib/schema";
+import { publicDataset } from "../lib/public-dataset";
+import type { ContentItem } from "../lib/schema";
 
-const dataset = PublicDatasetSchema.parse(publicDataset);
-const items = [...dataset.items].sort((left, right) =>
+const items = [...publicDataset.items].sort((left, right) =>
   Date.parse(right.updatedAt) - Date.parse(left.updatedAt) || left.slug.localeCompare(right.slug),
 );
 const groups = items.reduce<Array<{ date: string; items: ContentItem[] }>>((result, item) => {

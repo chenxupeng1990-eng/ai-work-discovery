@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { fixtureDataset } from "../../src/data/fixtures";
+import { generatedDataset } from "../fixtures/generated-dataset";
 
 const waitForExplorer = async (page: Page) => {
   await expect(page.locator("astro-island:not([ssr])")).toHaveCount(1);
@@ -51,12 +51,12 @@ test("latest sorting changes the first result according to updatedAt", async ({ 
   const latest = page.getByRole("button", { name: "最新", exact: true });
   const cardHeadings = page.getByRole("article").getByRole("heading");
   const featuredFirst = await cardHeadings.first().textContent();
-  const expectedFeaturedOrder = [...fixtureDataset.items]
+  const expectedFeaturedOrder = [...generatedDataset.items]
     .sort((left, right) => right.sortWeight - left.sortWeight
       || Date.parse(right.updatedAt) - Date.parse(left.updatedAt)
       || left.slug.localeCompare(right.slug))
     .map((item) => item.title);
-  const expectedLatestOrder = [...fixtureDataset.items]
+  const expectedLatestOrder = [...generatedDataset.items]
     .sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt)
       || right.sortWeight - left.sortWeight
       || left.slug.localeCompare(right.slug))
@@ -97,7 +97,7 @@ test("listing cards link every item to its internal detail page", async ({ page 
 
   const cards = page.getByRole("article");
   await expect(cards).toHaveCount(10);
-  for (const item of fixtureDataset.items) {
+  for (const item of generatedDataset.items) {
     const link = cards.filter({ hasText: item.title }).getByRole("link");
     await expect(link).toHaveAttribute("href", `/content/${item.slug}`);
     await expect(link).not.toHaveAttribute("target");

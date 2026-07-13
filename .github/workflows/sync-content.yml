@@ -1,0 +1,62 @@
+name: Sync public content
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-content-${{ github.event.repository.default_branch }}
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+      - name: Sync content
+        run: npm run sync
+        env:
+          FEISHU_APP_ID: ${{ secrets.FEISHU_APP_ID }}
+          FEISHU_APP_SECRET: ${{ secrets.FEISHU_APP_SECRET }}
+          FEISHU_BASE_APP_TOKEN: ${{ secrets.FEISHU_BASE_APP_TOKEN }}
+          FEISHU_CONTENT_TABLE_ID: ${{ secrets.FEISHU_CONTENT_TABLE_ID }}
+          FEISHU_COPY_BLOCKS_TABLE_ID: ${{ secrets.FEISHU_COPY_BLOCKS_TABLE_ID }}
+          FEISHU_INBOX_TABLE_ID: ${{ secrets.FEISHU_INBOX_TABLE_ID }}
+          AI_BASE_URL: ${{ secrets.AI_BASE_URL }}
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          AI_MODEL: ${{ secrets.AI_MODEL }}
+      - run: npm test
+      - run: npm run typecheck
+      - run: npm run check
+      - run: npm run build
+      - name: Commit validated content
+        working-directory: .
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- apps/web/src/generated/content.json
+          if [ -d apps/web/public/images/content ]; then
+            git add -- apps/web/public/images/content
+          fi
+          if git diff --cached --quiet; then
+            echo "No public content changes to commit."
+            exit 0
+          fi
+          git commit -m "content: sync public Feishu records"
+          git push origin HEAD:${{ github.event.repository.default_branch }}
