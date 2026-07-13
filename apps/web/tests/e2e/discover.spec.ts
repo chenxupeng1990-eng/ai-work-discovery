@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { fixtureDataset } from "../../src/data/fixtures";
 
 const waitForExplorer = async (page: Page) => {
   await expect(page.locator("astro-island:not([ssr])")).toHaveCount(1);
@@ -42,18 +43,37 @@ test("category chips filter results without moving the control bar", async ({ pa
   expect(after!.width).toBe(before!.width);
 });
 
-test("featured and latest sorting expose stable pressed state", async ({ page }) => {
+test("latest sorting changes the first result according to updatedAt", async ({ page }) => {
   await page.goto("/discover");
   await waitForExplorer(page);
 
   const featured = page.getByRole("button", { name: "精选", exact: true });
   const latest = page.getByRole("button", { name: "最新", exact: true });
+  const cardHeadings = page.getByRole("article").getByRole("heading");
+  const featuredFirst = await cardHeadings.first().textContent();
+  const expectedFeaturedOrder = [...fixtureDataset.items]
+    .sort((left, right) => right.sortWeight - left.sortWeight
+      || Date.parse(right.updatedAt) - Date.parse(left.updatedAt)
+      || left.slug.localeCompare(right.slug))
+    .map((item) => item.title);
+  const expectedLatestOrder = [...fixtureDataset.items]
+    .sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt)
+      || right.sortWeight - left.sortWeight
+      || left.slug.localeCompare(right.slug))
+    .map((item) => item.title);
 
   await expect(featured).toHaveAttribute("aria-pressed", "true");
   await expect(latest).toHaveAttribute("aria-pressed", "false");
+  await expect(cardHeadings).toHaveText(expectedFeaturedOrder);
+  expect(featuredFirst).toBe(expectedFeaturedOrder[0]);
+
   await latest.click();
+
   await expect(featured).toHaveAttribute("aria-pressed", "false");
   await expect(latest).toHaveAttribute("aria-pressed", "true");
+  await expect(cardHeadings.first()).toHaveText(expectedLatestOrder[0]);
+  await expect(cardHeadings).toHaveText(expectedLatestOrder);
+  expect(featuredFirst).not.toBe(expectedLatestOrder[0]);
 });
 
 test("empty search renders a complete resettable state", async ({ page }) => {
@@ -71,15 +91,41 @@ test("empty search renders a complete resettable state", async ({ page }) => {
   await expect(page.getByRole("button", { name: "精选", exact: true })).toHaveAttribute("aria-pressed", "true");
 });
 
-test("listing cards keep valid detail hrefs and fixed image geometry", async ({ page }) => {
+test("listing cards use valid public sources without broken placeholder links", async ({ page }) => {
   await page.goto("/discover");
   await waitForExplorer(page);
 
   const cards = page.getByRole("article");
   await expect(cards).toHaveCount(10);
+  const itemWithSource = fixtureDataset.items.find(
+    (item) => item.originalUrl === "https://agents.md/",
+  );
+  const itemWithoutSource = fixtureDataset.items.find(
+    (item) => !(item.feishuDocumentUrl ?? item.originalUrl),
+  );
+  expect(itemWithSource).toBeDefined();
+  expect(itemWithoutSource).toBeDefined();
+
+  const sourceUrl = itemWithSource!.feishuDocumentUrl ?? itemWithSource!.originalUrl!;
+  expect(new URL(sourceUrl).protocol).toBe("https:");
+  const linkedCard = cards.filter({ hasText: itemWithSource!.title });
+  const sourceLink = linkedCard.getByRole("link");
+  await expect(sourceLink).toHaveAttribute("href", sourceUrl);
+  await expect(sourceLink).toHaveAttribute("target", "_blank");
+  await expect(sourceLink).toHaveAttribute("rel", /\bnoreferrer\b/);
+  await sourceLink.evaluate((link) => {
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      document.body.dataset.clickedExternalUrl = (event.currentTarget as HTMLAnchorElement).href;
+    }, { once: true });
+  });
+  await sourceLink.click();
+  await expect(page.locator("body")).toHaveAttribute("data-clicked-external-url", sourceUrl);
+
+  const unlinkedCard = cards.filter({ hasText: itemWithoutSource!.title });
+  await expect(unlinkedCard.getByRole("link")).toHaveCount(0);
+
   for (const card of await cards.all()) {
-    const link = card.getByRole("link");
-    await expect(link).toHaveAttribute("href", /^\/content\/[a-z0-9]+(?:-[a-z0-9]+)*$/);
 
     const image = card.getByRole("img");
     const box = await image.boundingBox();
@@ -89,6 +135,7 @@ test("listing cards keep valid detail hrefs and fixed image geometry", async ({ 
   }
 
   await expect(page.locator('[href^="#"]')).toHaveCount(0);
+  await expect(page.locator('[href^="/content/"]')).toHaveCount(0);
 });
 
 test("discovery page avoids horizontal overflow and overlapping cards", async ({ page }) => {

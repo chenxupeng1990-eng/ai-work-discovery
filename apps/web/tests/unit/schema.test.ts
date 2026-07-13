@@ -136,6 +136,14 @@ describe("PublicDatasetSchema", () => {
     expect(PublicDatasetSchema.parse(generatedDataset)).toEqual(fixtureDataset);
   });
 
+  it("uses meaningful fixture update times that can drive latest sorting", () => {
+    const updateTimes = fixtureDataset.items.map((item) => Date.parse(item.updatedAt));
+    const generatedAt = Date.parse(fixtureDataset.generatedAt);
+
+    expect(new Set(updateTimes).size).toBeGreaterThan(1);
+    expect(updateTimes.every((updatedAt) => updatedAt <= generatedAt)).toBe(true);
+  });
+
   it("provides three to five genuine AI Signal fixtures", () => {
     const signals = fixtureDataset.items.filter((item) => item.type === "AI Signal");
 

@@ -73,9 +73,10 @@ export function DiscoveryExplorer({ items }: { items: ContentItem[] }) {
 
       {results.length > 0 ? (
         <div className="discovery-grid">
-          {results.map((item) => (
-            <article className="discovery-card" key={item.id}>
-              <a href={`/content/${item.slug}`}>
+          {results.map((item) => {
+            const href = item.feishuDocumentUrl ?? item.originalUrl;
+            const content = (
+              <>
                 <img
                   src={item.coverImage}
                   alt={`${item.title}内容截图`}
@@ -91,9 +92,19 @@ export function DiscoveryExplorer({ items }: { items: ContentItem[] }) {
                   <h3>{item.title}</h3>
                   <p>{item.summary}</p>
                 </div>
-              </a>
-            </article>
-          ))}
+              </>
+            );
+
+            return (
+              <article className="discovery-card" key={item.id}>
+                {href ? (
+                  <a href={href} target="_blank" rel="noopener noreferrer">
+                    {content}
+                  </a>
+                ) : content}
+              </article>
+            );
+          })}
         </div>
       ) : (
         <div className="discovery-empty">

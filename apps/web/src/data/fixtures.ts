@@ -1,7 +1,7 @@
 import type { PublicDataset } from "../lib/schema";
 
 export const fixtureDataset: PublicDataset = {
-  generatedAt: "2026-07-13T00:00:00.000Z",
+  generatedAt: "2026-07-13T12:00:00.000Z",
   items: [
     {
       id: "case-feishu-bridge",
@@ -19,7 +19,7 @@ export const fixtureDataset: PublicDataset = {
       featured: true,
       sortWeight: 100,
       publishedAt: "2026-07-13T00:00:00.000Z",
-      updatedAt: "2026-07-13T00:00:00.000Z",
+      updatedAt: "2026-07-13T10:00:00.000Z",
       copyBlocks: [
         {
           id: "feishu-bridge-config",
@@ -48,7 +48,7 @@ export const fixtureDataset: PublicDataset = {
       featured: true,
       sortWeight: 90,
       publishedAt: "2026-07-12T08:00:00.000Z",
-      updatedAt: "2026-07-13T00:00:00.000Z",
+      updatedAt: "2026-07-12T12:00:00.000Z",
       copyBlocks: [
         {
           id: "storyboard-prompt",
@@ -77,7 +77,7 @@ export const fixtureDataset: PublicDataset = {
       featured: true,
       sortWeight: 80,
       publishedAt: "2026-07-11T08:00:00.000Z",
-      updatedAt: "2026-07-13T00:00:00.000Z",
+      updatedAt: "2026-07-11T12:00:00.000Z",
       copyBlocks: [
         {
           id: "skills-path",
@@ -106,7 +106,7 @@ export const fixtureDataset: PublicDataset = {
       featured: false,
       sortWeight: 70,
       publishedAt: "2026-07-10T08:00:00.000Z",
-      updatedAt: "2026-07-13T00:00:00.000Z",
+      updatedAt: "2026-07-13T11:00:00.000Z",
       copyBlocks: [
         {
           id: "agents-md-template",
@@ -135,7 +135,7 @@ export const fixtureDataset: PublicDataset = {
       featured: true,
       sortWeight: 60,
       publishedAt: "2026-07-09T08:00:00.000Z",
-      updatedAt: "2026-07-13T00:00:00.000Z",
+      updatedAt: "2026-07-10T12:00:00.000Z",
       copyBlocks: [],
     },
     {
@@ -155,7 +155,7 @@ export const fixtureDataset: PublicDataset = {
       featured: false,
       sortWeight: 59,
       publishedAt: "2025-03-11T00:00:00.000Z",
-      updatedAt: "2026-07-13T00:00:00.000Z",
+      updatedAt: "2026-07-09T12:00:00.000Z",
       copyBlocks: [],
     },
     {
@@ -175,7 +175,7 @@ export const fixtureDataset: PublicDataset = {
       featured: false,
       sortWeight: 58,
       publishedAt: "2024-11-25T00:00:00.000Z",
-      updatedAt: "2026-07-13T00:00:00.000Z",
+      updatedAt: "2026-07-08T12:00:00.000Z",
       copyBlocks: [],
     },
     {
@@ -195,7 +195,7 @@ export const fixtureDataset: PublicDataset = {
       featured: false,
       sortWeight: 50,
       publishedAt: "2026-07-08T08:00:00.000Z",
-      updatedAt: "2026-07-13T00:00:00.000Z",
+      updatedAt: "2026-07-08T10:00:00.000Z",
       copyBlocks: [
         {
           id: "skills-clone-command",
@@ -223,7 +223,7 @@ export const fixtureDataset: PublicDataset = {
       featured: false,
       sortWeight: 40,
       publishedAt: "2026-07-07T08:00:00.000Z",
-      updatedAt: "2026-07-13T00:00:00.000Z",
+      updatedAt: "2026-07-07T12:00:00.000Z",
       copyBlocks: [
         {
           id: "weekly-review-agenda",
@@ -251,7 +251,7 @@ export const fixtureDataset: PublicDataset = {
       featured: false,
       sortWeight: 30,
       publishedAt: "2026-07-06T08:00:00.000Z",
-      updatedAt: "2026-07-13T00:00:00.000Z",
+      updatedAt: "2026-07-06T12:00:00.000Z",
       copyBlocks: [
         {
           id: "dependency-check-command",
