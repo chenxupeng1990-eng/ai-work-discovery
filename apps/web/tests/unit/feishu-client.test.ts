@@ -70,6 +70,53 @@ describe("FeishuClient", () => {
     });
   });
 
+  it("使用 URL encoded record path 更新记录", async () => {
+    const fetchMock = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(jsonResponse({ code: 0, tenant_access_token: "tenant-token", expire: 7200 }))
+      .mockResolvedValueOnce(jsonResponse({
+        code: 0,
+        data: { record: { record_id: "record/id", fields: { 处理状态: "处理中" } } },
+      }));
+    const client = new FeishuClient({
+      appId: "app-id",
+      appSecret: "app-secret",
+      appToken: "base/token",
+      fetch: fetchMock,
+      apiBaseUrl: "https://open.feishu.test",
+      tokenCache: new Map(),
+    });
+
+    await expect(client.updateRecord("table/id", "record/id", { 处理状态: "处理中" })).resolves.toEqual({
+      record_id: "record/id",
+      fields: { 处理状态: "处理中" },
+    });
+    expect(fetchMock.mock.calls[1]?.[0].toString()).toBe(
+      "https://open.feishu.test/open-apis/bitable/v1/apps/base%2Ftoken/tables/table%2Fid/records/record%2Fid",
+    );
+    expect(fetchMock.mock.calls[1]?.[1]).toMatchObject({
+      method: "PUT",
+      body: JSON.stringify({ fields: { 处理状态: "处理中" } }),
+    });
+  });
+
+  it("updateRecord failures remain typed and secret-safe", async () => {
+    const fetchMock = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(jsonResponse({ code: 0, tenant_access_token: "tenant-token", expire: 7200 }))
+      .mockResolvedValueOnce(jsonResponse({ code: 999, msg: "secret-never-print" }));
+    const client = new FeishuClient({
+      appId: "app-id",
+      appSecret: "secret-never-print",
+      appToken: "base-token",
+      fetch: fetchMock,
+      apiBaseUrl: "https://open.feishu.test",
+      tokenCache: new Map(),
+    });
+
+    const request = client.updateRecord("table-id", "record-id", { Error: "secret-never-print" });
+    await expect(request).rejects.toBeInstanceOf(FeishuApiError);
+    await expect(request).rejects.not.toThrow(/secret-never-print|Authorization|Bearer/);
+  });
+
   it.each([
     ["HTTP status", jsonResponse({ code: 0 }, 503)],
     ["Feishu code", jsonResponse({ code: 999, msg: "denied" })],

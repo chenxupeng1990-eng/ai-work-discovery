@@ -47,3 +47,15 @@ export const BASE_FIELDS = {
     processedAt: "处理时间",
   },
 } as const;
+
+export const BASE_VALUES = {
+  content: {
+    draft: "草稿",
+  },
+  inbox: {
+    pending: "待处理",
+    processing: "处理中",
+    reviewRequired: "待审核",
+    failed: "失败",
+  },
+} as const;

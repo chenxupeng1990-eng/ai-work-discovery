@@ -102,11 +102,30 @@ export class FeishuClient {
     return parseRecord(data.record, "create record");
   }
 
+  async updateRecord(
+    tableId: string,
+    recordId: string,
+    fields: Record<string, unknown>,
+  ): Promise<RawFeishuRecord> {
+    const payload = await this.requestJson("update record", this.recordUrl(tableId, recordId), {
+      method: "PUT",
+      body: JSON.stringify({ fields }),
+    });
+    const data = asObject(payload.data, "update record");
+    return parseRecord(data.record, "update record");
+  }
+
   private recordsUrl(tableId: string): URL {
     return new URL(
       `/open-apis/bitable/v1/apps/${encodeURIComponent(this.appToken)}/tables/${encodeURIComponent(tableId)}/records`,
       this.apiBaseUrl,
     );
+  }
+
+  private recordUrl(tableId: string, recordId: string): URL {
+    const url = this.recordsUrl(tableId);
+    url.pathname += `/${encodeURIComponent(recordId)}`;
+    return url;
   }
 
   private async requestJson(
