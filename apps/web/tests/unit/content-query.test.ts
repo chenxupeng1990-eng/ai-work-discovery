@@ -81,6 +81,17 @@ describe("queryContent", () => {
       "last",
     ]);
   });
+
+  it("does not change the input item order", () => {
+    const items = [
+      { ...baseItem, id: "last", slug: "last", sortWeight: 10 },
+      { ...baseItem, id: "first", slug: "first", sortWeight: 20 },
+    ];
+
+    queryContent(items, searchOptions(""));
+
+    expect(items.map((item) => item.slug)).toEqual(["last", "first"]);
+  });
 });
 
 describe("content route helpers", () => {
@@ -101,6 +112,18 @@ describe("content route helpers", () => {
     ];
 
     expect(getRecent(items, 2).map((item) => item.slug)).toEqual(["new", "middle"]);
+  });
+
+  it("does not change input order when returning recent items", () => {
+    const items = [
+      { ...baseItem, id: "old", slug: "old", updatedAt: "2026-07-01T00:00:00.000Z" },
+      { ...baseItem, id: "new", slug: "new", updatedAt: "2026-07-03T00:00:00.000Z" },
+      { ...baseItem, id: "middle", slug: "middle", updatedAt: "2026-07-02T00:00:00.000Z" },
+    ];
+
+    getRecent(items, 2);
+
+    expect(items.map((item) => item.slug)).toEqual(["old", "new", "middle"]);
   });
 
   it("returns no recent items for a non-positive limit", () => {
@@ -131,6 +154,46 @@ describe("content route helpers", () => {
 
     expect(getRelated(items, current, 3).map((item) => item.slug)).toEqual(["both", "category", "tag"]);
     expect(getRelated(items, current).map((item) => item.id)).not.toContain(current.id);
+  });
+
+  it("returns the top two related items when more than two candidates qualify", () => {
+    const current = {
+      ...baseItem,
+      id: "current",
+      slug: "current",
+      category: "团队案例",
+      tags: ["共享标签"],
+    };
+    const items = [
+      current,
+      { ...baseItem, id: "category", slug: "category", category: "团队案例", tags: [], sortWeight: 100 },
+      { ...baseItem, id: "tag", slug: "tag", category: "工具", tags: ["共享标签"], sortWeight: 90 },
+      { ...baseItem, id: "both", slug: "both", category: "团队案例", tags: ["共享标签"], sortWeight: 1 },
+    ];
+
+    const related = getRelated(items, current, 2);
+
+    expect(related).toHaveLength(2);
+    expect(related.map((item) => item.slug)).toEqual(["both", "category"]);
+  });
+
+  it("does not change input order when returning related items", () => {
+    const current = {
+      ...baseItem,
+      id: "current",
+      slug: "current",
+      category: "团队案例",
+      tags: ["共享标签"],
+    };
+    const items = [
+      current,
+      { ...baseItem, id: "lower", slug: "lower", category: "团队案例", tags: [], sortWeight: 1 },
+      { ...baseItem, id: "higher", slug: "higher", category: "团队案例", tags: [], sortWeight: 100 },
+    ];
+
+    getRelated(items, current, 2);
+
+    expect(items.map((item) => item.slug)).toEqual(["current", "lower", "higher"]);
   });
 
   it("returns no related items for a non-positive limit", () => {

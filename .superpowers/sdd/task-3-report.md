@@ -148,3 +148,66 @@ Exit code: 0
 ## 顾虑
 
 无阻塞问题。当前排序依赖 schema 已保证的 ISO 时间字符串；相关推荐的相关性范围按简报限定为共享标签和同分类，未扩展到全文相似度。
+
+## 2026-07-13 测试缺口补齐
+
+### 改动
+
+- 新增 `getRelated(items, current, 2)` 正数 limit 测试，构造 3 个相关候选，断言结果长度为 2 且前两项为 `both`、`category`。
+- 新增输入数组顺序不变测试，分别覆盖 `queryContent`、`getRecent`、`getRelated`。
+- 未修改生产实现。
+
+### 验证
+
+聚焦测试：
+
+```powershell
+npm test -- tests/unit/content-query.test.ts
+```
+
+```text
+Test Files  1 passed (1)
+Tests       18 passed (18)
+Exit code: 0
+```
+
+完整 Vitest 单测（排除 Playwright e2e 目录）：
+
+```powershell
+npm test -- --exclude "tests/e2e/**"
+```
+
+```text
+Test Files  2 passed (2)
+Tests       34 passed (34)
+Exit code: 0
+```
+
+原样运行 `npm test` 时，Vitest 收集了工作树中未跟踪的 `tests/e2e/home.spec.ts`，因此 Playwright 的 `test()` 报错；该次运行中其余 2 个测试文件、34 个测试均通过。本次任务未修改或提交该未跟踪 e2e 目录。
+
+检查：
+
+```powershell
+npm run check
+```
+
+```text
+Result (13 files):
+- 0 errors
+- 0 warnings
+- 0 hints
+Exit code: 0
+```
+
+构建：
+
+```powershell
+npm run build
+```
+
+```text
+Result (13 files): 0 errors, 0 warnings, 0 hints
+1 page(s) built
+Complete!
+Exit code: 0
+```
