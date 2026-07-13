@@ -65,8 +65,8 @@ function isSingleLineCommand(raw: string): boolean {
 }
 
 function hasConversationalRequest(raw: string): boolean {
-  return /\b(?:can|could|would)\s+you\b|\bplease\b|\bhelp\s+me\b|\b(?:explain|summari[sz]e|analy[sz]e|review)\b/i.test(raw)
-    || /[\u8bf7\u5e2e]|\u5e2e\u6211|\u89e3\u91ca|\u603b\u7ed3|\u5206\u6790|\u4e3a\u4ec0\u4e48|\u600e\u4e48|\u5982\u4f55|\u80fd\u5426|\u53ef\u4ee5|\uff1f/u.test(raw);
+  return /\b(?:can|could|would)\s+you\b|\bplease\b|\btell\s+me\b|\b(?:explain|summari[sz]e|help|why|what|analy[sz]e|interpret|describe|review)\b/i.test(raw)
+    || /\u8bf7|\u5e2e|\u89e3\u91ca|\u8bf4\u660e|\u603b\u7ed3|\u5206\u6790|\u4e3a\u4ec0\u4e48|\u542b\u4e49|\u600e\u4e48|\u5982\u4f55|\u80fd\u5426|\u53ef\u4ee5|\uff1f/u.test(raw);
 }
 
 function isPrompt(raw: string): boolean {

@@ -56,8 +56,23 @@ describe("detectSource", () => {
     "git status is failing, can you explain why?",
     "npm install failed, please help me",
     "curl this page and summarize it",
+    "git status tell me what it means",
+    "npm test interpret the output",
+    "git diff describe the result",
+    "git show explain",
+    "npm test help",
+    "git status why",
+    "git diff what",
+    "npm test analyze",
     `git status ${"\u5931\u8d25\u4e86\uff0c\u8bf7\u5e2e\u6211\u89e3\u91ca"}`,
     `curl ${"\u8fd9\u4e2a\u9875\u9762\u5e76\u603b\u7ed3"}`,
+    "git status 说明内容",
+    "git diff 解释",
+    "npm test 总结",
+    "git show 分析",
+    "curl https://example.com 帮我看",
+    "git status 为什么",
+    "npm test 含义",
   ])("classifies command-shaped requests as prompts: %s", (raw) => {
     expect(detectSource(raw).kind).toBe("prompt");
   });
@@ -71,6 +86,9 @@ describe("detectSource", () => {
   });
 
   it.each([
+    "npm install astro",
+    "git status",
+    "curl https://example.com",
     "npm install",
     "pnpm add cheerio",
     "yarn test",

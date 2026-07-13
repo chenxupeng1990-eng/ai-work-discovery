@@ -1,5 +1,7 @@
+import type { LookupFunction } from "node:net";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  createMetadataTransportFactory,
   fetchPublicMetadata,
   MAX_METADATA_BYTES,
   type HostResolver,
@@ -45,6 +47,72 @@ function transportFactory(
 
 afterEach(() => {
   vi.useRealTimers();
+});
+
+describe("default metadata transport wiring", () => {
+  it("uses the pinned dispatcher for the original hostname URL and closes after the response", async () => {
+    const close = vi.fn(async () => undefined);
+    const destroy = vi.fn();
+    const dispatcher = { close, destroy };
+    let pinnedLookup: LookupFunction | undefined;
+    const agentFactory = vi.fn((lookup: LookupFunction) => {
+      pinnedLookup = lookup;
+      return dispatcher;
+    });
+    const fetch = vi.fn(async (url: URL, init: RequestInit & { dispatcher?: unknown }) => {
+      expect(url.toString()).toBe("https://example.com/article");
+      expect(url.hostname).toBe("example.com");
+      expect(init.dispatcher).toBe(dispatcher);
+      return response("<title>Public page</title>", {
+        headers: { "content-type": "text/html; charset=utf-8" },
+        status: 200,
+      });
+    });
+    const factory = createMetadataTransportFactory({ fetch, agentFactory });
+
+    await fetchPublicMetadata("https://example.com/article", {
+      resolver: publicResolver,
+      transportFactory: factory,
+    });
+
+    expect(agentFactory).toHaveBeenCalledTimes(1);
+    expect(agentFactory).toHaveBeenCalledWith(expect.any(Function));
+    expect(pinnedLookup).toBeDefined();
+    const lookup = pinnedLookup;
+    if (!lookup) throw new Error("Expected the pinned lookup to reach the agent factory");
+    await expect(new Promise((resolve, reject) => {
+      lookup("example.com", { all: true }, (error, addresses) => {
+        if (error) reject(error);
+        else resolve(addresses);
+      });
+    })).resolves.toEqual([{ address: "93.184.216.34", family: 4 }]);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(close).toHaveBeenCalledTimes(1);
+    expect(destroy).not.toHaveBeenCalled();
+  });
+
+  it("destroys the pinned dispatcher when the request fails", async () => {
+    const requestError = new Error("request failed");
+    const close = vi.fn(async () => undefined);
+    const destroy = vi.fn();
+    const dispatcher = { close, destroy };
+    const factory = createMetadataTransportFactory({
+      fetch: vi.fn(async (_url: URL, init: RequestInit & { dispatcher?: unknown }) => {
+        expect(init.dispatcher).toBe(dispatcher);
+        throw requestError;
+      }),
+      agentFactory: vi.fn(() => dispatcher),
+    });
+
+    await expect(fetchPublicMetadata("https://example.com/article", {
+      resolver: publicResolver,
+      transportFactory: factory,
+    })).rejects.toThrow("request failed");
+
+    expect(close).not.toHaveBeenCalled();
+    expect(destroy).toHaveBeenCalledTimes(1);
+    expect(destroy).toHaveBeenCalledWith(requestError);
+  });
 });
 
 describe("fetchPublicMetadata URL safety", () => {

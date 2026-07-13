@@ -32,6 +32,16 @@ export interface MetadataTransport {
 
 export type MetadataTransportFactory = (target: SafeTransportTarget) => MetadataTransport;
 
+export interface MetadataDispatcher {
+  close(): Promise<void>;
+  destroy(error?: Error | null): void;
+}
+
+export interface MetadataTransportFactoryDependencies {
+  fetch(url: URL, init: RequestInit & { dispatcher: MetadataDispatcher }): Promise<Response>;
+  agentFactory(lookup: LookupFunction): MetadataDispatcher;
+}
+
 export interface FetchPublicMetadataOptions {
   resolver?: HostResolver;
   transportFactory?: MetadataTransportFactory;
@@ -52,17 +62,23 @@ const defaultResolver: HostResolver = async (hostname) => lookup(hostname, {
   verbatim: true,
 });
 
-const defaultTransportFactory: MetadataTransportFactory = (target) => {
-  const dispatcher = new Agent({ connect: { lookup: target.lookup } });
-  return {
-    request: (url, init) => undiciFetch(url, {
-      ...init,
-      dispatcher,
-    } as UndiciRequestInit) as unknown as Promise<Response>,
-    close: () => dispatcher.close(),
-    destroy: (error) => dispatcher.destroy(error ?? null),
+export function createMetadataTransportFactory(
+  dependencies: MetadataTransportFactoryDependencies,
+): MetadataTransportFactory {
+  return (target) => {
+    const dispatcher = dependencies.agentFactory(target.lookup);
+    return {
+      request: (url, init) => dependencies.fetch(url, { ...init, dispatcher }),
+      close: () => dispatcher.close(),
+      destroy: (error) => dispatcher.destroy(error ?? null),
+    };
   };
-};
+}
+
+const defaultTransportFactory = createMetadataTransportFactory({
+  fetch: (url, init) => undiciFetch(url, init as unknown as UndiciRequestInit) as unknown as Promise<Response>,
+  agentFactory: (pinnedLookup) => new Agent({ connect: { lookup: pinnedLookup } }),
+});
 
 export async function fetchPublicMetadata(
   source: string | URL,
