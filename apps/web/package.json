@@ -9,7 +9,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "sync": "tsx scripts/sync-content.ts"
+    "sync": "npm run sync:content",
+    "sync:content": "tsx scripts/sync-content.ts",
+    "sync:content:check": "tsc --noEmit --ignoreConfig scripts/sync-content.ts --module ESNext --moduleResolution Bundler --target ES2022 --lib ES2022,DOM --types node --skipLibCheck"
   },
   "dependencies": {
     "@astrojs/react": "latest",
