@@ -253,7 +253,16 @@ import { PublicDatasetSchema } from "../../src/lib/schema";
 
 describe("PublicDatasetSchema", () => {
   it("rejects forbidden and draft publication values", () => {
-    const result = PublicDatasetSchema.safeParse({ generatedAt: "2026-07-13T00:00:00.000Z", items: [{ status: "Draft" }] });
+    const result = PublicDatasetSchema.safeParse({
+      generatedAt: "2026-07-13T00:00:00.000Z",
+      items: [{
+        id: "case-1", slug: "case-1", title: "Case", type: "Case", category: "Cases",
+        summary: "Summary", recommendationReason: "Reason", coverImage: "/images/case.png",
+        tags: [], audience: [], scenario: "Team work", sourceName: "Public source",
+        featured: false, sortWeight: 0, publishedAt: "2026-07-13T00:00:00.000Z",
+        updatedAt: "2026-07-13T00:00:00.000Z", copyBlocks: [], status: "Draft"
+      }]
+    });
     expect(result.success).toBe(false);
   });
 });
@@ -278,7 +287,7 @@ export const CopyBlockSchema = z.object({
   content: z.string().min(1),
   order: z.number().int().nonnegative(),
   note: z.string().optional()
-});
+}).strict();
 
 export const ContentItemSchema = z.object({
   id: z.string().min(1),
@@ -300,12 +309,12 @@ export const ContentItemSchema = z.object({
   publishedAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
   copyBlocks: z.array(CopyBlockSchema)
-});
+}).strict();
 
 export const PublicDatasetSchema = z.object({
   generatedAt: z.string().datetime(),
   items: z.array(ContentItemSchema)
-});
+}).strict();
 
 export type CopyBlock = z.infer<typeof CopyBlockSchema>;
 export type ContentItem = z.infer<typeof ContentItemSchema>;
