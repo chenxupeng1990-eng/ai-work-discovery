@@ -31,15 +31,15 @@ const linkProps = href
 </article>
 
 <style>
-  .content-card,
-  .content-card__inner {
+  .content-card {
     min-width: 0;
-    height: 100%;
   }
 
   .content-card__inner {
+    min-width: 0;
     display: grid;
     grid-template-rows: auto 1fr;
+    align-content: start;
   }
 
   a.content-card__inner:hover h3 {
@@ -48,7 +48,9 @@ const linkProps = href
 
   img {
     width: 100%;
+    height: auto;
     aspect-ratio: 16 / 10;
+    align-self: start;
     display: block;
     border-radius: 4px;
     object-fit: cover;

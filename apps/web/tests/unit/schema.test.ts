@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { fixtureDataset } from "../../src/data/fixtures";
 import generatedDataset from "../../src/generated/content.json";
 import { PublicDatasetSchema } from "../../src/lib/schema";
@@ -108,7 +110,7 @@ describe("PublicDatasetSchema", () => {
   });
 
   it("validates realistic fixtures and their generated JSON", () => {
-    expect(fixtureDataset.items).toHaveLength(8);
+    expect(fixtureDataset.items).toHaveLength(10);
     expect(new Set(fixtureDataset.items.map((item) => item.type))).toEqual(new Set([
       "Case",
       "Inspiration",
@@ -124,12 +126,31 @@ describe("PublicDatasetSchema", () => {
       "skill-codex-skills-roundup",
       "configuration-agents-md",
       "signal-ai-hot-agent-workflows",
+      "signal-openai-agent-building-tools",
+      "signal-anthropic-model-context-protocol",
       "tool-github-codex-skills",
       "collaboration-ai-work-discovery-review",
       "getting-started-codex-dependencies",
     ]);
     expect(PublicDatasetSchema.parse(fixtureDataset)).toEqual(fixtureDataset);
     expect(PublicDatasetSchema.parse(generatedDataset)).toEqual(fixtureDataset);
+  });
+
+  it("provides three to five genuine AI Signal fixtures", () => {
+    const signals = fixtureDataset.items.filter((item) => item.type === "AI Signal");
+
+    expect(signals.length).toBeGreaterThanOrEqual(3);
+    expect(signals.length).toBeLessThanOrEqual(5);
+    expect(signals.every((item) => Boolean(item.originalUrl))).toBe(true);
+  });
+
+  it("keeps the public content JSON synchronized with fixtures", () => {
+    const publicDataPath = resolve("public/data/content.json");
+
+    expect(existsSync(publicDataPath)).toBe(true);
+    expect(PublicDatasetSchema.parse(JSON.parse(readFileSync(publicDataPath, "utf8")))).toEqual(
+      fixtureDataset,
+    );
   });
 
   it("uses interface screenshots instead of the Feishu auth QR code", () => {

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { fixtureDataset } from "../../src/data/fixtures";
 
 test("homepage exposes shared navigation and one main landmark", async ({ page }) => {
   await page.goto("/");
@@ -24,7 +25,10 @@ test("homepage prioritizes bounded discovery content over a rigid course", async
 
   await expect(page.locator('[data-home-section="spotlight"]')).toHaveCount(1);
   await expect(page.locator('[data-home-section="worth-trying"] [data-content-card]')).toHaveCount(5);
-  await expect(page.locator('[data-home-section="ai-signals"] [data-signal-item]')).toHaveCount(4);
+  const signalItems = page.locator('[data-home-section="ai-signals"] [data-signal-item]');
+  const signalCount = await signalItems.count();
+  expect(signalCount).toBeGreaterThanOrEqual(3);
+  expect(signalCount).toBeLessThanOrEqual(5);
   await expect(page.locator('[data-home-section="ready-to-use"] [data-ready-item]')).toHaveCount(3);
   await expect(page.locator('[data-home-section="recent"] [data-recent-item]')).toHaveCount(6);
 
@@ -37,12 +41,35 @@ test("homepage prioritizes bounded discovery content over a rigid course", async
     await expect(image).toHaveJSProperty("complete", true);
   }
 
+  const cardImages = page.locator('[data-content-card] [data-home-content-image]');
+  await expect(cardImages).toHaveCount(5);
+  for (const image of await cardImages.all()) {
+    const box = await image.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.width / box!.height).toBeGreaterThanOrEqual(1.58);
+    expect(box!.width / box!.height).toBeLessThanOrEqual(1.62);
+  }
+
   const contentLinks = page.locator('[data-home-content-link]');
   for (const link of await contentLinks.all()) {
     const href = await link.getAttribute("href");
     expect(href).toMatch(/^https:\/\//);
     expect(href).not.toContain("#");
   }
+});
+
+test("AI signals section renders only AI Signal content", async ({ page }) => {
+  await page.goto("/");
+
+  const expectedSignalUrls = fixtureDataset.items
+    .filter((item) => item.type === "AI Signal")
+    .sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt))
+    .slice(0, 4)
+    .map((item) => item.originalUrl);
+  const renderedSignalUrls = await page
+    .locator('[data-home-section="ai-signals"] [data-signal-item] a')
+    .evaluateAll((links) => links.map((link) => link.getAttribute("href")));
+  expect(renderedSignalUrls).toEqual(expectedSignalUrls);
 });
 
 test("homepage keeps the next section visible and avoids horizontal overflow", async ({ page }) => {

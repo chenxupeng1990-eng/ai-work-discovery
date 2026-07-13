@@ -1,68 +1,59 @@
-# Task 5 Implementation Report
+# Task 5 Review Fix Report
 
-## Scope
+## Review Findings
 
-Built the discovery-first homepage from the existing eight-item fixture dataset. The homepage renders one full-width spotlight, five worth-trying cards, four externally sourced AI signal entries, three ready-to-use resources, and six recent updates without introducing detail-route placeholders.
+The previous Task 5 implementation left three review issues unresolved:
 
-## RED
+1. `ContentCard.astro` applied `height: 100%` to both the card and its inner grid. Equal-height grid rows stretched card images away from their declared `16 / 10` ratio.
+2. The AI 风向 section selected recent items by `originalUrl`, so Skill and Tool entries appeared as signals while the fixture dataset contained only one genuine `AI Signal`.
+3. `vitest.config.ts` did not limit test discovery, so the standard `npm test` gate collected the Playwright E2E suite and failed.
 
-1. Extended `apps/web/tests/e2e/home.spec.ts` before production changes with assertions for the literal H1, required section headings, bounded item counts, local fixture images, valid external content links, absence of `学习进度`, first-viewport visibility of the next section, and horizontal overflow.
-2. Ran `npx playwright test tests/e2e/home.spec.ts --grep "bounded discovery" --project=desktop --reporter=line`.
-3. Confirmed exit code 1. The test failed at `home.spec.ts:18` because the required `AI 工作灵感与实践` H1 did not exist.
+The earlier report documented the Vitest failure and the one-signal fixture limitation as accepted state. This review fixes both instead of retaining them as caveats.
 
-## GREEN
+## RED Evidence
 
-- Added `FeaturedSpotlight.astro` with the selected fixture image as a full-width background, a solid contrast layer, fixed 48px/36px H1 sizes, eager image loading, explicit dimensions, and direct text overlay without a card.
-- Added `ContentCard.astro` with a stable `16 / 10` image ratio, 4px radius, lazy loading, fixed image dimensions, stable metadata row, and no shadow.
-- Added flat-list `AISignals.astro` and three-item `ReadyToUse.astro` sections.
-- Composed the homepage with deterministic data selection through `getFeatured` and `getRecent`.
-- Rendered content anchors only when a real `originalUrl` exists. Items awaiting the later detail route remain non-interactive instead of linking to a missing route or fragment.
-- Re-ran the desktop and mobile homepage E2E projects. Desktop passed 3 tests with the mobile-only test skipped; mobile passed all 4 tests.
+- Added desktop and mobile Playwright measurements for all five content-card images with an accepted rendered ratio of `1.58` to `1.62`.
+  - Before the fix, representative ratios were approximately `1.06` on desktop and `0.95` on mobile.
+- Added an E2E assertion that AI 风向 links exactly match the most recent fixture items whose type is `AI Signal`.
+  - Before the fix, the section rendered four links: three Skill/Tool links plus the single real signal link.
+- Added unit assertions requiring three to five genuine AI Signal fixtures, synchronized public JSON, and `tests/unit/**/*.test.ts` as the Vitest include pattern.
+  - Before the fix, the fixture count was `1`, `public/data/content.json` was absent, and the Vitest include value was undefined.
 
-## Command Results
+## Fixes
 
-- `npm run test:e2e -- tests/e2e/home.spec.ts`
-  - Exit code 0.
-  - 7 passed, 1 desktop-only conditional skip.
-  - Both projects verified headings, item counts, local images, valid content links, no `学习进度`, no horizontal overflow, and a visible next-section hint.
+- Removed the card and inner-grid `height: 100%` rules. Card images now use `width: 100%`, `height: auto`, `aspect-ratio: 16 / 10`, `object-fit: cover`, and `align-self: start`.
+- Changed homepage signal selection to filter strictly on `item.type === "AI Signal"` before applying the recent-item limit.
+- Added two complete, public, non-sensitive AI Signal fixtures based on official OpenAI and Anthropic announcements. Existing Skill and Tool types were not renamed.
+- Synchronized `src/generated/content.json` and `public/data/content.json` with the ten-item fixture dataset.
+- Limited Vitest discovery to `tests/unit/**/*.test.ts`.
+
+Homepage bounds remain one spotlight, five worth-trying cards, three AI signals, three ready-to-use items, and six recent updates.
+
+## Verification
+
 - `npm test`
-  - Exit code 1 because the current Vitest configuration also collects `tests/e2e/home.spec.ts` and Playwright rejects `test()` under Vitest.
-  - The actual unit suites passed: 34 tests passed across 2 unit files.
-  - The same E2E file passed independently under Playwright as recorded above.
+  - Exit code 0.
+  - 3 unit test files passed, 37 tests passed.
+- `npm run test:e2e -- tests/e2e/home.spec.ts --project=desktop --project=mobile --reporter=line`
+  - Exit code 0.
+  - 9 tests passed and 1 desktop run of the mobile-only navigation test was skipped.
+  - Both viewports verified content-card image ratios, AI Signal semantics, image loading, and no horizontal overflow.
 - `npm run check`
   - Exit code 0.
-  - 20 files checked, 0 errors, 0 warnings, 0 hints.
+  - 21 files checked with 0 errors, 0 warnings, and 0 hints.
 - `npm run build`
   - Exit code 0.
-  - Astro check passed and one static route, `/index.html`, was built.
-
-## Screenshots And Visual Check
-
-- Desktop: `.superpowers/sdd/screenshots/task-5-desktop.png`, 1440 x 1000 viewport.
-- Mobile: `.superpowers/sdd/screenshots/task-5-mobile.png`, Pixel 7 emulation at 412 x 839.
-- The worth-trying section begins at 751px on desktop and 645px on mobile, leaving a visible hint in both initial viewports.
-- Document scroll width matched viewport width at both sizes: 1440px desktop and 412px mobile.
-- Fixture images rendered in the spotlight and all five cards. Long Chinese titles wrapped without covering metadata or adjacent content.
-- No nested cards, shadows, blur, gradients, decorative blobs, viewport-scaled fonts, or negative letter spacing were observed.
-
-## Self-Review
-
-- `git diff --check` passed before the implementation commit.
-- Static scans found no forbidden style patterns and no Task 5 fragment links.
-- Homepage counts remain deliberately bounded at 1 / 5 / 4 / 3 / 6.
-- The fixture set contains one item typed `AI Signal`; the four-item AI 风向 feed therefore uses the existing items that have public `originalUrl` values and recommendation reasons. No fixture data was invented or expanded.
-- Changes are limited to the four Task 5 components, homepage composition, E2E coverage, and this report.
+  - Astro check passed and the static `/index.html` route built successfully.
 
 ## Files
 
-- `apps/web/src/components/FeaturedSpotlight.astro`
 - `apps/web/src/components/ContentCard.astro`
-- `apps/web/src/components/AISignals.astro`
-- `apps/web/src/components/ReadyToUse.astro`
 - `apps/web/src/pages/index.astro`
+- `apps/web/src/data/fixtures.ts`
+- `apps/web/src/generated/content.json`
+- `apps/web/public/data/content.json`
+- `apps/web/vitest.config.ts`
 - `apps/web/tests/e2e/home.spec.ts`
+- `apps/web/tests/unit/schema.test.ts`
+- `apps/web/tests/unit/vitest-config.test.ts`
 - `.superpowers/sdd/task-5-report.md`
-
-## Commit
-
-- Implementation: `44ac577` (`feat: build discovery-first homepage`)

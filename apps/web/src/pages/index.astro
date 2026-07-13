@@ -14,7 +14,7 @@ const worthTrying = [
   ...featured.slice(1),
   ...getRecent(items.filter((item) => !item.featured), 5),
 ].slice(0, 5);
-const aiSignals = getRecent(items.filter((item) => item.originalUrl), 4);
+const aiSignals = getRecent(items.filter((item) => item.type === "AI Signal"), 4);
 const readyTypeOrder = ["Getting Started", "Skill", "Tool"];
 const readyToUse = readyTypeOrder
   .flatMap((type) => getRecent(items.filter((item) => item.type === type && item.copyBlocks.length > 0), 3))
