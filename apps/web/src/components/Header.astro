@@ -21,7 +21,7 @@ const navigation = [
       <a class="icon-button" href="/discover" aria-label="搜索" title="搜索">
         <span class="search-icon" aria-hidden="true"></span>
       </a>
-      <button class="submit-link button-primary" type="button" disabled title="提交入口即将开放">
+      <button class="submit-link button-primary" type="button" aria-disabled="true" title="提交入口即将开放">
         提交内容
       </button>
 
@@ -112,6 +112,10 @@ const navigation = [
   .icon-button:hover {
     border-color: var(--lavender);
     color: var(--indigo);
+  }
+
+  .submit-link[aria-disabled="true"] {
+    cursor: not-allowed;
   }
 
   .search-icon {
@@ -262,9 +266,20 @@ const navigation = [
   const menuButton = document.querySelector<HTMLButtonElement>("[data-mobile-menu-button]");
   const mobileNavigation = document.querySelector<HTMLElement>("#mobile-navigation");
 
+  const setMenuExpanded = (expanded: boolean) => {
+    menuButton?.setAttribute("aria-expanded", String(expanded));
+    menuButton?.setAttribute("aria-label", expanded ? "关闭导航" : "打开导航");
+    menuButton?.setAttribute("title", expanded ? "关闭导航" : "打开导航");
+    mobileNavigation?.toggleAttribute("hidden", !expanded);
+  };
+
   menuButton?.addEventListener("click", () => {
-    const isExpanded = menuButton.getAttribute("aria-expanded") === "true";
-    menuButton.setAttribute("aria-expanded", String(!isExpanded));
-    mobileNavigation?.toggleAttribute("hidden", isExpanded);
+    setMenuExpanded(menuButton.getAttribute("aria-expanded") !== "true");
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || menuButton?.getAttribute("aria-expanded") !== "true") return;
+    setMenuExpanded(false);
+    menuButton.focus();
   });
 </script>

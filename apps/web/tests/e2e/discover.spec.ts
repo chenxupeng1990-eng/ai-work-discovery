@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { generatedDataset } from "../fixtures/generated-dataset";
+import { expectFocusVisible } from "./release-assertions";
 
 const waitForExplorer = async (page: Page) => {
   await expect(page.locator("astro-island:not([ssr])")).toHaveCount(1);
@@ -136,4 +137,28 @@ test("discovery page avoids horizontal overflow and overlapping cards", async ({
       && first!.y + first!.height > second!.y;
     expect(overlaps).toBe(false);
   }
+});
+
+test("discovery search, category, and sort controls operate from the keyboard", async ({ page }) => {
+  await page.goto("/discover");
+  await waitForExplorer(page);
+
+  const search = page.getByRole("searchbox", { name: "搜索内容" });
+  await search.focus();
+  await expectFocusVisible(search);
+  await search.fill("飞书");
+  await expect(page.getByRole("article")).toHaveCount(1);
+
+  await search.fill("");
+  const category = page.getByRole("button", { name: "产品信号", exact: true });
+  await category.focus();
+  await expectFocusVisible(category);
+  await page.keyboard.press("Enter");
+  await expect(category).toHaveAttribute("aria-pressed", "true");
+
+  const latest = page.getByRole("button", { name: "最新", exact: true });
+  await latest.focus();
+  await expectFocusVisible(latest);
+  await page.keyboard.press("Enter");
+  await expect(latest).toHaveAttribute("aria-pressed", "true");
 });

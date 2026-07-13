@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro check && astro build",
+    "verify:public": "tsx scripts/verify-public.ts",
     "check": "astro check",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { createElement } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CopyBlockView } from "../../src/components/CopyBlock";
@@ -24,6 +24,7 @@ describe("CopyBlockView", () => {
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();
+    vi.useRealTimers();
   });
 
   it("copies the block and announces success", async () => {
@@ -36,6 +37,23 @@ describe("CopyBlockView", () => {
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(block.content));
     expect(screen.getByRole("status")).toHaveTextContent("已复制 基础依赖检查");
     expect(screen.getByRole("button", { name: "已复制 基础依赖检查" })).toBeEnabled();
+  });
+
+  it("restores the copy button after 1600ms", async () => {
+    vi.useFakeTimers();
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    installClipboard(writeText);
+    render(createElement(CopyBlockView, { block }));
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "复制 基础依赖检查" }));
+    });
+    expect(screen.getByRole("button", { name: "已复制 基础依赖检查" })).toBeEnabled();
+
+    act(() => vi.advanceTimersByTime(1599));
+    expect(screen.getByRole("button", { name: "已复制 基础依赖检查" })).toBeEnabled();
+    act(() => vi.advanceTimersByTime(1));
+    expect(screen.getByRole("button", { name: "复制 基础依赖检查" })).toBeEnabled();
   });
 
   it("announces clipboard failure and remains retryable", async () => {

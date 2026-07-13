@@ -267,6 +267,34 @@ describe("downloadAsset", () => {
     }
   });
 
+  it("cancels and aborts after a reader error while preserving the original error", async () => {
+    const originalError = new Error("reader failed at source");
+    let aborted = false;
+    const cancel = vi.fn().mockResolvedValue(undefined);
+    const reader = {
+      cancel,
+      read: vi.fn().mockRejectedValue(originalError),
+    };
+    const body = new ReadableStream<Uint8Array>();
+    vi.spyOn(body, "getReader").mockReturnValue(
+      reader as unknown as ReadableStreamDefaultReader<Uint8Array>,
+    );
+
+    const request = downloadAsset("https://cdn.example.com/reader-error.png", {
+      fetchImpl: async (_input, init) => {
+        init?.signal?.addEventListener("abort", () => { aborted = true; });
+        return response(body, {
+          headers: { "content-type": "image/png" },
+          status: 200,
+        });
+      },
+    });
+
+    await expect(request).rejects.toBe(originalError);
+    expect(cancel).toHaveBeenCalledOnce();
+    expect(aborted).toBe(true);
+  });
+
   it("aborts retrieval after 10 seconds", async () => {
     vi.useFakeTimers();
     const request = downloadAsset("https://cdn.example.com/slow.png", {

@@ -1,5 +1,25 @@
-import { expect, test } from "@playwright/test";
+import { mkdir } from "node:fs/promises";
+import { resolve } from "node:path";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { generatedDataset } from "../fixtures/generated-dataset";
+import {
+  expectCardsAreSeparate,
+  expectCardTextFits,
+  expectControlsInBounds,
+  expectFocusVisible,
+  expectImagesLoaded,
+  expectNoHorizontalOverflow,
+} from "./release-assertions";
+
+const screenshotDirectory = resolve("../../.superpowers/sdd/task-14-screenshots");
+
+async function tabTo(page: Page, target: Locator) {
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    await page.keyboard.press("Tab");
+    if (await target.evaluate((element) => element === document.activeElement)) return;
+  }
+  throw new Error("Target was not reachable with Tab");
+}
 
 test("homepage exposes shared navigation and one main landmark", async ({ page }) => {
   await page.goto("/");
@@ -10,7 +30,7 @@ test("homepage exposes shared navigation and one main landmark", async ({ page }
   await expect(page.getByRole("link", { name: "搜索" })).toHaveAttribute("href", "/discover");
   await expect(page.locator('a[href="/cases"], a[href="/collaboration"], a[href="/resources"], a[href="/signals"]')).toHaveCount(0);
   await expect(page.locator('a[href="/updates"]')).toHaveCount(2);
-  await expect(page.getByRole("button", { name: "提交内容" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "提交内容" })).toHaveAttribute("aria-disabled", "true");
   await expect(page.locator('a[href="#discover"], a[href="#ready"], a[href="#submit"]')).toHaveCount(0);
   await expect(page.getByRole("contentinfo")).toBeVisible();
 });
@@ -90,19 +110,109 @@ test("mobile navigation opens without resizing the header or overflowing", async
   await page.goto("/");
 
   const header = page.getByRole("banner");
-  const menu = page.getByRole("button", { name: "打开导航" });
+  const menu = page.locator("[data-mobile-menu-button]");
   const navigation = page.getByRole("navigation", { name: "移动端主导航" });
   const initialHeight = await header.evaluate((element) => element.getBoundingClientRect().height);
 
   await expect(menu).toHaveAttribute("aria-controls", "mobile-navigation");
   await expect(menu).toHaveAttribute("aria-expanded", "false");
+  await expect(menu).toHaveAccessibleName("打开导航");
   await expect(navigation).toBeHidden();
   await menu.click();
   await expect(menu).toHaveAttribute("aria-expanded", "true");
+  await expect(menu).toHaveAccessibleName("关闭导航");
   await expect(navigation).toBeVisible();
   expect(await header.evaluate((element) => element.getBoundingClientRect().height)).toBe(initialHeight);
 
   const viewport = page.viewportSize();
   expect(viewport).not.toBeNull();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport!.width);
+});
+
+test("header controls support Tab, Enter, focus visibility, and mobile menu dismissal", async ({ page }, testInfo) => {
+  await page.goto("/");
+
+  const search = page.getByRole("link", { name: "搜索" });
+  await tabTo(page, search);
+  await expectFocusVisible(search);
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/discover\/?$/);
+
+  await page.goto("/");
+  const updates = testInfo.project.name === "desktop"
+    ? page.getByRole("navigation", { name: "主导航" }).getByRole("link", { name: "最近更新" })
+    : page.getByRole("link", { name: "发现", exact: true });
+  await tabTo(page, updates);
+  await expectFocusVisible(updates);
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(testInfo.project.name === "desktop" ? /\/updates\/?$/ : /\/discover\/?$/);
+
+  await page.goto("/");
+  const submit = page.getByRole("button", { name: "提交内容" });
+  await tabTo(page, submit);
+  await expectFocusVisible(submit);
+  const beforeSubmit = page.url();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(beforeSubmit);
+
+  if (testInfo.project.name === "mobile") {
+    const menu = page.locator("[data-mobile-menu-button]");
+    await tabTo(page, menu);
+    await expectFocusVisible(menu);
+    await page.keyboard.press("Enter");
+    await expect(menu).toHaveAttribute("aria-expanded", "true");
+    await expect(menu).toHaveAccessibleName("关闭导航");
+    await expect(page.getByRole("navigation", { name: "移动端主导航" })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(menu).toHaveAttribute("aria-expanded", "false");
+    await expect(menu).toHaveAccessibleName("打开导航");
+    await expect(page.getByRole("navigation", { name: "移动端主导航" })).toBeHidden();
+    await expect(menu).toBeFocused();
+  }
+});
+
+for (const checkpoint of [
+  { name: "home", route: "/" },
+  { name: "discover", route: "/discover" },
+  { name: "updates", route: "/updates" },
+  { name: "detail", route: "/content/codex-environment-dependency-checklist" },
+]) {
+  test(`${checkpoint.name} release framing and screenshot`, async ({ page }, testInfo) => {
+    await page.goto(checkpoint.route);
+    await expectNoHorizontalOverflow(page);
+    await expectImagesLoaded(page);
+    await expectControlsInBounds(page);
+    await expectCardsAreSeparate(page);
+    await expectCardTextFits(page);
+
+    if (checkpoint.route === "/") {
+      const hero = page.locator("main").locator("section").first();
+      const heroBox = await hero.boundingBox();
+      expect(heroBox).not.toBeNull();
+      expect(heroBox!.width * heroBox!.height).toBeGreaterThan(100_000);
+      const nextSectionTop = await page.locator('[data-home-section="worth-trying"]').evaluate(
+        (element) => element.getBoundingClientRect().top,
+      );
+      expect(nextSectionTop).toBeLessThan(page.viewportSize()!.height);
+    }
+
+    await mkdir(screenshotDirectory, { recursive: true });
+    await page.screenshot({
+      fullPage: true,
+      path: resolve(screenshotDirectory, `${checkpoint.name}-${testInfo.project.name}.png`),
+    });
+  });
+}
+
+test("390x844 release pages keep exact document width", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "Narrow mobile checkpoint only applies to mobile.");
+  await page.setViewportSize({ width: 390, height: 844 });
+
+  for (const route of ["/", "/discover", "/updates", "/content/codex-environment-dependency-checklist"]) {
+    await page.goto(route);
+    await expectNoHorizontalOverflow(page);
+    await expectControlsInBounds(page);
+    await expectCardsAreSeparate(page);
+    await expectCardTextFits(page);
+  }
 });
