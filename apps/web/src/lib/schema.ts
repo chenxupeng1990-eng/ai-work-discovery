@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+const CONTROLLED_COVER_IMAGE_PATH = /^\/images\/(?:(?:fixtures|content)\/(?:[A-Za-z0-9][A-Za-z0-9._-]*\/)*[A-Za-z0-9][A-Za-z0-9._-]*\.(?:avif|gif|jpe?g|png|webp)|fallback-[A-Za-z0-9][A-Za-z0-9-]*\.webp)$/;
+
 export const CopyBlockSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
@@ -26,7 +28,7 @@ export const ContentItemSchema = z.object({
   category: z.string().min(1),
   summary: z.string().min(1),
   recommendationReason: z.string().min(1),
-  coverImage: z.string().min(1),
+  coverImage: z.string().regex(CONTROLLED_COVER_IMAGE_PATH),
   tags: z.array(z.string()),
   audience: z.array(z.string()),
   scenario: z.string().min(1),
