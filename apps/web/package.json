@@ -15,8 +15,10 @@
     "@astrojs/react": "latest",
     "astro": "latest",
     "cheerio": "latest",
+    "ipaddr.js": "^2.4.0",
     "react": "latest",
     "react-dom": "latest",
+    "undici": "^7.28.0",
     "zod": "latest"
   },
   "devDependencies": {

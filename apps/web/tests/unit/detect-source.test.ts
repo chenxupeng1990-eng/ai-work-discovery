@@ -53,6 +53,24 @@ describe("detectSource", () => {
   });
 
   it.each([
+    "git status is failing, can you explain why?",
+    "npm install failed, please help me",
+    "curl this page and summarize it",
+    `git status ${"\u5931\u8d25\u4e86\uff0c\u8bf7\u5e2e\u6211\u89e3\u91ca"}`,
+    `curl ${"\u8fd9\u4e2a\u9875\u9762\u5e76\u603b\u7ed3"}`,
+  ])("classifies command-shaped requests as prompts: %s", (raw) => {
+    expect(detectSource(raw).kind).toBe("prompt");
+  });
+
+  it("requires an unfenced command to occupy exactly one line", () => {
+    expect(detectSource("git status\nnpm test").kind).toBe("text");
+  });
+
+  it("keeps fenced code ahead of prompt semantics", () => {
+    expect(detectSource("```sh\nnpm install failed, please help me\n```").kind).toBe("code");
+  });
+
+  it.each([
     "npm install",
     "pnpm add cheerio",
     "yarn test",

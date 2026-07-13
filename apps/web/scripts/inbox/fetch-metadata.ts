@@ -1,6 +1,8 @@
 import { lookup } from "node:dns/promises";
-import { isIP } from "node:net";
+import type { LookupFunction } from "node:net";
 import { load, type CheerioAPI } from "cheerio";
+import ipaddr from "ipaddr.js";
+import { Agent, fetch as undiciFetch, type RequestInit as UndiciRequestInit } from "undici";
 
 export const MAX_METADATA_BYTES = 2 * 1024 * 1024;
 
@@ -16,9 +18,23 @@ export interface ResolvedAddress {
 
 export type HostResolver = (hostname: string) => Promise<readonly ResolvedAddress[]>;
 
+export interface SafeTransportTarget {
+  hostname: string;
+  addresses: readonly Required<ResolvedAddress>[];
+  lookup: LookupFunction;
+}
+
+export interface MetadataTransport {
+  request(url: URL, init: RequestInit): Promise<Response>;
+  close(): Promise<void>;
+  destroy(error?: Error): void;
+}
+
+export type MetadataTransportFactory = (target: SafeTransportTarget) => MetadataTransport;
+
 export interface FetchPublicMetadataOptions {
-  fetchImpl?: typeof fetch;
   resolver?: HostResolver;
+  transportFactory?: MetadataTransportFactory;
 }
 
 export interface SourceMetadata {
@@ -36,17 +52,30 @@ const defaultResolver: HostResolver = async (hostname) => lookup(hostname, {
   verbatim: true,
 });
 
+const defaultTransportFactory: MetadataTransportFactory = (target) => {
+  const dispatcher = new Agent({ connect: { lookup: target.lookup } });
+  return {
+    request: (url, init) => undiciFetch(url, {
+      ...init,
+      dispatcher,
+    } as UndiciRequestInit) as unknown as Promise<Response>,
+    close: () => dispatcher.close(),
+    destroy: (error) => dispatcher.destroy(error ?? null),
+  };
+};
+
 export async function fetchPublicMetadata(
   source: string | URL,
   options: FetchPublicMetadataOptions = {},
 ): Promise<SourceMetadata> {
   const sourceUrl = parseRequestUrl(source);
-  const fetchImpl = options.fetchImpl ?? fetch;
   const resolver = options.resolver ?? defaultResolver;
+  const transportFactory = options.transportFactory ?? defaultTransportFactory;
   const controller = new AbortController();
   let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
   let readerCancelled = false;
   let timedOut = false;
+  let activeTransport: MetadataTransport | undefined;
 
   const cancelReader = () => {
     if (!reader || readerCancelled) return;
@@ -66,8 +95,9 @@ export async function fetchPublicMetadata(
     let response: Response;
 
     while (true) {
-      await assertPublicUrl(currentUrl, resolver, controller.signal);
-      response = await withAbort(fetchImpl(currentUrl, {
+      const target = await resolvePublicTarget(currentUrl, resolver, controller.signal);
+      activeTransport = transportFactory(target);
+      response = await withAbort(activeTransport.request(currentUrl, {
         credentials: "omit",
         headers: { accept: "text/html, text/plain;q=0.9" },
         redirect: "manual",
@@ -85,7 +115,9 @@ export async function fetchPublicMetadata(
       const nextUrl = parseRequestUrl(location, currentUrl);
       if (visited.has(nextUrl.toString())) throw new Error("Metadata redirect loop detected");
 
-      void response.body?.cancel().catch(() => undefined);
+      await response.body?.cancel().catch(() => undefined);
+      await activeTransport.close();
+      activeTransport = undefined;
       visited.add(nextUrl.toString());
       currentUrl = nextUrl;
       redirects += 1;
@@ -116,6 +148,8 @@ export async function fetchPublicMetadata(
     }
 
     const text = decodeBody(chunks, totalBytes, charset);
+    await activeTransport.close();
+    activeTransport = undefined;
     const baseMetadata: SourceMetadata = {
       sourceUrl: sourceUrl.toString(),
       finalUrl: currentUrl.toString(),
@@ -129,6 +163,8 @@ export async function fetchPublicMetadata(
 
     return await extractHtmlMetadata(text, currentUrl, baseMetadata, resolver, controller.signal);
   } catch (error) {
+    activeTransport?.destroy(error instanceof Error ? error : undefined);
+    activeTransport = undefined;
     if (reader) {
       cancelReader();
       controller.abort();
@@ -202,7 +238,7 @@ async function firstPublicMetadataUrl(
     if (!candidate) continue;
     try {
       const url = parseRequestUrl(candidate.trim(), baseUrl);
-      await assertPublicUrl(url, resolver, signal);
+      await resolvePublicTarget(url, resolver, signal);
       return url.toString();
     } catch (error) {
       if (isAbortError(error)) throw error;
@@ -218,12 +254,9 @@ function compactMetadata(metadata: SourceMetadata): SourceMetadata {
 }
 
 function parseRequestUrl(source: string | URL, baseUrl?: URL): URL {
-  const raw = source.toString();
-  if (raw.length > MAX_URL_LENGTH) throw new Error("Metadata URL exceeds the length limit");
-
   let url: URL;
   try {
-    url = new URL(raw, baseUrl);
+    url = new URL(source.toString(), baseUrl);
   } catch {
     throw new Error("Metadata URL must be a valid public HTTP(S) URL");
   }
@@ -232,20 +265,25 @@ function parseRequestUrl(source: string | URL, baseUrl?: URL): URL {
   }
   if (url.username || url.password) throw new Error("Metadata URL credentials are not allowed");
   url.hash = "";
+  if (url.href.length > MAX_URL_LENGTH) throw new Error("Metadata URL exceeds the length limit");
   return url;
 }
 
-async function assertPublicUrl(
+async function resolvePublicTarget(
   url: URL,
   resolver: HostResolver,
   signal: AbortSignal,
-): Promise<void> {
+): Promise<SafeTransportTarget> {
   const hostname = stripIpv6Brackets(url.hostname).toLowerCase();
   if (!hostname || isLocalHostname(hostname)) throw new Error("Metadata host must be public");
 
-  if (isIP(hostname)) {
+  if (ipaddr.isValid(hostname)) {
     if (!isPublicIp(hostname)) throw new Error("Metadata host must use a public IP address");
-    return;
+    const parsed = ipaddr.parse(hostname);
+    return createSafeTransportTarget(hostname, [{
+      address: parsed.toString(),
+      family: parsed.kind() === "ipv4" ? 4 : 6,
+    }]);
   }
 
   let addresses: readonly ResolvedAddress[];
@@ -258,6 +296,42 @@ async function assertPublicUrl(
   if (addresses.length === 0 || addresses.some(({ address }) => !isPublicIp(address))) {
     throw new Error("Metadata host must resolve only to public IP addresses");
   }
+  const approved = addresses.map(({ address }) => {
+    const parsed = ipaddr.parse(address);
+    return {
+      address: parsed.toString(),
+      family: parsed.kind() === "ipv4" ? 4 : 6,
+    };
+  });
+  return createSafeTransportTarget(hostname, approved);
+}
+
+function createSafeTransportTarget(
+  hostname: string,
+  addresses: readonly Required<ResolvedAddress>[],
+): SafeTransportTarget {
+  const approved = Object.freeze(addresses.map((address) => Object.freeze({ ...address })));
+  const pinnedLookup: LookupFunction = (requestedHostname, options, callback) => {
+    if (requestedHostname.toLowerCase() !== hostname) {
+      const error = new Error("Pinned DNS lookup hostname mismatch") as NodeJS.ErrnoException;
+      error.code = "ENOTFOUND";
+      callback(error, []);
+      return;
+    }
+    const family = options.family === "IPv4" ? 4 : options.family === "IPv6" ? 6 : options.family;
+    const matching = family === 4 || family === 6
+      ? approved.filter((address) => address.family === family)
+      : approved;
+    if (matching.length === 0) {
+      const error = new Error("Pinned DNS lookup has no approved address for this family") as NodeJS.ErrnoException;
+      error.code = "ENOTFOUND";
+      callback(error, []);
+      return;
+    }
+    if (options.all) callback(null, [...matching]);
+    else callback(null, matching[0].address, matching[0].family);
+  };
+  return { hostname, addresses: approved, lookup: pinnedLookup };
 }
 
 function isLocalHostname(hostname: string): boolean {
@@ -270,94 +344,47 @@ function isLocalHostname(hostname: string): boolean {
 }
 
 function isPublicIp(address: string): boolean {
-  const version = isIP(address);
-  if (version === 4) return isPublicIpv4(address);
-  if (version === 6) return isPublicIpv6(address);
-  return false;
+  if (!ipaddr.isValid(address)) return false;
+  const parsed = ipaddr.parse(address);
+  if (parsed instanceof ipaddr.IPv4) return isPublicIpv4(parsed);
+  return isPublicIpv6(parsed as ipaddr.IPv6);
 }
 
-function isPublicIpv4(address: string): boolean {
-  const octets = address.split(".").map(Number);
-  if (octets.length !== 4 || octets.some((value) => !Number.isInteger(value) || value < 0 || value > 255)) {
-    return false;
-  }
-  const value = (((octets[0] * 256 + octets[1]) * 256 + octets[2]) * 256 + octets[3]) >>> 0;
-  return ![
-    ["0.0.0.0", 8],
-    ["10.0.0.0", 8],
-    ["100.64.0.0", 10],
-    ["127.0.0.0", 8],
-    ["169.254.0.0", 16],
-    ["172.16.0.0", 12],
-    ["192.0.0.0", 24],
-    ["192.0.2.0", 24],
-    ["192.88.99.0", 24],
-    ["192.168.0.0", 16],
-    ["198.18.0.0", 15],
-    ["198.51.100.0", 24],
-    ["203.0.113.0", 24],
-    ["224.0.0.0", 4],
-    ["240.0.0.0", 4],
-  ].some(([network, prefix]) => ipv4InCidr(value, network as string, prefix as number));
+function isPublicIpv4(address: ipaddr.IPv4): boolean {
+  return address.range() === "unicast" && ![
+    "0.0.0.0/8",
+    "10.0.0.0/8",
+    "100.64.0.0/10",
+    "127.0.0.0/8",
+    "169.254.0.0/16",
+    "172.16.0.0/12",
+    "192.0.0.0/24",
+    "192.0.2.0/24",
+    "192.88.99.0/24",
+    "192.168.0.0/16",
+    "198.18.0.0/15",
+    "198.51.100.0/24",
+    "203.0.113.0/24",
+    "224.0.0.0/4",
+    "240.0.0.0/4",
+  ].some((cidr) => address.match(ipaddr.IPv4.parseCIDR(cidr)));
 }
 
-function ipv4InCidr(value: number, network: string, prefix: number): boolean {
-  const networkValue = network.split(".").map(Number).reduce((result, octet) => result * 256 + octet, 0) >>> 0;
-  const mask = prefix === 0 ? 0 : (0xffffffff << (32 - prefix)) >>> 0;
-  return (value & mask) === (networkValue & mask);
-}
-
-function isPublicIpv6(address: string): boolean {
-  const value = ipv6ToBigInt(address);
-  if (value === undefined) return false;
-
-  const mappedPrefix = 0xffffn;
-  if ((value >> 32n) === mappedPrefix) {
-    const ipv4 = Number(value & 0xffffffffn);
-    const addressV4 = [24, 16, 8, 0].map((shift) => (ipv4 >>> shift) & 0xff).join(".");
-    return isPublicIpv4(addressV4);
-  }
-
-  return value > 0xffffffffn
-    && !ipv6InCidr(value, "64:ff9b::", 96)
-    && !ipv6InCidr(value, "64:ff9b:1::", 48)
-    && !ipv6InCidr(value, "100::", 64)
-    && !ipv6InCidr(value, "2001::", 23)
-    && !ipv6InCidr(value, "2001:db8::", 32)
-    && !ipv6InCidr(value, "2002::", 16)
-    && !ipv6InCidr(value, "fc00::", 7)
-    && !ipv6InCidr(value, "fe80::", 10)
-    && !ipv6InCidr(value, "ff00::", 8);
-}
-
-function ipv6InCidr(value: bigint, network: string, prefix: number): boolean {
-  const networkValue = ipv6ToBigInt(network);
-  if (networkValue === undefined) return false;
-  return (value >> BigInt(128 - prefix)) === (networkValue >> BigInt(128 - prefix));
-}
-
-function ipv6ToBigInt(input: string): bigint | undefined {
-  let address = stripIpv6Brackets(input.toLowerCase());
-  if (address.includes("%")) return undefined;
-  if (address.includes(".")) {
-    const lastColon = address.lastIndexOf(":");
-    const ipv4 = address.slice(lastColon + 1);
-    const octets = ipv4.split(".").map(Number);
-    if (octets.length !== 4 || octets.some((value) => value < 0 || value > 255)) return undefined;
-    address = `${address.slice(0, lastColon)}:${((octets[0] << 8) | octets[1]).toString(16)}:${((octets[2] << 8) | octets[3]).toString(16)}`;
-  }
-
-  const halves = address.split("::");
-  if (halves.length > 2) return undefined;
-  const left = halves[0] ? halves[0].split(":") : [];
-  const right = halves.length === 2 && halves[1] ? halves[1].split(":") : [];
-  const missing = 8 - left.length - right.length;
-  if ((halves.length === 1 && missing !== 0) || missing < 0) return undefined;
-  const groups = halves.length === 2
-    ? [...left, ...Array<string>(missing).fill("0"), ...right]
-    : left;
-  if (groups.length !== 8 || groups.some((group) => !/^[0-9a-f]{1,4}$/.test(group))) return undefined;
-  return groups.reduce((result, group) => (result << 16n) + BigInt(`0x${group}`), 0n);
+function isPublicIpv6(address: ipaddr.IPv6): boolean {
+  if (address.isIPv4MappedAddress()) return false;
+  return address.range() === "unicast"
+    && address.match(ipaddr.IPv6.parseCIDR("2000::/3"))
+    && ![
+      "2001::/32",
+      "2001:2::/48",
+      "2001:10::/28",
+      "2001:20::/28",
+      "2001:db8::/32",
+      "2002::/16",
+      "3fff::/20",
+      "5f00::/16",
+      "fec0::/10",
+    ].some((cidr) => address.match(ipaddr.IPv6.parseCIDR(cidr)));
 }
 
 function stripIpv6Brackets(hostname: string): string {
