@@ -6,6 +6,7 @@
 - Added a strict OpenAI-compatible draft proposal parser and bounded enrichment request adapter.
 - Added pending Inbox processing, review-draft and Copy Block writes, failure isolation, and a detectable partial-write checkpoint.
 - Added the minimal Feishu `updateRecord` operation and shared draft/Inbox status constants.
+- Review fix: added source-record idempotency for draft creation and typed transport-error wrapping for Feishu fetch failures.
 - No UI or publication pipeline files were modified.
 
 ## RED / GREEN
@@ -17,6 +18,9 @@
 - `npm test -- tests/unit/process-inbox.test.ts` failed because the Inbox processor did not exist.
 - A timeout regression proved that aborting alone did not finish a response stream that ignored `AbortSignal`.
 - A transport-boundary regression proved that allowlisted metadata URLs still exposed query parameters to the model.
+- A retry regression proved that successful Content creation followed by a failed Inbox checkpoint update created a second draft after manual recovery.
+- Existing-draft and duplicate-source regressions proved that source Inbox ids were neither recovered nor enforced fail-safe.
+- Feishu list/create/update and tenant-token transport regressions proved that fetch rejections escaped as raw network/TLS errors.
 
 ### GREEN
 
@@ -27,7 +31,9 @@
 - One 20-second timeout covers fetch and streamed body reads. Responses are limited to 256 KiB, decoded as strict UTF-8, and non-2xx, malformed, oversized, timeout, and request failures remain typed without exposing the API key.
 - Pending Inbox records are marked Processing before detection. Non-pending records are skipped.
 - Content and Copy Block writes use explicit field allowlists. Content publication status is hardcoded to `草稿`; AI status is not trusted; public level is not written.
-- The created draft id is written back to the Inbox before any Copy Block write. A retry that already has a draft checkpoint fails visibly for manual recovery instead of silently creating another draft or duplicate blocks.
+- Draft creation hardcodes the internal `来源收件箱记录ID` field to the Inbox `record_id`. Before creating, the processor lists Content records and reuses the unique matching draft; multiple matches fail visibly without another create.
+- The created or recovered draft id is written back to the Inbox before any Copy Block write. A create-success/checkpoint-failure retry reuses the original draft after the Inbox is manually restored to pending.
+- The internal source Inbox id is not part of the public mapper allowlist and is covered by a non-disclosure regression.
 - Per-record failures write `失败` plus a 240-character sanitized message and processing continues for later records.
 
 ## No Automatic Publication Evidence
@@ -40,14 +46,16 @@
 ## Error Isolation
 
 - Provider and Feishu API errors expose only typed operation/category information and optional HTTP/code values.
+- Feishu request and tenant-token fetch rejections are wrapped as `FeishuApiError` with an optional `cause`; the public message contains only the operation and no URL, secret, headers, or body.
 - Inbox error storage uses `Error.message` only, removes configured secrets, Bearer values, URLs and credential-like key/value text, collapses line breaks, and caps the result at 240 characters.
 - Failure updating one Inbox record does not stop subsequent pending records; a failed failure-status write is contained so the batch summary still returns.
 
 ## Verification
 
-- Focused unit tests: 3 files passed, 48 tests passed.
-- Full `npm test`: 12 files passed, 289 tests passed.
-- Script and focused-test TypeScript check: passed.
+- Focused review unit tests: 3 files passed, 33 tests passed.
+- Full `npm test`: 12 files passed, 295 tests passed.
+- Script and focused-test TypeScript check passed with `npx tsc --noEmit --ignoreConfig scripts/inbox/process-inbox.ts scripts/feishu/client.ts scripts/feishu/fields.ts scripts/feishu/map-records.ts tests/unit/process-inbox.test.ts tests/unit/feishu-client.test.ts tests/unit/map-records.test.ts --module ESNext --moduleResolution Bundler --target ES2022 --lib ES2022,DOM --types node,vitest/globals --skipLibCheck`.
+- TypeScript was `6.0.3`; the check did not pass `--ignoreDeprecations`, and no deprecation diagnostic was emitted. The existing `--ignoreConfig` script-check convention was retained.
 - `npm run check`: 48 files checked; 0 errors, 0 warnings, 0 hints.
 - `npm run build`: 13 static pages generated.
 - `git diff --check`: passed.

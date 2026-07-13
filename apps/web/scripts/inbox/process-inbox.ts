@@ -57,8 +57,19 @@ export async function processPendingInbox(
       });
 
       const existingDraftIds = linkedRecordIds(record.fields[INBOX.relatedDraftContent]);
-      if (existingDraftIds.length > 0) {
-        throw new Error(`Draft checkpoint ${existingDraftIds[0]} already exists; manual recovery required`);
+      if (existingDraftIds.length > 1) {
+        throw new Error(`Multiple draft checkpoints found for Inbox record ${record.record_id}`);
+      }
+
+      const matchingDrafts = (await client.listRecords(config.FEISHU_CONTENT_TABLE_ID))
+        .filter(({ fields }) => fields[CONTENT.sourceInboxRecordId] === record.record_id);
+      if (matchingDrafts.length > 1) {
+        throw new Error(`Multiple drafts found for Inbox record ${record.record_id}`);
+      }
+      const matchedDraft = matchingDrafts[0];
+      const checkpointDraftId = existingDraftIds[0];
+      if (matchedDraft && checkpointDraftId && matchedDraft.record_id !== checkpointDraftId) {
+        throw new Error(`Draft checkpoint conflicts with source record for Inbox record ${record.record_id}`);
       }
 
       const rawContent = requireString(record, INBOX.rawContent);
@@ -74,10 +85,13 @@ export async function processPendingInbox(
         model: config.AI_MODEL,
       })))({ metadata, editorNote });
 
-      const draft = await client.createRecord(
-        config.FEISHU_CONTENT_TABLE_ID,
-        contentFields(record.record_id, detected, proposal),
-      );
+      const draft = matchedDraft
+        ?? (checkpointDraftId
+          ? { record_id: checkpointDraftId, fields: {} }
+          : await client.createRecord(
+              config.FEISHU_CONTENT_TABLE_ID,
+              contentFields(record.record_id, detected, proposal),
+            ));
 
       await client.updateRecord(config.FEISHU_INBOX_TABLE_ID, record.record_id, {
         [INBOX.relatedDraftContent]: [draft.record_id],
@@ -144,6 +158,7 @@ function contentFields(
     ...sourceFields,
     [CONTENT.publicationStatus]: BASE_VALUES.content.draft,
     [CONTENT.generatedFromInbox]: [inboxRecordId],
+    [CONTENT.sourceInboxRecordId]: inboxRecordId,
   };
 }
 

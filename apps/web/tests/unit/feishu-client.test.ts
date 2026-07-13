@@ -118,6 +118,59 @@ describe("FeishuClient", () => {
   });
 
   it.each([
+    ["list records", (client: FeishuClient) => client.listRecords("table-id")],
+    ["create record", (client: FeishuClient) => client.createRecord("table-id", { title: "secret-body" })],
+    ["update record", (client: FeishuClient) => client.updateRecord("table-id", "record-id", { title: "secret-body" })],
+  ])("wraps %s transport rejections as typed secret-safe errors", async (operation, request) => {
+    const transportError = new Error(
+      "TLS failed for https://open.feishu.test/private Authorization: Bearer tenant-token body=secret-body",
+    );
+    const fetchMock = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(jsonResponse({ code: 0, tenant_access_token: "tenant-token", expire: 7200 }))
+      .mockRejectedValueOnce(transportError);
+    const client = new FeishuClient({
+      appId: "app-id",
+      appSecret: "app-secret",
+      appToken: "base-token",
+      fetch: fetchMock,
+      apiBaseUrl: "https://open.feishu.test",
+      tokenCache: new Map(),
+    });
+
+    try {
+      await request(client);
+      throw new Error("expected request to reject");
+    } catch (error) {
+      expect(error).toBeInstanceOf(FeishuApiError);
+      expect(error).toMatchObject({ operation, cause: transportError });
+      expect(String(error)).not.toMatch(/open\.feishu|tenant-token|secret-body|Authorization|Bearer/);
+    }
+  });
+
+  it("wraps tenant token transport rejections as typed secret-safe errors", async () => {
+    const transportError = new Error(
+      "connect failed https://open.feishu.test app_secret=secret-never-print",
+    );
+    const client = new FeishuClient({
+      appId: "app-id",
+      appSecret: "secret-never-print",
+      appToken: "base-token",
+      fetch: vi.fn<typeof fetch>().mockRejectedValue(transportError),
+      apiBaseUrl: "https://open.feishu.test",
+      tokenCache: new Map(),
+    });
+
+    try {
+      await client.listRecords("table-id");
+      throw new Error("expected request to reject");
+    } catch (error) {
+      expect(error).toBeInstanceOf(FeishuApiError);
+      expect(error).toMatchObject({ operation: "tenant token", cause: transportError });
+      expect(String(error)).not.toMatch(/open\.feishu|secret-never-print|app_secret/);
+    }
+  });
+
+  it.each([
     ["HTTP status", jsonResponse({ code: 0 }, 503)],
     ["Feishu code", jsonResponse({ code: 999, msg: "denied" })],
     ["malformed JSON", new Response("not-json", { status: 200 })],

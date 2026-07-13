@@ -32,6 +32,7 @@ const publishedFields = (overrides: Record<string, unknown> = {}) => ({
   发布状态: "已发布",
   公开级别: "公开",
   内部备注: "不得发布",
+  来源收件箱记录ID: "inbox-internal-only",
   ...overrides,
 });
 
@@ -131,6 +132,8 @@ describe("mapPublishedContent", () => {
     ].sort());
     expect(serialized).not.toContain("内部备注");
     expect(serialized).not.toContain("发布状态");
+    expect(serialized).not.toContain("inbox-internal-only");
+    expect(serialized).not.toContain("来源收件箱记录ID");
     expect(ContentItemSchema.parse(item)).toEqual(item);
   });
 

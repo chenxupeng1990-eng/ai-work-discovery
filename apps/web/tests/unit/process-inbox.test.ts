@@ -57,7 +57,10 @@ describe("processPendingInbox", () => {
     const creates: Array<{ tableId: string; fields: Record<string, unknown> }> = [];
     let copyId = 0;
     const client = {
-      async listRecords() {
+      async listRecords(tableId: string) {
+        if (tableId === config.FEISHU_CONTENT_TABLE_ID) {
+          events.push("list:content");
+        }
         return [
           record("inbox-success", {
             [INBOX.processingStatus]: BASE_VALUES.inbox.pending,
@@ -127,13 +130,13 @@ describe("processPendingInbox", () => {
     expect(detect).toHaveBeenCalledTimes(2);
     expect(events.slice(0, 8)).toEqual([
       `update:inbox-success:${BASE_VALUES.inbox.processing}`,
+      "list:content",
       "detect:success",
       "fetch:success",
       "enrich:success",
       "create:content",
       "update:inbox-success:checkpoint",
       "create:copy:0",
-      "create:copy:1",
     ]);
 
     const contentWrite = creates.find(({ tableId }) => tableId === config.FEISHU_CONTENT_TABLE_ID);
@@ -147,6 +150,7 @@ describe("processPendingInbox", () => {
       [CONTENT.originalUrl]: "https://example.com/success",
       [CONTENT.publicationStatus]: BASE_VALUES.content.draft,
       [CONTENT.generatedFromInbox]: ["inbox-success"],
+      [CONTENT.sourceInboxRecordId]: "inbox-success",
     });
     expect(contentWrite?.fields).not.toHaveProperty(CONTENT.publicLevel);
     expect(Object.keys(contentWrite?.fields ?? {}).sort()).toEqual([
@@ -159,6 +163,7 @@ describe("processPendingInbox", () => {
       CONTENT.originalUrl,
       CONTENT.publicationStatus,
       CONTENT.generatedFromInbox,
+      CONTENT.sourceInboxRecordId,
     ].sort());
 
     const copyWrites = creates.filter(({ tableId }) => tableId === config.FEISHU_COPY_BLOCKS_TABLE_ID);
@@ -205,56 +210,120 @@ describe("processPendingInbox", () => {
     expect(errorMessage).not.toMatch(/ai-secret-value|feishu-secret-value|Bearer|password|token=|internal secret stack/);
   });
 
-  it("checkpoints a created draft before copy writes and refuses silent duplicate retries", async () => {
-    const events: string[] = [];
-    const firstClient = {
-      async listRecords() {
-        return [record("inbox-partial", {
-          [INBOX.processingStatus]: BASE_VALUES.inbox.pending,
-          [INBOX.rawContent]: "plain idea",
-        })];
+  it("reuses the original draft when checkpoint update failed before a retry", async () => {
+    const inbox = record("inbox-retry", {
+      [INBOX.processingStatus]: BASE_VALUES.inbox.pending,
+      [INBOX.rawContent]: "plain idea",
+    });
+    const contentRecords: RawFeishuRecord[] = [];
+    const contentCreates = vi.fn(async (_tableId: string, fields: Record<string, unknown>) => {
+      const draft = record("draft-original", fields);
+      contentRecords.push(draft);
+      return draft;
+    });
+    let failCheckpoint = true;
+    const client = {
+      async listRecords(tableId: string) {
+        return tableId === config.FEISHU_INBOX_TABLE_ID ? [inbox] : contentRecords;
       },
       async updateRecord(_tableId: string, recordId: string, fields: Record<string, unknown>) {
-        const draftLinks = fields[INBOX.relatedDraftContent];
-        const marker = Array.isArray(draftLinks) ? draftLinks[0] : fields[INBOX.processingStatus];
-        events.push(`update:${String(marker)}`);
+        if (fields[INBOX.relatedDraftContent] && failCheckpoint) {
+          failCheckpoint = false;
+          throw new Error("checkpoint update failed");
+        }
+        Object.assign(inbox.fields, fields);
         return record(recordId, fields);
       },
       async createRecord(tableId: string, fields: Record<string, unknown>) {
-        if (tableId === config.FEISHU_CONTENT_TABLE_ID) {
-          events.push("create:content");
-          return record("draft-partial", fields);
+        if (tableId !== config.FEISHU_CONTENT_TABLE_ID) {
+          throw new Error("no copy blocks expected");
         }
-        events.push("create:copy");
-        throw new Error("copy write failed");
+        return contentCreates(tableId, fields);
       },
     };
+    const noCopyProposal = { ...proposal, copyBlocks: [] };
 
-    await expect(processPendingInbox(firstClient as never, config, {
+    await expect(processPendingInbox(client as never, config, {
       detect: () => ({ kind: "text", raw: "plain idea" }),
-      enrich: async () => proposal,
+      enrich: async () => noCopyProposal,
     })).resolves.toEqual({ processed: 1, succeeded: 0, failed: 1, skipped: 0 });
-    expect(events.indexOf("update:draft-partial")).toBeLessThan(events.indexOf("create:copy"));
 
+    inbox.fields[INBOX.processingStatus] = BASE_VALUES.inbox.pending;
+    delete inbox.fields[INBOX.relatedDraftContent];
+
+    await expect(processPendingInbox(client as never, config, {
+      detect: () => ({ kind: "text", raw: "plain idea" }),
+      enrich: async () => noCopyProposal,
+    })).resolves.toEqual({ processed: 1, succeeded: 1, failed: 0, skipped: 0 });
+    expect(contentCreates).toHaveBeenCalledTimes(1);
+    expect(inbox.fields[INBOX.relatedDraftContent]).toEqual(["draft-original"]);
+  });
+
+  it("recovers an existing draft by source inbox record id", async () => {
+    const updates: Record<string, unknown>[] = [];
     const createRecord = vi.fn();
-    const retryClient = {
-      async listRecords() {
-        return [record("inbox-partial", {
-          [INBOX.processingStatus]: BASE_VALUES.inbox.pending,
-          [INBOX.rawContent]: "plain idea",
-          [INBOX.relatedDraftContent]: ["draft-partial"],
+    const client = {
+      async listRecords(tableId: string) {
+        if (tableId === config.FEISHU_INBOX_TABLE_ID) {
+          return [record("inbox-existing", {
+            [INBOX.processingStatus]: BASE_VALUES.inbox.pending,
+            [INBOX.rawContent]: "plain idea",
+          })];
+        }
+        return [record("draft-existing", {
+          [CONTENT.sourceInboxRecordId]: "inbox-existing",
         })];
       },
       async updateRecord(_tableId: string, recordId: string, fields: Record<string, unknown>) {
+        updates.push(fields);
         return record(recordId, fields);
       },
       createRecord,
     };
 
-    await expect(processPendingInbox(retryClient as never, config, {
+    await expect(processPendingInbox(client as never, config, {
       detect: () => ({ kind: "text", raw: "plain idea" }),
-      enrich: async () => proposal,
+      enrich: async () => ({ ...proposal, copyBlocks: [] }),
+    })).resolves.toEqual({ processed: 1, succeeded: 1, failed: 0, skipped: 0 });
+    expect(createRecord).not.toHaveBeenCalled();
+    expect(updates).toContainEqual({ [INBOX.relatedDraftContent]: ["draft-existing"] });
+    expect(updates.at(-1)).toMatchObject({
+      [INBOX.processingStatus]: BASE_VALUES.inbox.reviewRequired,
+      [INBOX.relatedDraftContent]: ["draft-existing"],
+    });
+  });
+
+  it("fails safely when multiple drafts have the same source inbox record id", async () => {
+    const updates: Record<string, unknown>[] = [];
+    const createRecord = vi.fn();
+    const client = {
+      async listRecords(tableId: string) {
+        if (tableId === config.FEISHU_INBOX_TABLE_ID) {
+          return [record("inbox-duplicate", {
+            [INBOX.processingStatus]: BASE_VALUES.inbox.pending,
+            [INBOX.rawContent]: "plain idea",
+          })];
+        }
+        return [
+          record("draft-a", { [CONTENT.sourceInboxRecordId]: "inbox-duplicate" }),
+          record("draft-b", { [CONTENT.sourceInboxRecordId]: "inbox-duplicate" }),
+        ];
+      },
+      async updateRecord(_tableId: string, recordId: string, fields: Record<string, unknown>) {
+        updates.push(fields);
+        return record(recordId, fields);
+      },
+      createRecord,
+    };
+
+    await expect(processPendingInbox(client as never, config, {
+      detect: () => ({ kind: "text", raw: "plain idea" }),
+      enrich: async () => ({ ...proposal, copyBlocks: [] }),
     })).resolves.toEqual({ processed: 1, succeeded: 0, failed: 1, skipped: 0 });
     expect(createRecord).not.toHaveBeenCalled();
+    expect(updates.at(-1)).toMatchObject({
+      [INBOX.processingStatus]: BASE_VALUES.inbox.failed,
+    });
+    expect(String(updates.at(-1)?.[INBOX.errorMessage])).toMatch(/multiple drafts/i);
   });
 });

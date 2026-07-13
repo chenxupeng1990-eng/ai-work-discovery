@@ -20,6 +20,7 @@ export const BASE_FIELDS = {
     publicationStatus: "发布状态",
     publicLevel: "公开级别",
     generatedFromInbox: "来源 Inbox 记录",
+    sourceInboxRecordId: "来源收件箱记录ID",
   },
   copyBlock: {
     relatedContent: "关联内容",

@@ -17,13 +17,19 @@ export class FeishuApiError extends Error {
   readonly status?: number;
   readonly code?: number;
 
-  constructor(operation: string, details: { status?: number; code?: number } = {}) {
+  constructor(
+    operation: string,
+    details: { status?: number; code?: number; cause?: unknown } = {},
+  ) {
     const suffix = details.status !== undefined
       ? ` (HTTP ${details.status})`
       : details.code !== undefined
         ? ` (code ${details.code})`
         : "";
-    super(`Feishu ${operation} failed${suffix}`);
+    super(
+      `Feishu ${operation} failed${suffix}`,
+      details.cause === undefined ? undefined : { cause: details.cause },
+    );
     this.name = "FeishuApiError";
     this.operation = operation;
     this.status = details.status;
@@ -134,7 +140,7 @@ export class FeishuClient {
     init: RequestInit,
   ): Promise<Record<string, unknown>> {
     const token = await this.getTenantToken();
-    const response = await this.fetchImpl(url, {
+    const response = await this.fetchResponse(operation, url, {
       ...init,
       headers: {
         "authorization": `Bearer ${token}`,
@@ -149,7 +155,8 @@ export class FeishuClient {
     const cached = this.tokenCache.get(cacheKey);
     if (cached && cached.expiresAt > this.now()) return cached.token;
 
-    const response = await this.fetchImpl(
+    const response = await this.fetchResponse(
+      "tenant token",
       new URL("/open-apis/auth/v3/tenant_access_token/internal", this.apiBaseUrl),
       {
         method: "POST",
@@ -169,6 +176,18 @@ export class FeishuClient {
       expiresAt: this.now() + Math.max(0, expire - 60) * 1000,
     });
     return token;
+  }
+
+  private async fetchResponse(
+    operation: string,
+    input: URL,
+    init: RequestInit,
+  ): Promise<Response> {
+    try {
+      return await this.fetchImpl(input, init);
+    } catch (cause) {
+      throw new FeishuApiError(operation, { cause });
+    }
   }
 }
 
