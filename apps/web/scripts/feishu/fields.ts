@@ -30,6 +30,7 @@ export const BASE_FIELDS = {
     content: "内容",
     order: "显示顺序",
     note: "备注",
+    sourceInboxCopyBlockKey: "来源收件箱复制块键",
   },
   inbox: {
     rawContent: "原始内容",

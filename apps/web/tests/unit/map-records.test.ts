@@ -122,7 +122,17 @@ describe("mapPublishedContent", () => {
   });
 
   it("忽略未知字段且不泄露发布和内部字段", () => {
-    const [item] = mapPublishedContent([record("rec-public", publishedFields())], []);
+    const [item] = mapPublishedContent([record("rec-public", publishedFields())], [
+      record("copy-public", {
+        关联内容: ["rec-public"],
+        区块标题: "公开区块",
+        区块类型: "Prompt",
+        语言: "text",
+        内容: "公开内容",
+        显示顺序: 0,
+        来源收件箱复制块键: "inbox-internal-only:0",
+      }),
+    ]);
     const serialized = JSON.stringify(item);
 
     expect(Object.keys(item).sort()).toEqual([
@@ -134,6 +144,8 @@ describe("mapPublishedContent", () => {
     expect(serialized).not.toContain("发布状态");
     expect(serialized).not.toContain("inbox-internal-only");
     expect(serialized).not.toContain("来源收件箱记录ID");
+    expect(serialized).not.toContain("来源收件箱复制块键");
+    expect(serialized).not.toContain("inbox-internal-only:0");
     expect(ContentItemSchema.parse(item)).toEqual(item);
   });
 

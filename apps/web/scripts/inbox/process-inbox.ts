@@ -61,15 +61,25 @@ export async function processPendingInbox(
         throw new Error(`Multiple draft checkpoints found for Inbox record ${record.record_id}`);
       }
 
-      const matchingDrafts = (await client.listRecords(config.FEISHU_CONTENT_TABLE_ID))
+      const contentRecords = await client.listRecords(config.FEISHU_CONTENT_TABLE_ID);
+      const matchingDrafts = contentRecords
         .filter(({ fields }) => fields[CONTENT.sourceInboxRecordId] === record.record_id);
       if (matchingDrafts.length > 1) {
-        throw new Error(`Multiple drafts found for Inbox record ${record.record_id}`);
+        throw new Error(
+          `Multiple drafts found for Inbox record ${record.record_id}; manual handling required`,
+        );
       }
       const matchedDraft = matchingDrafts[0];
       const checkpointDraftId = existingDraftIds[0];
-      if (matchedDraft && checkpointDraftId && matchedDraft.record_id !== checkpointDraftId) {
-        throw new Error(`Draft checkpoint conflicts with source record for Inbox record ${record.record_id}`);
+      if (matchedDraft && matchedDraft.fields[CONTENT.publicationStatus] !== BASE_VALUES.content.draft) {
+        throw new Error(
+          `Non-draft Content found for Inbox record ${record.record_id}; manual handling required`,
+        );
+      }
+      if (checkpointDraftId && matchedDraft?.record_id !== checkpointDraftId) {
+        throw new Error(
+          `Draft checkpoint conflicts with source record for Inbox record ${record.record_id}; manual handling required`,
+        );
       }
 
       const rawContent = requireString(record, INBOX.rawContent);
@@ -86,19 +96,18 @@ export async function processPendingInbox(
       })))({ metadata, editorNote });
 
       const draft = matchedDraft
-        ?? (checkpointDraftId
-          ? { record_id: checkpointDraftId, fields: {} }
-          : await client.createRecord(
-              config.FEISHU_CONTENT_TABLE_ID,
-              contentFields(record.record_id, detected, proposal),
-            ));
+        ?? await client.createRecord(
+          config.FEISHU_CONTENT_TABLE_ID,
+          contentFields(record.record_id, detected, proposal),
+        );
 
       await client.updateRecord(config.FEISHU_INBOX_TABLE_ID, record.record_id, {
         [INBOX.relatedDraftContent]: [draft.record_id],
       });
 
       for (const [order, copyBlock] of proposal.copyBlocks.entries()) {
-        await client.createRecord(config.FEISHU_COPY_BLOCKS_TABLE_ID, compact({
+        const copyKey = `${record.record_id}:${order}`;
+        const copyFields = compact({
           [COPY.relatedContent]: [draft.record_id],
           [COPY.title]: copyBlock.title,
           [COPY.type]: copyBlock.type,
@@ -106,7 +115,20 @@ export async function processPendingInbox(
           [COPY.content]: copyBlock.content,
           [COPY.order]: order,
           [COPY.note]: copyBlock.note,
-        }));
+          [COPY.sourceInboxCopyBlockKey]: copyKey,
+        });
+        const matchingCopies = (await client.listRecords(config.FEISHU_COPY_BLOCKS_TABLE_ID))
+          .filter(({ fields }) => fields[COPY.sourceInboxCopyBlockKey] === copyKey);
+        if (matchingCopies.length > 1) {
+          throw new Error(`Multiple Copy Blocks found for key ${copyKey}; manual handling required`);
+        }
+        if (matchingCopies[0]) {
+          if (!copyBlockMatches(matchingCopies[0], draft.record_id, copyFields)) {
+            throw new Error(`Copy Block conflict found for key ${copyKey}; manual handling required`);
+          }
+          continue;
+        }
+        await client.createRecord(config.FEISHU_COPY_BLOCKS_TABLE_ID, copyFields);
       }
 
       await client.updateRecord(config.FEISHU_INBOX_TABLE_ID, record.record_id, compact({
@@ -216,4 +238,16 @@ function safeErrorMessage(error: unknown, secrets: readonly string[]): string {
 
 function compact(fields: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(Object.entries(fields).filter(([, value]) => value !== undefined));
+}
+
+function copyBlockMatches(
+  record: RawFeishuRecord,
+  draftRecordId: string,
+  expectedFields: Record<string, unknown>,
+): boolean {
+  const linkedIds = linkedRecordIds(record.fields[COPY.relatedContent]);
+  if (linkedIds.length !== 1 || linkedIds[0] !== draftRecordId) return false;
+
+  return [COPY.title, COPY.type, COPY.language, COPY.content, COPY.order, COPY.note]
+    .every((field) => record.fields[field] === expectedFields[field]);
 }

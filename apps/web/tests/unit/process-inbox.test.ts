@@ -7,6 +7,7 @@ import { processPendingInbox } from "../../scripts/inbox/process-inbox";
 const CONTENT = BASE_FIELDS.content;
 const COPY = BASE_FIELDS.copyBlock;
 const INBOX = BASE_FIELDS.inbox;
+const COPY_SOURCE_KEY = "来源收件箱复制块键";
 
 const proposal: DraftProposal = {
   title: "Review me",
@@ -175,6 +176,7 @@ describe("processPendingInbox", () => {
         [COPY.language]: proposal.copyBlocks[0]?.language,
         [COPY.content]: proposal.copyBlocks[0]?.content,
         [COPY.order]: 0,
+        [COPY_SOURCE_KEY]: "inbox-success:0",
       },
       {
         [COPY.relatedContent]: ["draft-1"],
@@ -184,6 +186,7 @@ describe("processPendingInbox", () => {
         [COPY.content]: proposal.copyBlocks[1]?.content,
         [COPY.order]: 1,
         [COPY.note]: proposal.copyBlocks[1]?.note,
+        [COPY_SOURCE_KEY]: "inbox-success:1",
       },
     ]);
 
@@ -272,6 +275,7 @@ describe("processPendingInbox", () => {
         }
         return [record("draft-existing", {
           [CONTENT.sourceInboxRecordId]: "inbox-existing",
+          [CONTENT.publicationStatus]: BASE_VALUES.content.draft,
         })];
       },
       async updateRecord(_tableId: string, recordId: string, fields: Record<string, unknown>) {
@@ -305,8 +309,14 @@ describe("processPendingInbox", () => {
           })];
         }
         return [
-          record("draft-a", { [CONTENT.sourceInboxRecordId]: "inbox-duplicate" }),
-          record("draft-b", { [CONTENT.sourceInboxRecordId]: "inbox-duplicate" }),
+          record("draft-a", {
+            [CONTENT.sourceInboxRecordId]: "inbox-duplicate",
+            [CONTENT.publicationStatus]: BASE_VALUES.content.draft,
+          }),
+          record("draft-b", {
+            [CONTENT.sourceInboxRecordId]: "inbox-duplicate",
+            [CONTENT.publicationStatus]: BASE_VALUES.content.draft,
+          }),
         ];
       },
       async updateRecord(_tableId: string, recordId: string, fields: Record<string, unknown>) {
@@ -325,5 +335,156 @@ describe("processPendingInbox", () => {
       [INBOX.processingStatus]: BASE_VALUES.inbox.failed,
     });
     expect(String(updates.at(-1)?.[INBOX.errorMessage])).toMatch(/multiple drafts/i);
+  });
+
+  it("fails safely when the unique source match is already published", async () => {
+    const updates: Record<string, unknown>[] = [];
+    const createRecord = vi.fn();
+    const client = {
+      async listRecords(tableId: string) {
+        if (tableId === config.FEISHU_INBOX_TABLE_ID) {
+          return [record("inbox-published", {
+            [INBOX.processingStatus]: BASE_VALUES.inbox.pending,
+            [INBOX.rawContent]: "plain idea",
+          })];
+        }
+        return [record("content-published", {
+          [CONTENT.sourceInboxRecordId]: "inbox-published",
+          [CONTENT.publicationStatus]: "已发布",
+        })];
+      },
+      async updateRecord(_tableId: string, recordId: string, fields: Record<string, unknown>) {
+        updates.push(fields);
+        return record(recordId, fields);
+      },
+      createRecord,
+    };
+
+    await expect(processPendingInbox(client as never, config, {
+      detect: () => ({ kind: "text", raw: "plain idea" }),
+      enrich: async () => ({ ...proposal, copyBlocks: [] }),
+    })).resolves.toEqual({ processed: 1, succeeded: 0, failed: 1, skipped: 0 });
+    expect(createRecord).not.toHaveBeenCalled();
+    expect(updates.at(-1)).toMatchObject({
+      [INBOX.processingStatus]: BASE_VALUES.inbox.failed,
+    });
+    expect(String(updates.at(-1)?.[INBOX.errorMessage])).toMatch(/manual|人工|published|non-draft/i);
+  });
+
+  it("retries copy block writes without duplicating completed orders", async () => {
+    const inbox = record("inbox-copy-retry", {
+      [INBOX.processingStatus]: BASE_VALUES.inbox.pending,
+      [INBOX.rawContent]: "plain idea",
+    });
+    const contentRecords = [record("draft-copy-retry", {
+      [CONTENT.sourceInboxRecordId]: inbox.record_id,
+      [CONTENT.publicationStatus]: BASE_VALUES.content.draft,
+    })];
+    const copyRecords: RawFeishuRecord[] = [];
+    let failSecondCopy = true;
+    const copyCreates = vi.fn(async (_tableId: string, fields: Record<string, unknown>) => {
+      if (fields[COPY.order] === 1 && failSecondCopy) {
+        failSecondCopy = false;
+        throw new Error("second copy write failed");
+      }
+      const created = record(`copy-${copyRecords.length}`, fields);
+      copyRecords.push(created);
+      return created;
+    });
+    const client = {
+      async listRecords(tableId: string) {
+        if (tableId === config.FEISHU_INBOX_TABLE_ID) return [inbox];
+        if (tableId === config.FEISHU_CONTENT_TABLE_ID) return contentRecords;
+        return copyRecords;
+      },
+      async updateRecord(_tableId: string, recordId: string, fields: Record<string, unknown>) {
+        Object.assign(inbox.fields, fields);
+        return record(recordId, fields);
+      },
+      async createRecord(tableId: string, fields: Record<string, unknown>) {
+        if (tableId === config.FEISHU_COPY_BLOCKS_TABLE_ID) {
+          return copyCreates(tableId, fields);
+        }
+        throw new Error("no content create expected");
+      },
+    };
+
+    await expect(processPendingInbox(client as never, config, {
+      detect: () => ({ kind: "text", raw: "plain idea" }),
+      enrich: async () => proposal,
+    })).resolves.toEqual({ processed: 1, succeeded: 0, failed: 1, skipped: 0 });
+
+    inbox.fields[INBOX.processingStatus] = BASE_VALUES.inbox.pending;
+    await expect(processPendingInbox(client as never, config, {
+      detect: () => ({ kind: "text", raw: "plain idea" }),
+      enrich: async () => proposal,
+    })).resolves.toEqual({ processed: 1, succeeded: 1, failed: 0, skipped: 0 });
+
+    expect(copyCreates).toHaveBeenCalledTimes(3);
+    expect(copyRecords.map(({ fields }) => fields[COPY.order])).toEqual([0, 1]);
+    expect(copyRecords.map(({ fields }) => fields[COPY_SOURCE_KEY])).toEqual([
+      "inbox-copy-retry:0",
+      "inbox-copy-retry:1",
+    ]);
+  });
+
+  it.each([
+    {
+      name: "multiple records",
+      records: [
+        record("copy-a", { [COPY_SOURCE_KEY]: "inbox-copy-conflict:0" }),
+        record("copy-b", { [COPY_SOURCE_KEY]: "inbox-copy-conflict:0" }),
+      ],
+    },
+    {
+      name: "a different draft link",
+      records: [record("copy-a", {
+        [COPY_SOURCE_KEY]: "inbox-copy-conflict:0",
+        [COPY.relatedContent]: ["other-draft"],
+      })],
+    },
+    {
+      name: "conflicting public fields",
+      records: [record("copy-a", {
+        [COPY_SOURCE_KEY]: "inbox-copy-conflict:0",
+        [COPY.relatedContent]: ["draft-copy-conflict"],
+        [COPY.title]: "Different title",
+        [COPY.type]: proposal.copyBlocks[0]?.type,
+        [COPY.language]: proposal.copyBlocks[0]?.language,
+        [COPY.content]: proposal.copyBlocks[0]?.content,
+        [COPY.order]: 0,
+      })],
+    },
+  ])("fails safely when a copy block key has $name", async ({ records: existingCopies }) => {
+    const inbox = record("inbox-copy-conflict", {
+      [INBOX.processingStatus]: BASE_VALUES.inbox.pending,
+      [INBOX.rawContent]: "plain idea",
+    });
+    const createRecord = vi.fn();
+    const updates: Record<string, unknown>[] = [];
+    const client = {
+      async listRecords(tableId: string) {
+        if (tableId === config.FEISHU_INBOX_TABLE_ID) return [inbox];
+        if (tableId === config.FEISHU_CONTENT_TABLE_ID) {
+          return [record("draft-copy-conflict", {
+            [CONTENT.sourceInboxRecordId]: inbox.record_id,
+            [CONTENT.publicationStatus]: BASE_VALUES.content.draft,
+          })];
+        }
+        return existingCopies;
+      },
+      async updateRecord(_tableId: string, recordId: string, fields: Record<string, unknown>) {
+        updates.push(fields);
+        return record(recordId, fields);
+      },
+      createRecord,
+    };
+
+    await expect(processPendingInbox(client as never, config, {
+      detect: () => ({ kind: "text", raw: "plain idea" }),
+      enrich: async () => ({ ...proposal, copyBlocks: [proposal.copyBlocks[0]!] }),
+    })).resolves.toEqual({ processed: 1, succeeded: 0, failed: 1, skipped: 0 });
+    expect(createRecord).not.toHaveBeenCalled();
+    expect(updates.at(-1)).toMatchObject({ [INBOX.processingStatus]: BASE_VALUES.inbox.failed });
   });
 });
