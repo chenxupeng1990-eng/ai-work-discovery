@@ -1,0 +1,102 @@
+---
+import type { ContentItem } from "../lib/schema";
+
+const { items } = Astro.props as { items: ContentItem[] };
+---
+
+<section class="signals section" data-home-section="ai-signals" aria-labelledby="ai-signals-title">
+  <div class="container signals__layout">
+    <div class="signals__heading">
+      <p>持续观察</p>
+      <h2 id="ai-signals-title">AI 风向</h2>
+    </div>
+    <div class="signals__list">
+      {items.map((item) => (
+        <article class="signal" data-signal-item>
+          <div class="signal__meta">
+            <span>{item.sourceName}</span>
+            <span>{item.category}</span>
+          </div>
+          <h3>
+            <a
+              href={item.originalUrl}
+              target="_blank"
+              rel="noreferrer"
+              data-home-content-link
+            >
+              {item.title}
+            </a>
+          </h3>
+          <p>{item.recommendationReason}</p>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .signals {
+    background: var(--mist);
+  }
+
+  .signals__layout {
+    display: grid;
+    grid-template-columns: minmax(180px, 0.7fr) minmax(0, 2fr);
+    gap: 64px;
+  }
+
+  .signals__heading p {
+    margin-bottom: 12px;
+    color: var(--indigo);
+    font-size: 14px;
+  }
+
+  h2 {
+    margin-bottom: 0;
+    font-size: 32px;
+  }
+
+  .signal {
+    padding-block: 22px;
+    border-top: 1px solid var(--frost);
+  }
+
+  .signal:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .signal__meta {
+    margin-bottom: 8px;
+    display: flex;
+    gap: 16px;
+    color: var(--slate);
+    font-size: 12px;
+  }
+
+  h3 {
+    margin-bottom: 8px;
+    font-size: 21px;
+  }
+
+  h3 a:hover {
+    color: var(--indigo);
+  }
+
+  .signal p {
+    max-width: 780px;
+    margin-bottom: 0;
+    color: var(--steel);
+  }
+
+  @media (max-width: 720px) {
+    .signals__layout {
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+
+    h2 {
+      font-size: 26px;
+    }
+  }
+</style>

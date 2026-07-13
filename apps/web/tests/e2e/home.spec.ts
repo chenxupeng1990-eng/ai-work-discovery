@@ -12,6 +12,49 @@ test("homepage exposes shared navigation and one main landmark", async ({ page }
   await expect(page.getByRole("contentinfo")).toBeVisible();
 });
 
+test("homepage prioritizes bounded discovery content over a rigid course", async ({ page }) => {
+  await page.goto("/");
+
+  await expect(page.getByRole("heading", { level: 1, name: "AI 工作灵感与实践" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "值得一试" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "AI 风向" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "随手可用" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "最近更新" })).toBeVisible();
+  await expect(page.getByText("学习进度")).toHaveCount(0);
+
+  await expect(page.locator('[data-home-section="spotlight"]')).toHaveCount(1);
+  await expect(page.locator('[data-home-section="worth-trying"] [data-content-card]')).toHaveCount(5);
+  await expect(page.locator('[data-home-section="ai-signals"] [data-signal-item]')).toHaveCount(4);
+  await expect(page.locator('[data-home-section="ready-to-use"] [data-ready-item]')).toHaveCount(3);
+  await expect(page.locator('[data-home-section="recent"] [data-recent-item]')).toHaveCount(6);
+
+  const contentImages = page.locator('[data-home-content-image]');
+  await expect(contentImages).toHaveCount(6);
+  for (const image of await contentImages.all()) {
+    await expect(image).toHaveAttribute("src", /^\/images\/fixtures\/.+\.png$/);
+    await expect(image).toHaveAttribute("width", /\d+/);
+    await expect(image).toHaveAttribute("height", /\d+/);
+    await expect(image).toHaveJSProperty("complete", true);
+  }
+
+  const contentLinks = page.locator('[data-home-content-link]');
+  for (const link of await contentLinks.all()) {
+    const href = await link.getAttribute("href");
+    expect(href).toMatch(/^https:\/\//);
+    expect(href).not.toContain("#");
+  }
+});
+
+test("homepage keeps the next section visible and avoids horizontal overflow", async ({ page }) => {
+  await page.goto("/");
+
+  const nextSection = page.locator('[data-home-section="worth-trying"]');
+  const viewport = page.viewportSize();
+  expect(viewport).not.toBeNull();
+  expect(await nextSection.evaluate((element) => element.getBoundingClientRect().top)).toBeLessThan(viewport!.height);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport!.width);
+});
+
 test("mobile navigation opens without resizing the header or overflowing", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile", "Mobile navigation behavior only applies to the mobile project.");
 

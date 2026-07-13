@@ -1,0 +1,116 @@
+---
+import type { ContentItem } from "../lib/schema";
+
+const { item } = Astro.props as { item: ContentItem };
+---
+
+<section class="spotlight" data-home-section="spotlight" aria-labelledby="spotlight-title">
+  <img
+    class="spotlight__image"
+    src={item.coverImage}
+    alt={`${item.title}界面截图`}
+    width="1920"
+    height="1080"
+    loading="eager"
+    fetchpriority="high"
+    data-home-content-image
+  />
+  <div class="spotlight__contrast" aria-hidden="true"></div>
+  <div class="spotlight__content container">
+    <p class="spotlight__eyebrow">精选 Spotlight · {item.category}</p>
+    <h1 id="spotlight-title">AI 工作灵感与实践</h1>
+    <h2>{item.title}</h2>
+    <p class="spotlight__summary">{item.summary}</p>
+    <p class="spotlight__reason">{item.recommendationReason}</p>
+  </div>
+</section>
+
+<style>
+  .spotlight {
+    position: relative;
+    min-height: 590px;
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+    color: var(--canvas);
+    background: var(--ink);
+  }
+
+  .spotlight__image,
+  .spotlight__contrast {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .spotlight__image {
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .spotlight__contrast {
+    background: rgba(6, 27, 49, 0.76);
+  }
+
+  .spotlight__content {
+    position: relative;
+    z-index: 1;
+    padding-block: 72px;
+  }
+
+  .spotlight__eyebrow {
+    margin-bottom: 16px;
+    font-size: 14px;
+  }
+
+  h1 {
+    max-width: 760px;
+    margin-bottom: 24px;
+    font-size: 48px;
+  }
+
+  h2 {
+    max-width: 780px;
+    margin-bottom: 16px;
+    font-size: 30px;
+  }
+
+  .spotlight__summary,
+  .spotlight__reason {
+    max-width: 680px;
+    font-size: 16px;
+  }
+
+  .spotlight__summary {
+    margin-bottom: 12px;
+  }
+
+  .spotlight__reason {
+    margin-bottom: 0;
+    color: #dbe7f3;
+  }
+
+  @media (max-width: 720px) {
+    .spotlight {
+      min-height: 500px;
+    }
+
+    .spotlight__content {
+      padding-block: 48px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      font-size: 36px;
+    }
+
+    h2 {
+      font-size: 24px;
+    }
+
+    .spotlight__reason {
+      display: none;
+    }
+  }
+</style>

@@ -1,67 +1,231 @@
 ---
+import AISignals from "../components/AISignals.astro";
+import ContentCard from "../components/ContentCard.astro";
+import FeaturedSpotlight from "../components/FeaturedSpotlight.astro";
+import ReadyToUse from "../components/ReadyToUse.astro";
+import { fixtureDataset } from "../data/fixtures";
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { getFeatured, getRecent } from "../lib/content";
+
+const items = fixtureDataset.items;
+const featured = getFeatured(items);
+const spotlight = featured[0];
+const worthTrying = [
+  ...featured.slice(1),
+  ...getRecent(items.filter((item) => !item.featured), 5),
+].slice(0, 5);
+const aiSignals = getRecent(items.filter((item) => item.originalUrl), 4);
+const readyTypeOrder = ["Getting Started", "Skill", "Tool"];
+const readyToUse = readyTypeOrder
+  .flatMap((type) => getRecent(items.filter((item) => item.type === type && item.copyBlocks.length > 0), 3))
+  .slice(0, 3);
+const recent = getRecent(items, 6);
+const categories = ["灵感", "协作", "效率工具", "内容生产", "行业观察", "案例", "Skills 与 MCP", "快速开始"];
 ---
 
 <BaseLayout
-  title="AI Work Discovery"
+  title="AI 工作灵感与实践 | AI Work Discovery"
   description="发现可直接应用于工作的 AI 灵感、协作方式、案例与工具。"
 >
-  <section class="home-intro">
-    <div class="container intro-content">
-      <p class="eyebrow">AI 工作发现</p>
-      <h1>发现值得带回工作的 AI 实践</h1>
-      <p class="intro-copy">精选灵感、协作方式、实践案例与可复用工具，帮助团队更快找到下一步。</p>
+  <FeaturedSpotlight item={spotlight} />
+
+  <div class="category-strip" aria-label="发现方向">
+    <div class="container category-strip__inner">
+      {categories.map((category) => <span>{category}</span>)}
+    </div>
+  </div>
+
+  <section class="worth section" data-home-section="worth-trying" aria-labelledby="worth-title">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <p>本周精选</p>
+          <h2 id="worth-title">值得一试</h2>
+        </div>
+        <span>5 项发现</span>
+      </div>
+      <div class="worth__grid">
+        {worthTrying.map((item) => <ContentCard item={item} />)}
+      </div>
+    </div>
+  </section>
+
+  <AISignals items={aiSignals} />
+  <ReadyToUse items={readyToUse} />
+
+  <section class="recent section" data-home-section="recent" aria-labelledby="recent-title">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <p>保持新鲜</p>
+          <h2 id="recent-title">最近更新</h2>
+        </div>
+        <span>6 项内容</span>
+      </div>
+      <div class="recent__list">
+        {recent.map((item) => (
+          <article class="recent-item" data-recent-item>
+            <div class="recent-item__meta">
+              <span>{item.category}</span>
+              <time datetime={item.updatedAt}>{item.updatedAt.slice(0, 10)}</time>
+            </div>
+            <h3>
+              {item.originalUrl ? (
+                <a
+                  href={item.originalUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  data-home-content-link
+                >
+                  {item.title}
+                </a>
+              ) : item.title}
+            </h3>
+            <p>{item.summary}</p>
+          </article>
+        ))}
+      </div>
     </div>
   </section>
 </BaseLayout>
 
 <style>
-  .home-intro {
-    min-height: 520px;
+  .category-strip {
+    border-bottom: 1px solid var(--frost);
+  }
+
+  .category-strip__inner {
+    min-height: 88px;
     display: flex;
     align-items: center;
-    background: var(--canvas);
+    gap: 10px 24px;
+    overflow-x: auto;
+    color: var(--steel);
+    font-size: 14px;
+    scrollbar-width: none;
   }
 
-  .intro-content {
-    padding-block: 72px;
+  .category-strip__inner::-webkit-scrollbar {
+    display: none;
   }
 
-  .eyebrow {
-    margin-bottom: 16px;
+  .category-strip span {
+    flex: 0 0 auto;
+  }
+
+  .section-heading {
+    margin-bottom: 32px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .section-heading p {
+    margin-bottom: 12px;
     color: var(--indigo);
     font-size: 14px;
-    font-weight: 400;
   }
 
-  h1 {
-    max-width: 760px;
-    margin-bottom: 24px;
-    font-size: 48px;
+  .section-heading h2 {
+    margin-bottom: 0;
+    font-size: 32px;
   }
 
-  .intro-copy {
-    max-width: 680px;
-    margin-bottom: 32px;
+  .section-heading > span {
+    color: var(--slate);
+    font-size: 13px;
+  }
+
+  .worth__grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 40px 24px;
+  }
+
+  .worth__grid > :global(:nth-child(-n + 2)) {
+    grid-column: span 3;
+  }
+
+  .worth__grid > :global(:nth-child(n + 3)) {
+    grid-column: span 2;
+  }
+
+  .recent {
+    background: var(--mist);
+  }
+
+  .recent__list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 48px;
+  }
+
+  .recent-item {
+    min-width: 0;
+    padding-block: 24px;
+    border-top: 1px solid var(--frost);
+  }
+
+  .recent-item:nth-child(-n + 2) {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .recent-item__meta {
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    color: var(--slate);
+    font-size: 12px;
+  }
+
+  .recent-item h3 {
+    margin-bottom: 8px;
+    font-size: 20px;
+  }
+
+  .recent-item a:hover {
+    color: var(--indigo);
+  }
+
+  .recent-item p {
+    margin-bottom: 0;
     color: var(--steel);
-    font-size: 18px;
+    font-size: 14px;
+  }
+
+  @media (max-width: 960px) {
+    .worth__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .worth__grid > :global(:nth-child(n)) {
+      grid-column: auto;
+    }
+
+    .recent__list {
+      grid-template-columns: 1fr;
+    }
+
+    .recent-item:nth-child(2) {
+      padding-top: 24px;
+      border-top: 1px solid var(--frost);
+    }
   }
 
   @media (max-width: 720px) {
-    .home-intro {
-      min-height: 440px;
+    .category-strip__inner {
+      min-height: 80px;
     }
 
-    .intro-content {
-      padding-block: 56px;
+    .section-heading h2 {
+      font-size: 26px;
     }
 
-    h1 {
-      font-size: 36px;
-    }
-
-    .intro-copy {
-      font-size: 16px;
+    .worth__grid {
+      grid-template-columns: 1fr;
     }
   }
 </style>

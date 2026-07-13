@@ -1,0 +1,89 @@
+---
+import type { ContentItem } from "../lib/schema";
+
+const { item } = Astro.props as { item: ContentItem };
+const href = item.originalUrl;
+const Wrapper = href ? "a" : "div";
+const linkProps = href
+  ? { href, target: "_blank", rel: "noreferrer", "data-home-content-link": "" }
+  : {};
+---
+
+<article class="content-card" data-content-card>
+  <Wrapper class="content-card__inner" {...linkProps}>
+    <img
+      src={item.coverImage}
+      alt={`${item.title}内容截图`}
+      width="640"
+      height="400"
+      loading="lazy"
+      data-home-content-image
+    />
+    <div class="content-card__body">
+      <div class="content-card__meta">
+        <span>{item.category}</span>
+        <span>{item.sourceName}</span>
+      </div>
+      <h3>{item.title}</h3>
+      <p>{item.summary}</p>
+    </div>
+  </Wrapper>
+</article>
+
+<style>
+  .content-card,
+  .content-card__inner {
+    min-width: 0;
+    height: 100%;
+  }
+
+  .content-card__inner {
+    display: grid;
+    grid-template-rows: auto 1fr;
+  }
+
+  a.content-card__inner:hover h3 {
+    color: var(--indigo);
+  }
+
+  img {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    display: block;
+    border-radius: 4px;
+    object-fit: cover;
+  }
+
+  .content-card__body {
+    padding-top: 16px;
+  }
+
+  .content-card__meta {
+    min-height: 20px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    color: var(--slate);
+    font-size: 12px;
+  }
+
+  .content-card__meta span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  h3 {
+    margin-bottom: 10px;
+    font-size: 20px;
+  }
+
+  p {
+    margin-bottom: 0;
+    color: var(--steel);
+    font-size: 14px;
+  }
+</style>
