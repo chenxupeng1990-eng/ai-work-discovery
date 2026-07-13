@@ -7,7 +7,7 @@ test("homepage exposes shared navigation and one main landmark", async ({ page }
   await expect(page.getByRole("banner")).toBeVisible();
   await expect(page.getByRole("main")).toHaveCount(1);
   await expect(page.getByRole("link", { name: "发现", exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "搜索" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "搜索" })).toHaveAttribute("href", "/discover");
   await expect(page.getByRole("button", { name: "提交内容" })).toBeDisabled();
   await expect(page.locator('a[href="#discover"], a[href="#ready"], a[href="#submit"]')).toHaveCount(0);
   await expect(page.getByRole("contentinfo")).toBeVisible();

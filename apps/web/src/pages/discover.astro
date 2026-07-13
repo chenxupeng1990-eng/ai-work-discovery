@@ -1,0 +1,327 @@
+---
+import publicDataset from "../../public/data/content.json";
+import { DiscoveryExplorer } from "../components/DiscoveryExplorer";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { PublicDatasetSchema } from "../lib/schema";
+
+const { items } = PublicDatasetSchema.parse(publicDataset);
+---
+
+<BaseLayout
+  title="发现 | AI Work Discovery"
+  description="发现 AI 工作灵感、协作方式、案例和工具。"
+>
+  <section class="discover-intro" aria-labelledby="discover-title">
+    <div class="container">
+      <p>工作发现</p>
+      <h1 id="discover-title">找到下一项值得尝试的 AI 工作方法</h1>
+    </div>
+  </section>
+
+  <div class="container discover-content">
+    <DiscoveryExplorer client:load items={items} />
+  </div>
+</BaseLayout>
+
+<style>
+  .discover-intro {
+    padding-block: 64px 48px;
+    border-bottom: 1px solid var(--frost);
+  }
+
+  .discover-intro p {
+    margin-bottom: 12px;
+    color: var(--indigo);
+    font-size: 14px;
+  }
+
+  .discover-intro h1 {
+    max-width: 760px;
+    margin-bottom: 0;
+    font-size: 48px;
+  }
+
+  .discover-content {
+    padding-block: 48px 80px;
+  }
+
+  :global(.discovery-explorer) {
+    min-width: 0;
+  }
+
+  :global(.discovery-controls) {
+    min-width: 0;
+    min-height: 124px;
+    display: grid;
+    align-content: start;
+    gap: 16px;
+  }
+
+  :global(.discovery-search) {
+    position: relative;
+    display: block;
+  }
+
+  :global(.discovery-search input) {
+    width: 100%;
+    min-height: 48px;
+    padding: 0 16px 0 44px;
+    border: 1px solid var(--frost);
+    border-radius: 4px;
+    color: var(--ink);
+    background: var(--canvas);
+  }
+
+  :global(.discovery-search input::placeholder) {
+    color: var(--slate);
+  }
+
+  :global(.discovery-search__icon) {
+    position: absolute;
+    top: 50%;
+    left: 18px;
+    z-index: 1;
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid var(--steel);
+    border-radius: 50%;
+    pointer-events: none;
+    transform: translateY(-55%);
+  }
+
+  :global(.discovery-search__icon::after) {
+    position: absolute;
+    right: -5px;
+    bottom: -3px;
+    width: 6px;
+    height: 1.5px;
+    background: var(--steel);
+    content: "";
+    transform: rotate(45deg);
+    transform-origin: left center;
+  }
+
+  :global(.discovery-filter-row) {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 24px;
+  }
+
+  :global(.discovery-categories) {
+    min-width: 0;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  :global(.discovery-categories::-webkit-scrollbar) {
+    display: none;
+  }
+
+  :global(.discovery-categories button) {
+    min-height: 36px;
+    padding: 0 14px;
+    flex: 0 0 auto;
+    border: 1px solid var(--frost);
+    border-radius: 999px;
+    color: var(--steel);
+    background: var(--canvas);
+    cursor: pointer;
+  }
+
+  :global(.discovery-categories button[aria-pressed="true"]) {
+    border-color: var(--lavender);
+    color: var(--indigo);
+    background: var(--wash);
+  }
+
+  :global(.discovery-sort) {
+    display: grid;
+    grid-template-columns: repeat(2, 64px);
+    border: 1px solid var(--frost);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  :global(.discovery-sort button) {
+    min-height: 36px;
+    padding: 0;
+    border: 0;
+    border-left: 1px solid var(--frost);
+    color: var(--steel);
+    background: var(--canvas);
+    cursor: pointer;
+  }
+
+  :global(.discovery-sort button:first-child) {
+    border-left: 0;
+  }
+
+  :global(.discovery-sort button[aria-pressed="true"]) {
+    color: var(--indigo);
+    background: var(--wash);
+  }
+
+  :global(.discovery-results-heading) {
+    min-height: 88px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--frost);
+  }
+
+  :global(.discovery-results-heading h2) {
+    margin-bottom: 0;
+    font-size: 32px;
+  }
+
+  :global(.discovery-results-heading [role="status"]) {
+    color: var(--slate);
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  :global(.discovery-grid) {
+    padding-top: 32px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 40px 24px;
+  }
+
+  :global(.discovery-card) {
+    min-width: 0;
+  }
+
+  :global(.discovery-card a) {
+    min-width: 0;
+    display: grid;
+    align-content: start;
+  }
+
+  :global(.discovery-card a:hover h3) {
+    color: var(--indigo);
+  }
+
+  :global(.discovery-card img) {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 10;
+    display: block;
+    border-radius: 4px;
+    object-fit: cover;
+  }
+
+  :global(.discovery-card__body) {
+    min-width: 0;
+    padding-top: 16px;
+  }
+
+  :global(.discovery-card__meta) {
+    min-height: 20px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    color: var(--slate);
+    font-size: 12px;
+  }
+
+  :global(.discovery-card__meta span) {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  :global(.discovery-card h3) {
+    margin-bottom: 10px;
+    overflow-wrap: anywhere;
+    font-size: 20px;
+  }
+
+  :global(.discovery-card p) {
+    margin-bottom: 0;
+    color: var(--steel);
+    font-size: 14px;
+  }
+
+  :global(.discovery-empty) {
+    min-height: 360px;
+    padding-block: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid var(--frost);
+    text-align: center;
+  }
+
+  :global(.discovery-empty h2) {
+    margin-bottom: 12px;
+    font-size: 26px;
+  }
+
+  :global(.discovery-empty p) {
+    margin-bottom: 24px;
+    color: var(--steel);
+  }
+
+  @media (max-width: 1080px) {
+    :global(.discovery-grid) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 800px) {
+    .discover-intro h1 {
+      font-size: 36px;
+    }
+
+    :global(.discovery-grid) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 720px) {
+    .discover-intro {
+      padding-block: 48px 40px;
+    }
+
+    .discover-content {
+      padding-block: 32px 56px;
+    }
+
+    :global(.discovery-controls) {
+      min-height: 168px;
+    }
+
+    :global(.discovery-filter-row) {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    :global(.discovery-sort) {
+      width: 100%;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    :global(.discovery-results-heading) {
+      min-height: 80px;
+    }
+
+    :global(.discovery-results-heading h2) {
+      font-size: 26px;
+    }
+
+    :global(.discovery-grid) {
+      grid-template-columns: 1fr;
+      gap: 36px;
+    }
+  }
+</style>
