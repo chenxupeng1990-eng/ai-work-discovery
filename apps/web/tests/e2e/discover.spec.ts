@@ -97,30 +97,25 @@ test("listing cards use valid public sources without broken placeholder links", 
 
   const cards = page.getByRole("article");
   await expect(cards).toHaveCount(10);
-  const itemWithSource = fixtureDataset.items.find(
-    (item) => item.originalUrl === "https://agents.md/",
+  const itemWithBothSources = fixtureDataset.items.find(
+    (item) => item.feishuDocumentUrl && item.originalUrl,
   );
   const itemWithoutSource = fixtureDataset.items.find(
     (item) => !(item.feishuDocumentUrl ?? item.originalUrl),
   );
-  expect(itemWithSource).toBeDefined();
+  expect(itemWithBothSources).toBeDefined();
   expect(itemWithoutSource).toBeDefined();
 
-  const sourceUrl = itemWithSource!.feishuDocumentUrl ?? itemWithSource!.originalUrl!;
-  expect(new URL(sourceUrl).protocol).toBe("https:");
-  const linkedCard = cards.filter({ hasText: itemWithSource!.title });
+  const sourceUrl = "https://waytoagi.feishu.cn/wiki/QPe5w5g7UisbEkkow8XcDmOpn8e";
+  expect(itemWithBothSources!.feishuDocumentUrl).toBe(sourceUrl);
+  expect(itemWithBothSources!.originalUrl).toBe("https://agents.md/");
+  const linkedCard = cards.filter({ hasText: itemWithBothSources!.title });
   const sourceLink = linkedCard.getByRole("link");
   await expect(sourceLink).toHaveAttribute("href", sourceUrl);
   await expect(sourceLink).toHaveAttribute("target", "_blank");
-  await expect(sourceLink).toHaveAttribute("rel", /\bnoreferrer\b/);
-  await sourceLink.evaluate((link) => {
-    link.addEventListener("click", (event) => {
-      event.preventDefault();
-      document.body.dataset.clickedExternalUrl = (event.currentTarget as HTMLAnchorElement).href;
-    }, { once: true });
-  });
-  await sourceLink.click();
-  await expect(page.locator("body")).toHaveAttribute("data-clicked-external-url", sourceUrl);
+  const relTokens = (await sourceLink.getAttribute("rel"))?.split(/\s+/) ?? [];
+  expect(relTokens).toContain("noopener");
+  expect(relTokens).toContain("noreferrer");
 
   const unlinkedCard = cards.filter({ hasText: itemWithoutSource!.title });
   await expect(unlinkedCard.getByRole("link")).toHaveCount(0);

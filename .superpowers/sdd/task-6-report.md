@@ -9,8 +9,8 @@ Task 6 does not create `/content/<slug>` routes. Discovery cards therefore use `
 ## TDD Evidence
 
 - Initial RED: the discovery E2E suite failed before `/discover`, its controls, cards, and empty state existed.
-- Review RED: the navigation test expected a public source URL but received `/content/codex-skills-practical-roundup`.
-- Review GREEN: cards now expose valid HTTPS source URLs with `target="_blank"` and `rel="noopener noreferrer"`; a controlled click assertion prevents third-party navigation while proving the card is clickable.
+- Final review RED: the schema accepted non-HTTPS URL schemes, and the discovery fixture did not prove Feishu-source precedence when both URLs existed.
+- Final review GREEN: public URLs use Zod's structured HTTPS protocol constraint; the AGENTS.md fixture retains its original source while adding the public WayToAGI Feishu document, and cards prefer that Feishu URL with `target="_blank"` plus independent `noopener` and `noreferrer` tokens.
 - Sorting regression: the test records the first Featured card, selects Latest, verifies both `aria-pressed` states, and asserts the first card and full order against `updatedAt` sorting.
 
 ## Implementation
@@ -19,11 +19,11 @@ Task 6 does not create `/content/<slug>` routes. Discovery cards therefore use `
 - Added a resettable empty state and responsive discovery cards with fixed `16 / 10` image geometry.
 - Removed premature `/content/<slug>` navigation from Task 6 cards.
 - Added realistic, distinct ISO `updatedAt` values and synchronized `src/data/fixtures.ts`, `src/generated/content.json`, and `public/data/content.json`.
-- Kept the discovery E2E independent of third-party availability by validating URL schema and external-link attributes locally, then preventing navigation during the click assertion.
+- Kept the discovery E2E independent of third-party availability by validating URL schema and external-link attributes locally without navigating to external sources.
 
 ## Verification
 
-- `npm test`: 3 files passed, 39 tests passed.
+- `npm test`: 3 files passed, 46 tests passed.
 - `npm run test:e2e -- tests/e2e/discover.spec.ts`: 14 tests passed across desktop and mobile.
 - `npm run test:e2e -- tests/e2e/home.spec.ts`: 9 tests passed; 1 desktop run of the mobile-only navigation test was skipped as expected.
 - `npm run check`: 24 files checked with 0 errors, 0 warnings, and 0 hints.

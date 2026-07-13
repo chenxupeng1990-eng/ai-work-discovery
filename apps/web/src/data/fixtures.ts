@@ -102,6 +102,7 @@ export const fixtureDataset: PublicDataset = {
       audience: ["研发团队", "技术负责人"],
       scenario: "统一 Agent 行为",
       originalUrl: "https://agents.md/",
+      feishuDocumentUrl: "https://waytoagi.feishu.cn/wiki/QPe5w5g7UisbEkkow8XcDmOpn8e",
       sourceName: "AGENTS.md",
       featured: false,
       sortWeight: 70,

@@ -83,6 +83,24 @@ describe("PublicDatasetSchema", () => {
     expect(result.success).toBe(false);
   });
 
+  it.each([
+    ["originalUrl", "http://example.com"],
+    ["originalUrl", "ftp://example.com/file"],
+    ["originalUrl", "mailto:hello@example.com"],
+    ["originalUrl", "javascript:alert(1)"],
+    ["feishuDocumentUrl", "http://waytoagi.feishu.cn/wiki/example"],
+    ["feishuDocumentUrl", "ftp://waytoagi.feishu.cn/wiki/example"],
+    ["feishuDocumentUrl", "mailto:hello@example.com"],
+    ["feishuDocumentUrl", "javascript:alert(1)"],
+  ] as const)("rejects non-HTTPS %s value %s", (field, url) => {
+    const result = PublicDatasetSchema.safeParse({
+      generatedAt: "2026-07-13T00:00:00.000Z",
+      items: [{ ...validItem, [field]: url }],
+    });
+
+    expect(result.success).toBe(false);
+  });
+
   it("rejects extra fields at dataset and copy-block boundaries", () => {
     const datasetResult = PublicDatasetSchema.safeParse({
       generatedAt: "2026-07-13T00:00:00.000Z",

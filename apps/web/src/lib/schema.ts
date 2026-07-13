@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const CONTROLLED_COVER_IMAGE_PATH = /^\/images\/(?:(?:fixtures|content)\/(?:[A-Za-z0-9][A-Za-z0-9._-]*\/)*[A-Za-z0-9][A-Za-z0-9._-]*\.(?:avif|gif|jpe?g|png|webp)|fallback-[A-Za-z0-9][A-Za-z0-9-]*\.webp)$/;
+const HttpsUrlSchema = z.url({ protocol: /^https$/ });
 
 export const CopyBlockSchema = z.object({
   id: z.string().min(1),
@@ -32,8 +33,8 @@ export const ContentItemSchema = z.object({
   tags: z.array(z.string()),
   audience: z.array(z.string()),
   scenario: z.string().min(1),
-  originalUrl: z.url().optional(),
-  feishuDocumentUrl: z.url().optional(),
+  originalUrl: HttpsUrlSchema.optional(),
+  feishuDocumentUrl: HttpsUrlSchema.optional(),
   sourceName: z.string().min(1),
   featured: z.boolean(),
   sortWeight: z.number(),
