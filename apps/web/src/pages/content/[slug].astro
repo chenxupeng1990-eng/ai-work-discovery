@@ -1,0 +1,460 @@
+---
+import ContentCard from "../../components/ContentCard.astro";
+import { CopyBlockView } from "../../components/CopyBlock";
+import FeishuDocumentCard from "../../components/FeishuDocumentCard.astro";
+import publicDataset from "../../../public/data/content.json";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getRelated } from "../../lib/content";
+import { PublicDatasetSchema, type ContentItem } from "../../lib/schema";
+
+const dataset = PublicDatasetSchema.parse(publicDataset);
+
+export function getStaticPaths() {
+  const dataset = PublicDatasetSchema.parse(publicDataset);
+
+  return dataset.items.map((item) => ({
+    params: { slug: item.slug },
+    props: { item },
+  }));
+}
+
+const { item } = Astro.props as { item: ContentItem };
+const related = getRelated(dataset.items, item, 3);
+const copyBlocks = [...item.copyBlocks].sort((left, right) => left.order - right.order);
+---
+
+<BaseLayout title={`${item.title} | AI Work Discovery`} description={item.summary}>
+  <article class="detail">
+    <header class="detail-hero">
+      <div class="container detail-hero__layout">
+        <div class="detail-hero__content">
+          <div class="detail-hero__meta">
+            <span>{item.type}</span>
+            <span>{item.category}</span>
+          </div>
+          <h1>{item.title}</h1>
+          <p class="detail-hero__summary">{item.summary}</p>
+          <div class="detail-tags" aria-label="内容标签">
+            {item.tags.map((tag) => <span>{tag}</span>)}
+          </div>
+        </div>
+        <img
+          src={item.coverImage}
+          alt={`${item.title}封面`}
+          width="960"
+          height="600"
+          loading="eager"
+          fetchpriority="high"
+        />
+      </div>
+    </header>
+
+    <div class="container detail-body">
+      <div class="detail-main">
+        <section class="detail-section" aria-labelledby="recommendation-title">
+          <p>为什么推荐</p>
+          <h2 id="recommendation-title">推荐理由</h2>
+          <div class="detail-section__lead">{item.recommendationReason}</div>
+        </section>
+
+        <section class="detail-section" aria-labelledby="fit-title">
+          <p>适合谁使用</p>
+          <h2 id="fit-title">适用人群与场景</h2>
+          <dl class="detail-fit">
+            <div>
+              <dt>人群</dt>
+              <dd>{item.audience.map((audience) => <span>{audience}</span>)}</dd>
+            </div>
+            <div>
+              <dt>场景</dt>
+              <dd>{item.scenario}</dd>
+            </div>
+          </dl>
+        </section>
+
+        {copyBlocks.length > 0 && (
+          <section class="detail-section detail-copy" aria-labelledby="copy-title">
+            <p>直接复用</p>
+            <h2 id="copy-title">可复制内容</h2>
+            <div class="detail-copy__list">
+              {copyBlocks.map((block) => <CopyBlockView client:load block={block} />)}
+            </div>
+          </section>
+        )}
+
+        <section class="detail-section" aria-labelledby="source-title">
+          <p>出处与时间</p>
+          <h2 id="source-title">来源信息</h2>
+          <dl class="detail-source">
+            <div><dt>来源</dt><dd>{item.sourceName}</dd></div>
+            <div><dt>发布</dt><dd><time datetime={item.publishedAt}>{item.publishedAt.slice(0, 10)}</time></dd></div>
+            <div><dt>更新</dt><dd><time datetime={item.updatedAt}>{item.updatedAt.slice(0, 10)}</time></dd></div>
+          </dl>
+          <div class="detail-source__actions" data-source-actions>
+            {item.feishuDocumentUrl && (
+              <a
+                class="button-primary"
+                href={item.feishuDocumentUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                打开飞书原文
+                <span aria-hidden="true">↗</span>
+              </a>
+            )}
+            {item.originalUrl && (
+              <a
+                class="button-secondary"
+                href={item.originalUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`打开原始来源：${item.sourceName}`}
+              >
+                打开原始来源
+                <span aria-hidden="true">↗</span>
+              </a>
+            )}
+          </div>
+        </section>
+      </div>
+
+      {item.feishuDocumentUrl && (
+        <aside class="detail-aside" aria-label="飞书文档预览">
+          <FeishuDocumentCard item={item} />
+        </aside>
+      )}
+    </div>
+
+    {related.length > 0 && (
+      <section class="related section" data-related-content aria-labelledby="related-title">
+        <div class="container">
+          <p>继续发现</p>
+          <h2 id="related-title">相关内容</h2>
+          <div class="related__grid">
+            {related.map((relatedItem) => <ContentCard item={relatedItem} />)}
+          </div>
+        </div>
+      </section>
+    )}
+  </article>
+</BaseLayout>
+
+<style>
+  .detail {
+    min-width: 0;
+  }
+
+  .detail-hero {
+    padding-block: 56px;
+    border-bottom: 1px solid var(--frost);
+    background: var(--mist);
+  }
+
+  .detail-hero__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 0.82fr);
+    align-items: center;
+    gap: 56px;
+  }
+
+  .detail-hero__content {
+    min-width: 0;
+  }
+
+  .detail-hero__meta {
+    margin-bottom: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    color: var(--indigo);
+    font-size: 13px;
+  }
+
+  h1 {
+    max-width: 780px;
+    margin-bottom: 20px;
+    overflow-wrap: anywhere;
+    font-size: 48px;
+  }
+
+  .detail-hero__summary {
+    max-width: 720px;
+    margin-bottom: 24px;
+    color: var(--steel);
+    font-size: 18px;
+  }
+
+  .detail-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .detail-tags span,
+  .detail-fit dd span {
+    padding: 7px 11px;
+    border: 1px solid var(--frost);
+    border-radius: 999px;
+    color: var(--steel);
+    background: var(--canvas);
+    font-size: 13px;
+  }
+
+  .detail-hero img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 10;
+    display: block;
+    border-radius: 4px;
+    object-fit: cover;
+  }
+
+  .detail-body {
+    padding-block: 64px 80px;
+    display: grid;
+    grid-template-columns: minmax(0, 1.65fr) minmax(300px, 0.75fr);
+    align-items: start;
+    gap: 64px;
+  }
+
+  .detail-main,
+  .detail-aside {
+    min-width: 0;
+  }
+
+  .detail-aside {
+    position: sticky;
+    top: 96px;
+  }
+
+  .detail-section {
+    padding-block: 40px;
+    border-top: 1px solid var(--frost);
+  }
+
+  .detail-section:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .detail-section > p,
+  .related > .container > p {
+    margin-bottom: 10px;
+    color: var(--indigo);
+    font-size: 13px;
+  }
+
+  .detail-section > h2,
+  .related h2 {
+    margin-bottom: 24px;
+    font-size: 30px;
+  }
+
+  .detail-section__lead {
+    max-width: 780px;
+    color: var(--ink);
+    font-size: 22px;
+    line-height: 1.55;
+  }
+
+  dl,
+  dd {
+    margin: 0;
+  }
+
+  .detail-fit,
+  .detail-source {
+    display: grid;
+    gap: 16px;
+  }
+
+  .detail-fit > div,
+  .detail-source > div {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: 20px;
+  }
+
+  dt {
+    color: var(--slate);
+    font-size: 13px;
+  }
+
+  dd {
+    min-width: 0;
+    color: var(--steel);
+  }
+
+  .detail-fit dd {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .detail-copy__list {
+    display: grid;
+    gap: 20px;
+  }
+
+  :global(.copy-block) {
+    min-width: 0;
+    padding: 24px;
+    border: 1px solid var(--frost);
+    border-radius: 4px;
+  }
+
+  :global(.copy-block__header) {
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  :global(.copy-block__header p) {
+    margin-bottom: 6px;
+    color: var(--slate);
+    font-size: 12px;
+  }
+
+  :global(.copy-block__header h2) {
+    margin-bottom: 0;
+    font-size: 20px;
+  }
+
+  :global(.copy-block__button) {
+    width: 108px;
+    height: 40px;
+    min-width: 108px;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid var(--lavender);
+    border-radius: 4px;
+    color: var(--indigo);
+    background: var(--canvas);
+    cursor: pointer;
+  }
+
+  :global(.copy-block__button:hover) {
+    background: var(--wash);
+  }
+
+  :global(.copy-block__icon) {
+    position: relative;
+    width: 15px;
+    height: 15px;
+    display: block;
+    border: 1.5px solid currentColor;
+    border-radius: 2px;
+  }
+
+  :global(.copy-block__icon span) {
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    width: 12px;
+    height: 12px;
+    border: 1.5px solid currentColor;
+    border-radius: 2px;
+    background: var(--canvas);
+  }
+
+  :global(.copy-block pre) {
+    max-width: 100%;
+    margin: 0;
+    padding: 18px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-radius: 4px;
+    color: var(--ink);
+    background: var(--mist);
+    font-size: 13px;
+    line-height: 1.6;
+    white-space: pre;
+  }
+
+  :global(.copy-block__note) {
+    margin: 12px 0 0;
+    color: var(--slate);
+    font-size: 13px;
+  }
+
+  .detail-source__actions {
+    margin-top: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .related {
+    background: var(--mist);
+  }
+
+  .related__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+  }
+
+  @media (max-width: 960px) {
+    .detail-hero__layout,
+    .detail-body {
+      grid-template-columns: 1fr;
+    }
+
+    .detail-hero__layout {
+      gap: 32px;
+    }
+
+    .detail-body {
+      gap: 48px;
+    }
+
+    .detail-aside {
+      position: static;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .detail-hero {
+      padding-block: 40px;
+    }
+
+    h1 {
+      font-size: 36px;
+    }
+
+    .detail-hero__summary {
+      font-size: 16px;
+    }
+
+    .detail-body {
+      padding-block: 48px 56px;
+    }
+
+    .detail-section {
+      padding-block: 32px;
+    }
+
+    .detail-section > h2,
+    .related h2 {
+      font-size: 26px;
+    }
+
+    .detail-section__lead {
+      font-size: 19px;
+    }
+
+    :global(.copy-block__header) {
+      align-items: flex-start;
+    }
+
+    .related__grid {
+      grid-template-columns: 1fr;
+      gap: 36px;
+    }
+  }
+</style>

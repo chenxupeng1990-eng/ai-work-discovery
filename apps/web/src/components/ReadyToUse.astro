@@ -23,14 +23,7 @@ const { items } = Astro.props as { items: ContentItem[] };
             <h3>{block.title}</h3>
             <p>{item.recommendationReason}</p>
             <pre><code>{block.content}</code></pre>
-            {item.originalUrl && (
-              <a
-                href={item.originalUrl}
-                target="_blank"
-                rel="noreferrer"
-                data-home-content-link
-              >查看来源</a>
-            )}
+            <a href={`/content/${item.slug}`} data-home-content-link>查看详情</a>
           </article>
         );
       })}

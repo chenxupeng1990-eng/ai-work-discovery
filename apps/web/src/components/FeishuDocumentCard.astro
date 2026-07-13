@@ -1,0 +1,89 @@
+---
+import type { ContentItem } from "../lib/schema";
+
+const { item } = Astro.props as { item: ContentItem };
+---
+
+<article class="feishu-document" data-feishu-document-card>
+  <img
+    src={item.coverImage}
+    alt={`${item.title}飞书文档预览`}
+    width="640"
+    height="400"
+    loading="lazy"
+  />
+  <div class="feishu-document__body">
+    <p class="feishu-document__eyebrow">飞书公开文档</p>
+    <h2>{item.title}</h2>
+    <p class="feishu-document__summary">{item.summary}</p>
+    <div class="feishu-document__tags" aria-label="文档标签">
+      {item.tags.map((tag) => <span>{tag}</span>)}
+    </div>
+    <a
+      class="button-primary"
+      href={item.feishuDocumentUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      打开飞书原文
+      <span aria-hidden="true">↗</span>
+    </a>
+  </div>
+</article>
+
+<style>
+  .feishu-document {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--frost);
+    border-radius: 4px;
+  }
+
+  img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 10;
+    display: block;
+    object-fit: cover;
+  }
+
+  .feishu-document__body {
+    padding: 24px;
+  }
+
+  .feishu-document__eyebrow {
+    margin-bottom: 8px;
+    color: var(--indigo);
+    font-size: 13px;
+  }
+
+  h2 {
+    margin-bottom: 12px;
+    overflow-wrap: anywhere;
+    font-size: 24px;
+  }
+
+  .feishu-document__summary {
+    margin-bottom: 18px;
+    color: var(--steel);
+  }
+
+  .feishu-document__tags {
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .feishu-document__tags span {
+    padding: 6px 10px;
+    border: 1px solid var(--frost);
+    border-radius: 999px;
+    color: var(--slate);
+    font-size: 12px;
+  }
+
+  .button-primary {
+    width: 100%;
+  }
+</style>

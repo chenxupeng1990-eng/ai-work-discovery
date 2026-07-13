@@ -91,34 +91,17 @@ test("empty search renders a complete resettable state", async ({ page }) => {
   await expect(page.getByRole("button", { name: "精选", exact: true })).toHaveAttribute("aria-pressed", "true");
 });
 
-test("listing cards use valid public sources without broken placeholder links", async ({ page }) => {
+test("listing cards link every item to its internal detail page", async ({ page }) => {
   await page.goto("/discover");
   await waitForExplorer(page);
 
   const cards = page.getByRole("article");
   await expect(cards).toHaveCount(10);
-  const itemWithBothSources = fixtureDataset.items.find(
-    (item) => item.feishuDocumentUrl && item.originalUrl,
-  );
-  const itemWithoutSource = fixtureDataset.items.find(
-    (item) => !(item.feishuDocumentUrl ?? item.originalUrl),
-  );
-  expect(itemWithBothSources).toBeDefined();
-  expect(itemWithoutSource).toBeDefined();
-
-  const sourceUrl = "https://waytoagi.feishu.cn/wiki/QPe5w5g7UisbEkkow8XcDmOpn8e";
-  expect(itemWithBothSources!.feishuDocumentUrl).toBe(sourceUrl);
-  expect(itemWithBothSources!.originalUrl).toBe("https://agents.md/");
-  const linkedCard = cards.filter({ hasText: itemWithBothSources!.title });
-  const sourceLink = linkedCard.getByRole("link");
-  await expect(sourceLink).toHaveAttribute("href", sourceUrl);
-  await expect(sourceLink).toHaveAttribute("target", "_blank");
-  const relTokens = (await sourceLink.getAttribute("rel"))?.split(/\s+/) ?? [];
-  expect(relTokens).toContain("noopener");
-  expect(relTokens).toContain("noreferrer");
-
-  const unlinkedCard = cards.filter({ hasText: itemWithoutSource!.title });
-  await expect(unlinkedCard.getByRole("link")).toHaveCount(0);
+  for (const item of fixtureDataset.items) {
+    const link = cards.filter({ hasText: item.title }).getByRole("link");
+    await expect(link).toHaveAttribute("href", `/content/${item.slug}`);
+    await expect(link).not.toHaveAttribute("target");
+  }
 
   for (const card of await cards.all()) {
 
@@ -130,7 +113,7 @@ test("listing cards use valid public sources without broken placeholder links", 
   }
 
   await expect(page.locator('[href^="#"]')).toHaveCount(0);
-  await expect(page.locator('[href^="/content/"]')).toHaveCount(0);
+  await expect(page.locator('[href^="/content/"]')).toHaveCount(10);
 });
 
 test("discovery page avoids horizontal overflow and overlapping cards", async ({ page }) => {

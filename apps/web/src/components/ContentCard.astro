@@ -2,15 +2,14 @@
 import type { ContentItem } from "../lib/schema";
 
 const { item } = Astro.props as { item: ContentItem };
-const href = item.originalUrl;
-const Wrapper = href ? "a" : "div";
-const linkProps = href
-  ? { href, target: "_blank", rel: "noreferrer", "data-home-content-link": "" }
-  : {};
 ---
 
 <article class="content-card" data-content-card>
-  <Wrapper class="content-card__inner" {...linkProps}>
+  <a
+    class="content-card__inner"
+    href={`/content/${item.slug}`}
+    data-home-content-link
+  >
     <img
       src={item.coverImage}
       alt={`${item.title}内容截图`}
@@ -27,7 +26,7 @@ const linkProps = href
       <h3>{item.title}</h3>
       <p>{item.summary}</p>
     </div>
-  </Wrapper>
+  </a>
 </article>
 
 <style>

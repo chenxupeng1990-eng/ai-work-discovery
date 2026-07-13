@@ -70,16 +70,7 @@ const categories = ["灵感", "协作", "效率工具", "内容生产", "行业�
               <time datetime={item.updatedAt}>{item.updatedAt.slice(0, 10)}</time>
             </div>
             <h3>
-              {item.originalUrl ? (
-                <a
-                  href={item.originalUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  data-home-content-link
-                >
-                  {item.title}
-                </a>
-              ) : item.title}
+              <a href={`/content/${item.slug}`} data-home-content-link>{item.title}</a>
             </h3>
             <p>{item.summary}</p>
           </article>

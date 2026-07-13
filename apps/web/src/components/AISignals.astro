@@ -19,9 +19,7 @@ const { items } = Astro.props as { items: ContentItem[] };
           </div>
           <h3>
             <a
-              href={item.originalUrl}
-              target="_blank"
-              rel="noreferrer"
+              href={`/content/${item.slug}`}
               data-home-content-link
             >
               {item.title}

@@ -74,7 +74,6 @@ export function DiscoveryExplorer({ items }: { items: ContentItem[] }) {
       {results.length > 0 ? (
         <div className="discovery-grid">
           {results.map((item) => {
-            const href = item.feishuDocumentUrl ?? item.originalUrl;
             const content = (
               <>
                 <img
@@ -97,11 +96,7 @@ export function DiscoveryExplorer({ items }: { items: ContentItem[] }) {
 
             return (
               <article className="discovery-card" key={item.id}>
-                {href ? (
-                  <a href={href} target="_blank" rel="noopener noreferrer">
-                    {content}
-                  </a>
-                ) : content}
+                <a href={`/content/${item.slug}`}>{content}</a>
               </article>
             );
           })}

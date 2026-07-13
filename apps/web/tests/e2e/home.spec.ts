@@ -8,6 +8,8 @@ test("homepage exposes shared navigation and one main landmark", async ({ page }
   await expect(page.getByRole("main")).toHaveCount(1);
   await expect(page.getByRole("link", { name: "发现", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "搜索" })).toHaveAttribute("href", "/discover");
+  await expect(page.locator('a[href="/cases"], a[href="/collaboration"], a[href="/resources"], a[href="/signals"]')).toHaveCount(0);
+  await expect(page.locator('a[href="/updates"]')).toHaveCount(2);
   await expect(page.getByRole("button", { name: "提交内容" })).toBeDisabled();
   await expect(page.locator('a[href="#discover"], a[href="#ready"], a[href="#submit"]')).toHaveCount(0);
   await expect(page.getByRole("contentinfo")).toBeVisible();
@@ -53,8 +55,8 @@ test("homepage prioritizes bounded discovery content over a rigid course", async
   const contentLinks = page.locator('[data-home-content-link]');
   for (const link of await contentLinks.all()) {
     const href = await link.getAttribute("href");
-    expect(href).toMatch(/^https:\/\//);
-    expect(href).not.toContain("#");
+    expect(href).toMatch(/^\/content\/[a-z0-9-]+$/);
+    await expect(link).not.toHaveAttribute("target");
   }
 });
 
@@ -65,7 +67,7 @@ test("AI signals section renders only AI Signal content", async ({ page }) => {
     .filter((item) => item.type === "AI Signal")
     .sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt))
     .slice(0, 4)
-    .map((item) => item.originalUrl);
+    .map((item) => `/content/${item.slug}`);
   const renderedSignalUrls = await page
     .locator('[data-home-section="ai-signals"] [data-signal-item] a')
     .evaluateAll((links) => links.map((link) => link.getAttribute("href")));
