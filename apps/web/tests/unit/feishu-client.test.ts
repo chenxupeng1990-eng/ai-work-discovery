@@ -96,4 +96,47 @@ describe("FeishuClient", () => {
       expect(message).not.toContain("Bearer");
     }
   });
+
+  it.each([
+    ["missing has_more", { items: [] }],
+    ["string has_more", { items: [], has_more: "false" }],
+    ["has_more without page_token", { items: [], has_more: true }],
+    ["non-array items", { items: {}, has_more: false }],
+  ])("rejects invalid list records page: %s", async (_label, data) => {
+    const fetchMock = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(jsonResponse({ code: 0, tenant_access_token: "tenant-token", expire: 7200 }))
+      .mockResolvedValueOnce(jsonResponse({ code: 0, data }));
+    const client = new FeishuClient({
+      appId: "app-id",
+      appSecret: "app-secret",
+      appToken: "base-token",
+      fetch: fetchMock,
+      apiBaseUrl: "https://open.feishu.test",
+      tokenCache: new Map(),
+    });
+
+    await expect(client.listRecords("table-id")).rejects.toBeInstanceOf(FeishuApiError);
+  });
+
+  it("rejects API base URL credentials without exposing the password", () => {
+    const secret = "secret-never-print";
+
+    expect(() => new FeishuClient({
+      appId: "app-id",
+      appSecret: "app-secret",
+      appToken: "base-token",
+      apiBaseUrl: `https://user:${secret}@open.feishu.test`,
+    })).toThrow();
+
+    try {
+      new FeishuClient({
+        appId: "app-id",
+        appSecret: "app-secret",
+        appToken: "base-token",
+        apiBaseUrl: `https://user:${secret}@open.feishu.test`,
+      });
+    } catch (error) {
+      expect(String(error)).not.toContain(secret);
+    }
+  });
 });

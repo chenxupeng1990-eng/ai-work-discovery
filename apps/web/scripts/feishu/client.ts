@@ -55,6 +55,9 @@ export class FeishuClient {
     if (apiBaseUrl.protocol !== "https:") {
       throw new TypeError("Feishu API base URL must use HTTPS");
     }
+    if (apiBaseUrl.username || apiBaseUrl.password) {
+      throw new TypeError("Feishu API base URL must not include credentials");
+    }
 
     this.appId = options.appId;
     this.appSecret = options.appSecret;
@@ -80,7 +83,8 @@ export class FeishuClient {
       if (!Array.isArray(items)) throw new FeishuApiError("list records");
       records.push(...items.map((item) => parseRecord(item, "list records")));
 
-      const hasMore = data.has_more === true;
+      if (typeof data.has_more !== "boolean") throw new FeishuApiError("list records");
+      const hasMore = data.has_more;
       pageToken = typeof data.page_token === "string" && data.page_token ? data.page_token : undefined;
       if (hasMore && !pageToken) throw new FeishuApiError("list records");
       if (!hasMore) pageToken = undefined;
