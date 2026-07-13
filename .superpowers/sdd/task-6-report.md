@@ -6,8 +6,8 @@ Implemented the searchable and filterable discovery listing as one hydrated Reac
 
 ## TDD Evidence
 
-- The initial desktop run failed because `/discover` had no searchbox, category controls, sort controls, cards, or empty state.
-- The updated home regression failed because Header search was still a button instead of a link to `/discover`.
+- RED: `npm run test:e2e -- tests/e2e/discover.spec.ts` ran 12 desktop/mobile tests before implementation; 11 failed because `/discover` had no searchbox, category controls, sort controls, cards, or empty state, while the desktop overflow check alone passed against the missing route.
+- RED: `npm run test:e2e -- tests/e2e/discover.spec.ts --project=desktop --grep "header search"` failed because Header search was still a button instead of a link to `/discover`.
 - After implementation, the focused discovery suite passed in both desktop and mobile projects: 14 tests passed.
 
 ## Implementation
@@ -37,6 +37,17 @@ Implemented the searchable and filterable discovery listing as one hydrated Reac
 - `npm run build`
   - Exit code 0.
   - Static `/index.html` and `/discover/index.html` routes built successfully.
+- `npm run test:e2e`
+  - Exit code 0.
+  - 23 tests passed across desktop and mobile; the desktop run of the mobile-only navigation test was skipped as expected.
+- Playwright desktop/mobile full-page capture
+  - Desktop document width matched its 1440px viewport.
+  - Mobile document width matched its 412px viewport.
+  - Visual inspection confirmed stable controls, fixed 16:10 cards, and no text overlap.
+
+## Commit
+
+- Implementation commit: `efc1a0f0767f5adbb614969d4440ae71bf3b2651` (`feat: add searchable discovery page`)
 
 ## Files
 
