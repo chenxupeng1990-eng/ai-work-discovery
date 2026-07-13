@@ -2,7 +2,7 @@
 
 ## Scope
 
-Implemented the AI Work Discovery visual foundation, shared layout, navigation, footer, homepage shell, and structural Playwright coverage. No files outside the assigned Task 4 paths were changed.
+Implemented the AI Work Discovery visual foundation, shared layout, navigation, footer, homepage shell, and structural Playwright coverage. The Task 4 review fix is limited to the header, homepage E2E coverage, this report, and the homepage intro needed to remove broken placeholder fragments.
 
 ## TDD Process
 
@@ -16,27 +16,32 @@ Implemented the AI Work Discovery visual foundation, shared layout, navigation, 
 ## Implementation Notes
 
 - `BaseLayout` owns the document shell and the site's only `main` landmark.
-- The header provides text navigation, an accessible search icon button with `aria-label` and `title`, a `提交内容` action, and an absolute-positioned native mobile menu.
+- The header provides text navigation, an accessible search icon button with `aria-label` and `title`, a disabled `提交内容` command ready for a later submission flow, and an absolute-positioned mobile menu controlled by a real `button`.
+- The mobile menu button owns `aria-controls="mobile-navigation"`, starts with `aria-expanded="false"`, and uses a minimal inline script to update `aria-expanded` while toggling the navigation's `hidden` state.
 - Mobile navigation keeps the header at 64px and does not create horizontal overflow.
+- The Task 4-only `#discover` and `#ready` intro CTAs were removed, and the previous `#submit` link became a disabled button so the current page contains no broken fragment commands without adding Task 5 content.
 - Global styles define the approved colors, fixed typography, 1320px container, section/button/tag/grid primitives, and a 4px maximum radius except tags and circular icon geometry.
 - No shadows, blur, decorative gradients, blobs, or negative letter spacing were added.
+
+## Review Failure And Fix
+
+- Before the fix, `npm run test:e2e -- tests/e2e/home.spec.ts --project=mobile` exited with code 1: 1 test passed and 1 failed after 5 seconds because Chromium did not expose the `<summary aria-label="打开导航">` as the requested button role.
+- The failing assertion was `getByRole("button", { name: "打开导航" })`, confirming the review issue was semantic rather than a locator timeout problem.
+- Replacing `<details>/<summary>` with a real button and explicitly controlled hidden navigation fixed the accessibility tree while preserving the fixed header layout.
 
 ## Verification
 
 - `npm run test:e2e -- tests/e2e/home.spec.ts`
-  - Desktop and mobile structural coverage passed.
-  - Mobile menu height and overflow coverage passed on the mobile project.
-  - The desktop project skipped the mobile-only behavior test as intended.
+  - Exit code 0: 3 passed, 1 skipped.
+  - Desktop and mobile structural coverage passed; the desktop project skipped only the mobile-specific behavior test.
+  - The mobile test verified the button role, `aria-controls`, `aria-expanded="false"` before interaction, `aria-expanded="true"` after interaction, visible navigation, unchanged header height, and `document.documentElement.scrollWidth <= viewport.width`.
   - Playwright emitted only the existing `NO_COLOR`/`FORCE_COLOR` environment warning.
 - `npm run check`
   - Exit code 0.
   - 16 files checked, 0 errors, 0 warnings, 0 hints.
 - `npm run build`
   - Exit code 0.
-  - Astro check passed and one static page (`/index.html`) was built.
-- Desktop 1440x1000 and mobile 412x915 screenshots were inspected; header controls fit, mobile navigation overlays without resizing the header, and no incoherent overlap or horizontal overflow was observed.
-- `git diff --cached --check`
-  - Exit code 0 before the implementation commit.
+  - Astro check passed with 0 errors, 0 warnings, and 0 hints; one static page (`/index.html`) was built.
 
 ## Changed Files
 
@@ -51,4 +56,5 @@ Implemented the AI Work Discovery visual foundation, shared layout, navigation, 
 ## Commit
 
 - Implementation: `2bbb662` (`feat: add discovery site visual foundation`)
-- Report: recorded in the follow-up documentation commit containing this file.
+- Initial report: `971d4d9` (`docs: add task 4 implementation report`)
+- Review fix: recorded in the commit containing this report update.

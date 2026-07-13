@@ -25,16 +25,26 @@ const navigation = [
       <button class="icon-button" type="button" aria-label="搜索" title="搜索">
         <span class="search-icon" aria-hidden="true"></span>
       </button>
-      <a class="submit-link button-primary" href="#submit">提交内容</a>
+      <button class="submit-link button-primary" type="button" disabled title="提交入口即将开放">
+        提交内容
+      </button>
 
-      <details class="mobile-menu">
-        <summary class="icon-button" aria-label="打开导航" title="打开导航">
+      <div class="mobile-menu">
+        <button
+          class="icon-button"
+          type="button"
+          aria-label="打开导航"
+          aria-controls="mobile-navigation"
+          aria-expanded="false"
+          title="打开导航"
+          data-mobile-menu-button
+        >
           <span class="menu-icon" aria-hidden="true"></span>
-        </summary>
-        <nav class="mobile-navigation" aria-label="移动端主导航">
+        </button>
+        <nav id="mobile-navigation" class="mobile-navigation" aria-label="移动端主导航" hidden>
           {navigation.map((item) => <a href={item.href}>{item.label}</a>)}
         </nav>
-      </details>
+      </div>
     </div>
   </div>
 </header>
@@ -133,14 +143,6 @@ const navigation = [
     display: none;
   }
 
-  .mobile-menu summary {
-    list-style: none;
-  }
-
-  .mobile-menu summary::-webkit-details-marker {
-    display: none;
-  }
-
   .menu-icon,
   .menu-icon::before,
   .menu-icon::after {
@@ -179,6 +181,10 @@ const navigation = [
     border: 1px solid var(--frost);
     border-radius: 4px;
     background: var(--canvas);
+  }
+
+  .mobile-navigation[hidden] {
+    display: none;
   }
 
   .mobile-navigation a {
@@ -255,3 +261,14 @@ const navigation = [
     }
   }
 </style>
+
+<script>
+  const menuButton = document.querySelector<HTMLButtonElement>("[data-mobile-menu-button]");
+  const mobileNavigation = document.querySelector<HTMLElement>("#mobile-navigation");
+
+  menuButton?.addEventListener("click", () => {
+    const isExpanded = menuButton.getAttribute("aria-expanded") === "true";
+    menuButton.setAttribute("aria-expanded", String(!isExpanded));
+    mobileNavigation?.toggleAttribute("hidden", isExpanded);
+  });
+</script>
