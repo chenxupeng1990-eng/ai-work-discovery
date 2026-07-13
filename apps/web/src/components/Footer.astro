@@ -1,0 +1,36 @@
+<footer class="site-footer">
+  <div class="footer-inner container">
+    <p>AI Work Discovery</p>
+    <p>发现可应用于工作的 AI 实践。</p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--frost);
+    color: var(--steel);
+    background: var(--mist);
+  }
+
+  .footer-inner {
+    min-height: 120px;
+    padding-block: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .footer-inner p {
+    margin-bottom: 0;
+  }
+
+  @media (max-width: 720px) {
+    .footer-inner {
+      align-items: flex-start;
+      flex-direction: column;
+      justify-content: center;
+      gap: 8px;
+    }
+  }
+</style>

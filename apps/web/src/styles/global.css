@@ -1,0 +1,167 @@
+:root {
+  --ink: #061b31;
+  --slate: #64748d;
+  --steel: #50617a;
+  --canvas: #ffffff;
+  --mist: #f8fafd;
+  --frost: #e5edf5;
+  --indigo: #533afd;
+  --indigo-hover: #7389ff;
+  --lavender: #b9b9f9;
+  --wash: #e8e9ff;
+  --max-width: 1320px;
+  font-family: Inter, "Noto Sans SC", system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--canvas);
+  letter-spacing: 0;
+}
+* {
+  box-sizing: border-box;
+  letter-spacing: 0;
+}
+
+html {
+  min-width: 320px;
+  overflow-x: hidden;
+  background: var(--canvas);
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 300;
+  line-height: 1.15;
+}
+
+.container {
+  width: min(calc(100% - 48px), var(--max-width));
+  margin-inline: auto;
+}
+
+.section {
+  padding-block: 80px;
+  border-top: 1px solid var(--frost);
+}
+
+.grid {
+  display: grid;
+  gap: 24px;
+}
+
+.grid-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.button-primary,
+.button-secondary {
+  min-height: 44px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 4px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.button-primary {
+  color: var(--canvas);
+  background: var(--indigo);
+  border: 1px solid var(--indigo);
+}
+
+.button-primary:hover {
+  background: var(--indigo-hover);
+  border-color: var(--indigo-hover);
+}
+
+.button-secondary {
+  color: var(--indigo);
+  background: var(--canvas);
+  border: 1px solid var(--lavender);
+}
+
+.button-secondary:hover {
+  background: var(--wash);
+}
+
+.tag {
+  min-height: 32px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--frost);
+  border-radius: 999px;
+  color: var(--steel);
+  background: var(--canvas);
+  font-size: 14px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--indigo);
+  outline-offset: 3px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 960px) {
+  .grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .container {
+    width: min(calc(100% - 32px), var(--max-width));
+  }
+
+  .section {
+    padding-block: 56px;
+  }
+
+  .grid-4 {
+    grid-template-columns: 1fr;
+  }
+}

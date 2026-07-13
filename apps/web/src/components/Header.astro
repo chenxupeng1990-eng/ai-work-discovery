@@ -1,0 +1,257 @@
+---
+const navigation = [
+  { label: "发现", href: "/" },
+  { label: "实践案例", href: "/cases" },
+  { label: "协作方式", href: "/collaboration" },
+  { label: "工具与资源", href: "/resources" },
+  { label: "AI 信号", href: "/signals" },
+  { label: "最近更新", href: "/updates" },
+];
+---
+
+<header class="site-header">
+  <div class="header-inner container">
+    <a class="brand" href="/" aria-label="AI Work Discovery 首页">
+      <span class="brand-full">AI Work Discovery</span>
+      <span class="brand-short" aria-hidden="true">AI</span>
+    </a>
+
+    <nav class="desktop-navigation" aria-label="主导航">
+      {navigation.map((item) => <a href={item.href}>{item.label}</a>)}
+    </nav>
+
+    <div class="header-actions">
+      <a class="mobile-discover" href="/">发现</a>
+      <button class="icon-button" type="button" aria-label="搜索" title="搜索">
+        <span class="search-icon" aria-hidden="true"></span>
+      </button>
+      <a class="submit-link button-primary" href="#submit">提交内容</a>
+
+      <details class="mobile-menu">
+        <summary class="icon-button" aria-label="打开导航" title="打开导航">
+          <span class="menu-icon" aria-hidden="true"></span>
+        </summary>
+        <nav class="mobile-navigation" aria-label="移动端主导航">
+          {navigation.map((item) => <a href={item.href}>{item.label}</a>)}
+        </nav>
+      </details>
+    </div>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: relative;
+    z-index: 10;
+    height: 72px;
+    border-bottom: 1px solid var(--frost);
+    background: var(--canvas);
+  }
+
+  .header-inner {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 32px;
+  }
+
+  .brand {
+    flex: 0 0 auto;
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  .brand-short,
+  .mobile-discover {
+    display: none;
+  }
+
+  .desktop-navigation {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-left: auto;
+    color: var(--steel);
+    font-size: 14px;
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  .desktop-navigation a:hover,
+  .mobile-navigation a:hover {
+    color: var(--indigo);
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .icon-button {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--frost);
+    border-radius: 4px;
+    color: var(--ink);
+    background: var(--canvas);
+    cursor: pointer;
+  }
+
+  .icon-button:hover {
+    border-color: var(--lavender);
+    color: var(--indigo);
+  }
+
+  .search-icon {
+    position: relative;
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid currentColor;
+    border-radius: 50%;
+  }
+
+  .search-icon::after {
+    position: absolute;
+    right: -5px;
+    bottom: -3px;
+    width: 7px;
+    height: 1.5px;
+    background: currentColor;
+    content: "";
+    transform: rotate(45deg);
+    transform-origin: left center;
+  }
+
+  .mobile-menu {
+    position: relative;
+    display: none;
+  }
+
+  .mobile-menu summary {
+    list-style: none;
+  }
+
+  .mobile-menu summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .menu-icon,
+  .menu-icon::before,
+  .menu-icon::after {
+    width: 18px;
+    height: 1.5px;
+    display: block;
+    background: currentColor;
+  }
+
+  .menu-icon {
+    position: relative;
+  }
+
+  .menu-icon::before,
+  .menu-icon::after {
+    position: absolute;
+    left: 0;
+    content: "";
+  }
+
+  .menu-icon::before {
+    top: -6px;
+  }
+
+  .menu-icon::after {
+    top: 6px;
+  }
+
+  .mobile-navigation {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: min(280px, calc(100vw - 32px));
+    padding: 8px;
+    display: grid;
+    border: 1px solid var(--frost);
+    border-radius: 4px;
+    background: var(--canvas);
+  }
+
+  .mobile-navigation a {
+    min-height: 44px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--frost);
+    color: var(--steel);
+    font-size: 14px;
+  }
+
+  .mobile-navigation a:last-child {
+    border-bottom: 0;
+  }
+
+  @media (max-width: 1120px) {
+    .desktop-navigation {
+      display: none;
+    }
+
+    .header-actions {
+      margin-left: auto;
+    }
+
+    .mobile-discover {
+      display: inline-flex;
+      align-items: center;
+      color: var(--steel);
+      font-size: 14px;
+    }
+
+    .mobile-menu {
+      display: block;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .site-header {
+      height: 64px;
+    }
+
+    .header-inner {
+      gap: 8px;
+    }
+
+    .brand {
+      font-size: 14px;
+    }
+
+    .brand-full {
+      display: none;
+    }
+
+    .brand-short {
+      display: inline;
+    }
+
+    .submit-link {
+      min-height: 40px;
+      padding-inline: 12px;
+      font-size: 14px;
+    }
+
+    .icon-button {
+      width: 40px;
+      height: 40px;
+    }
+  }
+
+  @media (max-width: 390px) {
+    .submit-link {
+      padding-inline: 8px;
+    }
+  }
+</style>
