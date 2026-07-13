@@ -1,7 +1,8 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import { spawnSync } from "node:child_process";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { spawn, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { setTimeout as delay } from "node:timers/promises";
 import { describe, expect, it, vi } from "vitest";
 import type { SyncConfig } from "../../scripts/config";
 import type { RawFeishuRecord } from "../../scripts/feishu/client";
@@ -9,7 +10,7 @@ import { BASE_FIELDS } from "../../scripts/feishu/fields";
 import { buildPublicDataset, writePublicDataset } from "../../scripts/publish/build-dataset";
 import {
   SyncRunError,
-  createExclusiveFileLock,
+  createSynchronizationLock,
   runSync,
   type SyncLogger,
   type SyncOutput,
@@ -219,53 +220,192 @@ describe("runSync", () => {
   });
 });
 
-describe("createExclusiveFileLock", () => {
-  it("does not remove an old lock owned by a live process", async () => {
-    const directory = await mkdtemp(join(tmpdir(), "sync-live-lock-"));
-    const lockPath = join(directory, "sync.lock");
-    await writeFile(lockPath, JSON.stringify({
-      pid: process.pid,
-      createdAt: "2000-01-01T00:00:00.000Z",
-      token: "live-owner",
-    }));
+describe("createSynchronizationLock", () => {
+  it("allows only one concurrent runSync and rejects the second before its critical section", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "sync-contention-"));
+    let active = 0;
+    let maxActive = 0;
+    let releaseFirst!: () => void;
+    const firstEntered = new Promise<void>((resolveEntered) => {
+      releaseFirst = resolveEntered;
+    });
+    let markEntered!: () => void;
+    const entered = new Promise<void>((resolveEntered) => {
+      markEntered = resolveEntered;
+    });
 
     try {
-      const lock = createExclusiveFileLock({
-        path: lockPath,
-        clock: () => new Date("2026-07-14T08:00:00.000Z"),
-        staleAfterMs: 1,
+      const first = runSync({
+        client: clientFor(),
+        config,
+        lock: createSynchronizationLock({ target: directory }),
+        processInbox: async () => {
+          active += 1;
+          maxActive = Math.max(maxActive, active);
+          markEntered();
+          await firstEntered;
+          active -= 1;
+          return successfulInbox();
+        },
+        buildDataset: async (items, options) => buildPublicDataset(items, {
+          ...options,
+          downloadAsset: async () => "/images/content/cover.webp",
+        }),
+        output: memoryOutput(),
       });
-      await expect(lock.runExclusive(async () => undefined))
-        .rejects.toMatchObject({ code: "LOCK_CONTENDED" });
-      expect(await readFile(lockPath, "utf8")).toContain("live-owner");
+      await entered;
+
+      const secondProcessInbox = vi.fn(async () => successfulInbox());
+      await expect(runSync({
+        client: clientFor(),
+        config,
+        lock: createSynchronizationLock({ target: directory }),
+        processInbox: secondProcessInbox,
+        output: memoryOutput(),
+      })).rejects.toMatchObject({ code: "LOCK_CONTENDED", stage: "lock" });
+
+      releaseFirst();
+      await expect(first).resolves.toMatchObject({ status: "success" });
+      expect(secondProcessInbox).not.toHaveBeenCalled();
+      expect(maxActive).toBe(1);
+    } finally {
+      releaseFirst?.();
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects every competing acquisition in a 100-round stress run", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "sync-lock-stress-"));
+
+    try {
+      for (let round = 0; round < 100; round += 1) {
+        let releaseOwner!: () => void;
+        const ownerBarrier = new Promise<void>((resolveBarrier) => {
+          releaseOwner = resolveBarrier;
+        });
+        let markEntered!: () => void;
+        const entered = new Promise<void>((resolveEntered) => {
+          markEntered = resolveEntered;
+        });
+        const owner = createSynchronizationLock({ target: directory }).runExclusive(async () => {
+          markEntered();
+          await ownerBarrier;
+        });
+        await entered;
+
+        await expect(createSynchronizationLock({ target: directory }).runExclusive(async () => undefined))
+          .rejects.toMatchObject({ code: "LOCK_CONTENDED" });
+        releaseOwner();
+        await owner;
+      }
     } finally {
       await rm(directory, { recursive: true, force: true });
     }
   });
 
-  it("reclaims one bounded stale dead lock and releases its own lock", async () => {
+  it("recovers a stale lock left by a crashed process", async () => {
     const directory = await mkdtemp(join(tmpdir(), "sync-stale-lock-"));
-    const lockPath = join(directory, "nested", "sync.lock");
-    await mkdir(join(directory, "nested"), { recursive: true });
-    await writeFile(lockPath, JSON.stringify({
-      pid: 2_147_483_647,
-      createdAt: "2000-01-01T00:00:00.000Z",
-      token: "dead-owner",
-    }));
+    const childScript = [
+      "import lockfile from 'proper-lockfile';",
+      `await lockfile.lock(${JSON.stringify(directory)}, { realpath: false, stale: 2000, update: 1000, retries: 0 });`,
+      "console.log('locked');",
+      "setInterval(() => {}, 1000);",
+    ].join("\n");
+    const child = spawn(process.execPath, ["--input-type=module", "--eval", childScript], {
+      cwd: resolve("."),
+      stdio: ["ignore", "pipe", "pipe"],
+    });
 
     try {
-      const lock = createExclusiveFileLock({
-        path: lockPath,
-        clock: () => new Date("2026-07-14T08:00:00.000Z"),
-        staleAfterMs: 1,
+      await waitForOutput(child, "locked");
+      child.kill("SIGKILL");
+      await new Promise<void>((resolveExit) => child.once("exit", () => resolveExit()));
+
+      const lock = createSynchronizationLock({
+        target: directory,
+        staleMs: 2000,
+        updateMs: 1000,
       });
-      await expect(lock.runExclusive(async () => "done")).resolves.toBe("done");
-      await expect(readFile(lockPath, "utf8")).rejects.toThrow();
+      await expect(waitForStaleRecovery(lock)).resolves.toBe("recovered");
+    } finally {
+      child.kill("SIGKILL");
+      await rm(directory, { recursive: true, force: true });
+    }
+  }, 10_000);
+
+  it("keeps a live lock beyond its stale threshold through heartbeat updates", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "sync-heartbeat-"));
+    let releaseOwner!: () => void;
+    const ownerBarrier = new Promise<void>((resolveBarrier) => {
+      releaseOwner = resolveBarrier;
+    });
+
+    try {
+      const owner = createSynchronizationLock({
+        target: directory,
+        staleMs: 2000,
+        updateMs: 1000,
+      }).runExclusive(async () => ownerBarrier);
+      await delay(2600);
+
+      await expect(createSynchronizationLock({
+        target: directory,
+        staleMs: 2000,
+        updateMs: 1000,
+      }).runExclusive(async () => undefined)).rejects.toMatchObject({ code: "LOCK_CONTENDED" });
+      releaseOwner();
+      await owner;
+    } finally {
+      releaseOwner?.();
+      await rm(directory, { recursive: true, force: true });
+    }
+  }, 10_000);
+
+  it("releases its owned lock when the protected operation throws", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "sync-release-error-"));
+
+    try {
+      const lock = createSynchronizationLock({ target: directory });
+      await expect(lock.runExclusive(async () => {
+        throw new Error("operation failed");
+      })).rejects.toThrow("operation failed");
+      await expect(lock.runExclusive(async () => "next owner")).resolves.toBe("next owner");
     } finally {
       await rm(directory, { recursive: true, force: true });
     }
   });
 });
+
+async function waitForOutput(child: ReturnType<typeof spawn>, expected: string): Promise<void> {
+  await new Promise<void>((resolveOutput, rejectOutput) => {
+    let output = "";
+    const timeout = setTimeout(() => rejectOutput(new Error(`Timed out waiting for ${expected}`)), 5000);
+    child.stdout?.on("data", (chunk) => {
+      output += chunk.toString();
+      if (output.includes(expected)) {
+        clearTimeout(timeout);
+        resolveOutput();
+      }
+    });
+    child.once("error", rejectOutput);
+    child.once("exit", (code) => {
+      if (!output.includes(expected)) rejectOutput(new Error(`Lock child exited with code ${code}`));
+    });
+  });
+}
+
+async function waitForStaleRecovery(lock: ReturnType<typeof createSynchronizationLock>): Promise<string> {
+  const deadline = Date.now() + 4500;
+  while (Date.now() < deadline) {
+    try {
+      return await lock.runExclusive(async () => "recovered");
+    } catch (error) {
+      if (!(error instanceof SyncRunError) || error.code !== "LOCK_CONTENDED") throw error;
+      await delay(100);
+    }
+  }
+  throw new Error("Timed out waiting for stale lock recovery");
+}
 
 describe("sync content CLI", () => {
   it("maps typed configuration failure to nonzero without printing secret material", () => {

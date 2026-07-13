@@ -1,7 +1,6 @@
-import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
-import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { resolve } from "node:path";
+import lockfile from "proper-lockfile";
 import { loadSyncConfig, type SyncConfig } from "./config";
 import { FeishuClient, type RawFeishuRecord } from "./feishu/client";
 import { BASE_FIELDS } from "./feishu/fields";
@@ -14,8 +13,9 @@ import {
 } from "./publish/build-dataset";
 import { PublicDatasetSchema, type ContentItem, type PublicDataset } from "../src/lib/schema";
 
-const DEFAULT_LOCK_PATH = resolve(".sync-content.lock");
-const DEFAULT_STALE_AFTER_MS = 15 * 60 * 1000;
+const DEFAULT_LOCK_TARGET = resolve(".");
+const DEFAULT_STALE_MS = 15 * 60 * 1000;
+const DEFAULT_UPDATE_MS = 5 * 60 * 1000;
 const CONTENT = BASE_FIELDS.content;
 
 export type SyncClient = Pick<FeishuClient, "listRecords" | "createRecord" | "updateRecord">;
@@ -77,7 +77,7 @@ export class SyncRunError extends Error {
 
 export async function runSync(dependencies: SyncDependencies): Promise<SyncSummary> {
   const logger = dependencies.logger ?? consoleLogger;
-  const lock = dependencies.lock ?? createExclusiveFileLock({ path: DEFAULT_LOCK_PATH });
+  const lock = dependencies.lock ?? createSynchronizationLock();
 
   try {
     return await lock.runExclusive(async () => {
@@ -145,7 +145,7 @@ export async function runSync(dependencies: SyncDependencies): Promise<SyncSumma
   } catch (error) {
     const typed = error instanceof SyncRunError
       ? error
-      : new SyncRunError("LOCK_CONTENDED", "lock", error);
+      : new SyncRunError("LOCK_FAILED", "lock", error);
     logger.error(`sync status=failed code=${typed.code} stage=${typed.stage}`);
     throw typed;
   }
@@ -173,89 +173,47 @@ const consoleLogger: SyncLogger = {
   error: (message) => console.error(message),
 };
 
-export interface FileLockOptions {
-  path?: string;
-  clock?: () => Date;
-  staleAfterMs?: number;
+export interface SynchronizationLockOptions {
+  target?: string;
+  staleMs?: number;
+  updateMs?: number;
 }
 
-type LockMetadata = { pid: number; createdAt: string; token: string };
-
-export function createExclusiveFileLock(options: FileLockOptions = {}): SyncLock {
-  const path = options.path ?? DEFAULT_LOCK_PATH;
-  const clock = options.clock ?? (() => new Date());
-  const staleAfterMs = options.staleAfterMs ?? DEFAULT_STALE_AFTER_MS;
+export function createSynchronizationLock(options: SynchronizationLockOptions = {}): SyncLock {
+  const target = options.target ?? DEFAULT_LOCK_TARGET;
+  const stale = options.staleMs ?? DEFAULT_STALE_MS;
+  const update = options.updateMs ?? DEFAULT_UPDATE_MS;
 
   return {
     async runExclusive<T>(operation: () => Promise<T>): Promise<T> {
-      const metadata: LockMetadata = {
-        pid: process.pid,
-        createdAt: clock().toISOString(),
-        token: randomUUID(),
-      };
-      await acquireLock(path, metadata, clock, staleAfterMs);
+      let release: (() => Promise<void>) | undefined;
+      try {
+        release = await lockfile.lock(target, {
+          realpath: false,
+          retries: 0,
+          stale,
+          update,
+        });
+      } catch (error) {
+        const code = isErrorCode(error, "ELOCKED") ? "LOCK_CONTENDED" : "LOCK_ACQUIRE_FAILED";
+        throw new SyncRunError(code, "lock", error);
+      }
+
       try {
         return await operation();
       } finally {
-        await releaseLock(path, metadata);
+        try {
+          await release();
+        } catch (error) {
+          throw new SyncRunError("LOCK_RELEASE_FAILED", "lock", error);
+        }
       }
     },
   };
 }
 
-async function acquireLock(
-  path: string,
-  metadata: LockMetadata,
-  clock: () => Date,
-  staleAfterMs: number,
-): Promise<void> {
-  await mkdir(dirname(path), { recursive: true });
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    try {
-      await writeFile(path, `${JSON.stringify(metadata)}\n`, { encoding: "utf8", flag: "wx" });
-      return;
-    } catch (error) {
-      if (!isFileExistsError(error) || attempt > 0 || !(await isStaleLock(path, clock, staleAfterMs))) {
-        throw new SyncRunError("LOCK_CONTENDED", "lock", error);
-      }
-      await rm(path, { force: true });
-    }
-  }
-}
-
-async function isStaleLock(path: string, clock: () => Date, staleAfterMs: number): Promise<boolean> {
-  let info: LockMetadata | undefined;
-  try {
-    info = JSON.parse(await readFile(path, "utf8")) as LockMetadata;
-  } catch {
-    const file = await stat(path).catch(() => undefined);
-    return Boolean(file && clock().getTime() - file.mtimeMs > staleAfterMs);
-  }
-  if (!Number.isInteger(info.pid) || info.pid <= 0) return false;
-  if (isProcessAlive(info.pid)) return false;
-  return clock().getTime() - Date.parse(info.createdAt) > staleAfterMs;
-}
-
-function isProcessAlive(pid: number): boolean {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (error) {
-    return error instanceof Error && "code" in error && error.code === "ESRCH" ? false : true;
-  }
-}
-
-async function releaseLock(path: string, metadata: LockMetadata): Promise<void> {
-  try {
-    const current = JSON.parse(await readFile(path, "utf8")) as Partial<LockMetadata>;
-    if (current.token === metadata.token) await rm(path, { force: true });
-  } catch {
-    // The lock may have been removed by a bounded stale-lock recovery.
-  }
-}
-
-function isFileExistsError(error: unknown): boolean {
-  return error instanceof Error && "code" in error && error.code === "EEXIST";
+function isErrorCode(error: unknown, code: string): boolean {
+  return error instanceof Error && "code" in error && error.code === code;
 }
 
 export async function main(): Promise<SyncSummary> {
