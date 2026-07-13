@@ -4,6 +4,7 @@
 
 - Baseline: `f99c079b0f7452efe8bedcd1c87f8af7e0007f8c`
 - Added the bounded public image downloader, deterministic public dataset builder, atomic generated dataset writer, focused unit coverage, and seven type-specific WebP fallbacks.
+- Review hardening replaces automatic redirects with validated manual hops and guarantees best-effort stream cancellation plus request abort after reader acquisition failures.
 - No UI pages, components, fixture data, generated `content.json`, or sync orchestration were modified.
 
 ## RED / GREEN
@@ -16,8 +17,8 @@
 
 ### GREEN
 
-- `downloadAsset` accepts credential-free HTTPS only, validates the final redirect URL, requires a 2xx response, and allows only JPEG, PNG, or WebP declarations with matching magic bytes.
-- A 10-second `AbortController` timeout covers retrieval. `Content-Length` rejects known oversize assets before processing, while streamed byte counting stops unknown-length responses above 8 MB without unbounded buffering.
+- `downloadAsset` accepts credential-free HTTPS only and uses `redirect: "manual"` for 301, 302, 303, 307, and 308 responses. Every `Location` is resolved against the current URL and revalidated before the next request. Missing locations, loops, more than five hops, credentials, and any HTTP downgrade fail without including credential-bearing URLs in errors.
+- A 10-second `AbortController` timeout covers retrieval. `Content-Length` rejects known oversize assets before processing, while streamed byte counting stops unknown-length responses above 8 MB without unbounded buffering. Once a reader exists, timeout, size-limit, read, validation, and later processing failures best-effort cancel the reader and abort the request; successful downloads do neither.
 - Asset bytes are streamed into a fixed `public/images/content` temporary file, fsynced, named by SHA-256 plus a controlled extension, and atomically renamed. Existing identical hashes are reused and all failure paths remove temporary files.
 - `buildPublicDataset` copies only explicit `ContentItem` and `CopyBlock` public keys. Remote sources are supplied separately by controlled target path, so raw records and private publication metadata cannot enter the public item structure.
 - Missing or failed cover downloads select a real type-specific WebP fallback. Successful download results must remain under `/images/content/` and pass `ContentItemSchema` as part of the final `PublicDatasetSchema` validation.
@@ -27,9 +28,11 @@
 ## Security Tests
 
 - Rejected HTTP source URLs and URLs containing username/password credentials.
-- Rejected a final redirect URL that downgraded to HTTP.
+- Rejected an HTTPS-to-HTTP intermediate redirect even when a later hop would return to HTTPS.
+- Verified relative `Location` resolution, all manual fetches using `redirect: "manual"`, the five-hop limit, missing `Location`, redirect loops, and credential redaction in errors.
 - Rejected non-2xx responses, missing/unknown/disallowed content types, and mismatched JPEG/PNG/WebP signatures.
-- Verified both declared and streamed 8 MB limits and the 10-second abort path.
+- Verified both declared and streamed 8 MB limits, including observable reader cancellation and request abort with no unhandled cancellation rejection.
+- Verified timeout cleanup after reader acquisition and verified successful completion does not cancel or abort.
 - Verified SHA-256 filenames, controlled extensions, path confinement, and duplicate hash reuse.
 - Verified private keys are absent from serialized output and downloaded paths outside `/images/content/` are rejected.
 - Verified failed dataset validation removes `content.tmp.json` and preserves the previous `content.json` byte-for-byte.
@@ -49,8 +52,8 @@
 
 ## Verification
 
-- Target unit test: 1 file passed, 29 tests passed.
-- Full `npm test`: 8 files passed, 107 tests passed.
+- Target unit test: 1 file passed, 36 tests passed.
+- Full `npm test`: 8 files passed, 114 tests passed.
 - Script TypeScript check: passed with `npx tsc --noEmit --ignoreConfig scripts/publish/assets.ts scripts/publish/build-dataset.ts --module ESNext --moduleResolution Bundler --target ES2022 --lib ES2022,DOM --types node --skipLibCheck`.
 - `npm run check`: 40 files checked; 0 errors, 0 warnings, 0 hints.
 - `npm run build`: 13 static pages generated.

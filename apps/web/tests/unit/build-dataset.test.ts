@@ -79,14 +79,104 @@ describe("downloadAsset", () => {
     await expect(downloadAsset(sourceUrl)).rejects.toThrow(/HTTPS|credentials/i);
   });
 
-  it("rejects a redirect whose final URL is not HTTPS", async () => {
-    await expect(downloadAsset("https://cdn.example.com/cover.png", {
-      fetchImpl: async () => response(PNG_BYTES, {
+  it("rejects an HTTPS to HTTP downgrade even if a later redirect returns to HTTPS", async () => {
+    const fetchImpl = vi.fn(async (input: string | URL | Request) => {
+      const url = input.toString();
+      if (url === "https://cdn.example.com/cover.png") {
+        return response(null, {
+          headers: { location: "http://cdn.example.com/insecure.png" },
+          status: 302,
+          url,
+        });
+      }
+      return response(null, {
+        headers: { location: "https://cdn.example.com/final.png" },
+        status: 302,
+        url,
+      });
+    });
+
+    await expect(downloadAsset("https://cdn.example.com/cover.png", { fetchImpl }))
+      .rejects.toThrow(/HTTPS/i);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("resolves a relative redirect Location against the current URL", async () => {
+    const fetchImpl = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url = input.toString();
+      expect(init?.redirect).toBe("manual");
+      if (url === "https://cdn.example.com/assets/cover.png") {
+        return response(null, {
+          headers: { location: "../final.png" },
+          status: 303,
+          url,
+        });
+      }
+      return response(PNG_BYTES, {
         headers: { "content-type": "image/png" },
         status: 200,
-        url: "http://cdn.example.com/redirected.png",
+        url,
+      });
+    });
+
+    const assetPath = await downloadAsset("https://cdn.example.com/assets/cover.png", { fetchImpl });
+    createdAssets.add(resolve(`public${assetPath}`));
+
+    expect(fetchImpl.mock.calls.map(([input]) => input.toString())).toEqual([
+      "https://cdn.example.com/assets/cover.png",
+      "https://cdn.example.com/final.png",
+    ]);
+  });
+
+  it("rejects more than five redirect hops", async () => {
+    const fetchImpl = vi.fn(async (input: string | URL | Request) => {
+      const url = new URL(input.toString());
+      const hop = Number(url.searchParams.get("hop") ?? "0");
+      return response(null, {
+        headers: { location: `/cover.png?hop=${hop + 1}` },
+        status: 307,
+        url: url.toString(),
+      });
+    });
+
+    await expect(downloadAsset("https://cdn.example.com/cover.png", { fetchImpl }))
+      .rejects.toThrow(/redirect|5/i);
+    expect(fetchImpl).toHaveBeenCalledTimes(6);
+  });
+
+  it("rejects a redirect without Location", async () => {
+    await expect(downloadAsset("https://cdn.example.com/cover.png", {
+      fetchImpl: async () => response(null, { status: 308 }),
+    })).rejects.toThrow(/Location/i);
+  });
+
+  it("rejects redirect loops", async () => {
+    const fetchImpl = vi.fn(async (input: string | URL | Request) => {
+      const url = input.toString();
+      return response(null, {
+        headers: {
+          location: url.endsWith("first.png") ? "/second.png" : "/first.png",
+        },
+        status: 301,
+        url,
+      });
+    });
+
+    await expect(downloadAsset("https://cdn.example.com/first.png", { fetchImpl }))
+      .rejects.toThrow(/loop/i);
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not expose redirect URL credentials in errors", async () => {
+    const request = downloadAsset("https://cdn.example.com/cover.png", {
+      fetchImpl: async () => response(null, {
+        headers: { location: "https://user:secret@cdn.example.com/private.png" },
+        status: 302,
       }),
-    })).rejects.toThrow(/HTTPS/i);
+    });
+
+    await expect(request).rejects.toThrow(/credentials/i);
+    await expect(request).rejects.not.toThrow(/user|secret/i);
   });
 
   it("rejects non-2xx responses", async () => {
@@ -139,24 +229,42 @@ describe("downloadAsset", () => {
     })).rejects.toThrow(/8 MB|size/i);
   });
 
-  it("rejects a streamed body once it exceeds 8 MB", async () => {
+  it("cancels the reader and aborts the request once a streamed body exceeds 8 MB", async () => {
     const chunk = new Uint8Array(1024 * 1024);
     chunk.set(PNG_BYTES);
-    let sent = 0;
+    let cancelled = false;
+    let aborted = false;
+    const unhandledRejections: unknown[] = [];
+    const onUnhandledRejection = (reason: unknown) => unhandledRejections.push(reason);
     const body = new ReadableStream<Uint8Array>({
       pull(controller) {
         controller.enqueue(chunk);
-        sent += 1;
-        if (sent === 9) controller.close();
+      },
+      cancel() {
+        cancelled = true;
+        return Promise.reject(new Error("observable cancel rejection"));
       },
     });
+    process.on("unhandledRejection", onUnhandledRejection);
 
-    await expect(downloadAsset("https://cdn.example.com/stream.png", {
-      fetchImpl: async () => response(body, {
-        headers: { "content-type": "image/png" },
-        status: 200,
-      }),
-    })).rejects.toThrow(/8 MB|size/i);
+    try {
+      await expect(downloadAsset("https://cdn.example.com/stream.png", {
+        fetchImpl: async (_input, init) => {
+          init?.signal?.addEventListener("abort", () => { aborted = true; });
+          return response(body, {
+            headers: { "content-type": "image/png" },
+            status: 200,
+          });
+        },
+      })).rejects.toThrow(/8 MB|size/i);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(cancelled).toBe(true);
+      expect(aborted).toBe(true);
+      expect(unhandledRejections).toEqual([]);
+    } finally {
+      process.off("unhandledRejection", onUnhandledRejection);
+    }
   });
 
   it("aborts retrieval after 10 seconds", async () => {
@@ -172,6 +280,63 @@ describe("downloadAsset", () => {
     const assertion = expect(request).rejects.toThrow(/10 seconds|timed out/i);
     await vi.advanceTimersByTimeAsync(10_000);
     await assertion;
+  });
+
+  it("cancels an acquired reader and aborts the request when streaming times out", async () => {
+    vi.useFakeTimers();
+    let cancelled = false;
+    let aborted = false;
+    const body = new ReadableStream<Uint8Array>({
+      pull() {
+        return new Promise(() => undefined);
+      },
+      cancel() {
+        cancelled = true;
+      },
+    });
+    const request = downloadAsset("https://cdn.example.com/slow-stream.png", {
+      fetchImpl: async (_input, init) => {
+        init?.signal?.addEventListener("abort", () => { aborted = true; });
+        return response(body, {
+          headers: { "content-type": "image/png" },
+          status: 200,
+        });
+      },
+    });
+
+    const assertion = expect(request).rejects.toThrow(/10 seconds|timed out/i);
+    await vi.advanceTimersByTimeAsync(10_000);
+    await assertion;
+
+    expect(cancelled).toBe(true);
+    expect(aborted).toBe(true);
+  });
+
+  it("does not cancel or abort after a successful download", async () => {
+    let cancelled = false;
+    let aborted = false;
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(PNG_BYTES);
+        controller.close();
+      },
+      cancel() {
+        cancelled = true;
+      },
+    });
+    const assetPath = await downloadAsset("https://cdn.example.com/cover.png", {
+      fetchImpl: async (_input, init) => {
+        init?.signal?.addEventListener("abort", () => { aborted = true; });
+        return response(body, {
+          headers: { "content-type": "image/png" },
+          status: 200,
+        });
+      },
+    });
+    createdAssets.add(resolve(`public${assetPath}`));
+
+    expect(cancelled).toBe(false);
+    expect(aborted).toBe(false);
   });
 
   it.each([

@@ -3,8 +3,10 @@ import { access, mkdir, open, rename, rm } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
 const MAX_ASSET_BYTES = 8 * 1024 * 1024;
+const MAX_REDIRECTS = 5;
 const REQUEST_TIMEOUT_MS = 10_000;
 const CONTENT_DIRECTORY = resolve("public/images/content");
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 
 const ALLOWED_IMAGE_TYPES = {
   "image/jpeg": { extension: "jpg", magic: isJpeg },
@@ -24,16 +26,51 @@ export async function downloadAsset(
 ): Promise<string> {
   const source = parseSafeHttpsUrl(sourceUrl);
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+  let readerCancelled = false;
+  let timedOut = false;
+
+  const cancelReader = () => {
+    if (!reader || readerCancelled) return;
+    readerCancelled = true;
+    void reader.cancel().catch(() => undefined);
+  };
+  const timeout = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+    cancelReader();
+  }, REQUEST_TIMEOUT_MS);
   let temporaryPath: string | undefined;
   let file: Awaited<ReturnType<typeof open>> | undefined;
 
   try {
-    const response = await (options.fetchImpl ?? fetch)(source, {
-      redirect: "follow",
-      signal: controller.signal,
-    });
-    parseSafeHttpsUrl(response.url || source.toString());
+    const fetchImpl = options.fetchImpl ?? fetch;
+    const visited = new Set([source.toString()]);
+    let currentUrl = source;
+    let redirects = 0;
+    let response: Response;
+
+    while (true) {
+      response = await fetchImpl(currentUrl, {
+        redirect: "manual",
+        signal: controller.signal,
+      });
+      if (!REDIRECT_STATUSES.has(response.status)) break;
+      if (redirects >= MAX_REDIRECTS) {
+        throw new Error(`Asset redirect limit of ${MAX_REDIRECTS} exceeded`);
+      }
+
+      const location = response.headers.get("location");
+      if (!location) throw new Error("Asset redirect is missing Location");
+      const nextUrl = parseSafeHttpsUrl(location, currentUrl);
+      if (visited.has(nextUrl.toString())) throw new Error("Asset redirect loop detected");
+
+      void response.body?.cancel().catch(() => undefined);
+      visited.add(nextUrl.toString());
+      currentUrl = nextUrl;
+      redirects += 1;
+    }
+
     if (!response.ok) throw new Error(`Asset request failed with HTTP ${response.status}`);
 
     const contentType = parseContentType(response.headers.get("content-type"));
@@ -51,7 +88,7 @@ export async function downloadAsset(
     const signature = new Uint8Array(12);
     let signatureLength = 0;
     let totalBytes = 0;
-    const reader = response.body.getReader();
+    reader = response.body.getReader();
 
     while (true) {
       if (controller.signal.aborted) throw new DOMException("aborted", "AbortError");
@@ -100,7 +137,11 @@ export async function downloadAsset(
     temporaryPath = undefined;
     return `/images/content/${digest}.${extension}`;
   } catch (error) {
-    if (controller.signal.aborted || isAbortError(error)) {
+    if (reader) {
+      cancelReader();
+      controller.abort();
+    }
+    if (timedOut || isAbortError(error)) {
       throw new Error("Asset download timed out after 10 seconds");
     }
     throw error;
@@ -111,10 +152,10 @@ export async function downloadAsset(
   }
 }
 
-function parseSafeHttpsUrl(rawUrl: string): URL {
+function parseSafeHttpsUrl(rawUrl: string, baseUrl?: URL): URL {
   let url: URL;
   try {
-    url = new URL(rawUrl);
+    url = new URL(rawUrl, baseUrl);
   } catch {
     throw new Error("Asset URL must be a valid HTTPS URL");
   }
