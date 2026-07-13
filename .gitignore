@@ -1,0 +1,9 @@
+.worktrees/
+.superpowers/
+**/node_modules/
+**/dist/
+**/.astro/
+**/playwright-report/
+**/test-results/
+apps/web/.env
+apps/web/src/generated/*.tmp.json
