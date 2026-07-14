@@ -2,6 +2,7 @@ import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { expect, test } from "@playwright/test";
 import { DISCOVERY_TRACKS } from "../../src/lib/discovery-recommendation";
+import { selectHeroItems } from "../../src/lib/home-content";
 import { generatedDataset } from "../fixtures/generated-dataset";
 import {
   expectCardsAreSeparate,
@@ -15,6 +16,7 @@ import {
 
 const screenshotDirectory = resolve("../../.superpowers/sdd/task-14-screenshots");
 const detailRoute = `/content/${generatedDataset.items[0]!.slug}`;
+const heroItems = selectHeroItems(generatedDataset.items);
 
 test("public routes share the QIFEI brand asset and copy", async ({ page }) => {
   const titles = [
@@ -82,7 +84,11 @@ test("homepage track links use the supported discovery tracks and filter discove
 test("homepage prioritizes bounded discovery content over a rigid course", async ({ page }) => {
   await page.goto("/");
 
-  await expect(page.getByRole("heading", { level: 1, name: "AI 工作灵感与实践" })).toBeVisible();
+  const hero = page.getByRole("region", { name: "精选内容" });
+  await expect(hero.getByRole("heading", { level: 1, name: heroItems[0]!.title })).toBeVisible();
+  await expect(hero.locator(".hero-carousel__slide.is-active .hero-carousel__brand")).toHaveText(
+    "QIFEI AI Work Discovery",
+  );
   await expect(page.getByRole("heading", { name: "值得一试" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "AI 风向" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "随手可用" })).toBeVisible();
@@ -121,6 +127,21 @@ test("homepage prioritizes bounded discovery content over a rigid course", async
     expect(href).toMatch(/^\/content\/[a-z0-9-]+$/);
     await expect(link).not.toHaveAttribute("target");
   }
+});
+
+test("homepage carousel hydrates and supports manual navigation", async ({ page }) => {
+  await page.goto("/");
+  const hero = page.getByRole("region", { name: "精选内容" });
+
+  await hero.getByRole("button", { name: "下一项精选" }).click();
+  await expect(hero.getByRole("heading", { name: heroItems[1]!.title })).toBeVisible();
+
+  await hero.getByRole("button", { name: `转到第 1 项：${heroItems[0]!.title}` }).click();
+  await expect(hero.getByRole("heading", { name: heroItems[0]!.title })).toBeVisible();
+
+  await hero.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(hero.getByRole("heading", { name: heroItems[1]!.title })).toBeVisible();
 });
 
 test("AI signals section renders only AI Signal content", async ({ page }) => {
@@ -287,5 +308,16 @@ test("390x844 release pages keep exact document width", async ({ page }, testInf
     await expectControlsInBounds(page);
     await expectCardsAreSeparate(page);
     await expectCardTextFits(page);
+
+    if (route === "/") {
+      const dots = page.locator(".hero-carousel__dots button");
+      await expect(dots).toHaveCount(heroItems.length);
+      for (const dot of await dots.all()) {
+        const box = await dot.boundingBox();
+        expect(box).not.toBeNull();
+        expect(box!.width).toBeGreaterThanOrEqual(44);
+        expect(box!.height).toBeGreaterThanOrEqual(44);
+      }
+    }
   }
 });

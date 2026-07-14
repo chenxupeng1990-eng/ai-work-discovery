@@ -26,6 +26,7 @@ function useReducedMotionPreference() {
 
 export function HeroCarousel({ items }: HeroCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [autoplayRevision, setAutoplayRevision] = useState(0);
   const [paused, setPaused] = useState(false);
   const motionAllowed = useReducedMotionPreference();
   const pauseReasons = useRef<Record<PauseReason, boolean>>({
@@ -41,11 +42,18 @@ export function HeroCarousel({ items }: HeroCarouselProps) {
 
   const showPrevious = useCallback(() => {
     setActiveIndex((current) => (current - 1 + items.length) % items.length);
+    setAutoplayRevision((current) => current + 1);
   }, [items.length]);
 
   const showNext = useCallback(() => {
     setActiveIndex((current) => (current + 1) % items.length);
+    setAutoplayRevision((current) => current + 1);
   }, [items.length]);
+
+  const showItem = useCallback((index: number) => {
+    setActiveIndex(index);
+    setAutoplayRevision((current) => current + 1);
+  }, []);
 
   useEffect(() => {
     if (!motionAllowed || paused || items.length < 2) return;
@@ -53,7 +61,7 @@ export function HeroCarousel({ items }: HeroCarouselProps) {
       setActiveIndex((current) => (current + 1) % items.length);
     }, 6000);
     return () => window.clearInterval(timer);
-  }, [items.length, motionAllowed, paused]);
+  }, [autoplayRevision, items.length, motionAllowed, paused]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -161,7 +169,7 @@ export function HeroCarousel({ items }: HeroCarouselProps) {
                 className={index === activeIndex ? "is-active" : ""}
                 aria-label={`转到第 ${index + 1} 项：${item.title}`}
                 aria-current={index === activeIndex ? "true" : undefined}
-                onClick={() => setActiveIndex(index)}
+                onClick={() => showItem(index)}
               />
             ))}
           </div>
@@ -331,20 +339,30 @@ export function HeroCarousel({ items }: HeroCarouselProps) {
         }
 
         .hero-carousel__dots {
-          gap: var(--spacing-12);
+          gap: 0;
         }
 
         .hero-carousel__dots button {
-          width: 10px;
-          height: 10px;
+          width: 44px;
+          height: 44px;
           padding: 0;
-          border: 1px solid rgba(255, 255, 255, 0.74);
+          display: grid;
+          place-items: center;
+          border: 0;
           border-radius: 50%;
           background: transparent;
           cursor: pointer;
         }
 
-        .hero-carousel__dots button.is-active {
+        .hero-carousel__dots button::before {
+          width: 10px;
+          height: 10px;
+          border: 1px solid rgba(255, 255, 255, 0.74);
+          border-radius: 50%;
+          content: "";
+        }
+
+        .hero-carousel__dots button.is-active::before {
           background: var(--color-pure-white);
         }
 

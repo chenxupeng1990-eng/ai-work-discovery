@@ -6,18 +6,37 @@ import { fixtureDataset } from "../fixtures/content";
 
 const [first, second] = fixtureDataset.items;
 
-function setReducedMotion(matches: boolean) {
+function setReducedMotion(initialMatches: boolean) {
+  let matches = initialMatches;
+  let changeListener: (() => void) | undefined;
+  const addEventListener = vi.fn((type: string, listener: () => void) => {
+    if (type === "change") changeListener = listener;
+  });
+  const removeEventListener = vi.fn();
+  const mediaQuery = {
+    get matches() {
+      return matches;
+    },
+    media: "(prefers-reduced-motion: reduce)",
+    onchange: null,
+    addEventListener,
+    removeEventListener,
+    dispatchEvent: vi.fn(),
+  };
+
   Object.defineProperty(window, "matchMedia", {
     configurable: true,
-    value: vi.fn().mockImplementation((query: string) => ({
-      matches: query === "(prefers-reduced-motion: reduce)" && matches,
-      media: query,
-      onchange: null,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    })),
+    value: vi.fn().mockReturnValue(mediaQuery),
   });
+
+  return {
+    addEventListener,
+    removeEventListener,
+    change(nextMatches: boolean) {
+      matches = nextMatches;
+      changeListener?.();
+    },
+  };
 }
 
 function setPageVisibility(state: DocumentVisibilityState) {
@@ -96,6 +115,25 @@ describe("HeroCarousel", () => {
     expect(screen.getByRole("heading", { name: first!.title })).toBeVisible();
   });
 
+  it.each([
+    ["next arrow", () => fireEvent.click(screen.getByRole("button", { name: "下一项精选" }))],
+    ["dot", () => fireEvent.click(screen.getByRole("button", { name: `转到第 2 项：${second!.title}` }))],
+    ["ArrowRight key", () => fireEvent.keyDown(screen.getByRole("region", { name: "精选内容" }), { key: "ArrowRight" })],
+  ])("restarts the full six-second autoplay delay after manual %s navigation", (_method, navigate) => {
+    vi.useFakeTimers();
+    render(<HeroCarousel items={[first!, second!]} />);
+
+    act(() => vi.advanceTimersByTime(3000));
+    navigate();
+    expect(screen.getByRole("heading", { name: second!.title })).toBeVisible();
+
+    act(() => vi.advanceTimersByTime(5999));
+    expect(screen.getByRole("heading", { name: second!.title })).toBeVisible();
+
+    act(() => vi.advanceTimersByTime(1));
+    expect(screen.getByRole("heading", { name: first!.title })).toBeVisible();
+  });
+
   it("advances after six seconds and pauses while hovered", () => {
     vi.useFakeTimers();
     render(<HeroCarousel items={[first!, second!]} />);
@@ -167,5 +205,44 @@ describe("HeroCarousel", () => {
     expect(screen.getByRole("heading", { name: first!.title })).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "下一项精选" }));
     expect(screen.getByRole("heading", { name: second!.title })).toBeVisible();
+  });
+
+  it("responds to reduced-motion preference changes", () => {
+    vi.useFakeTimers();
+    const motion = setReducedMotion(false);
+    render(<HeroCarousel items={[first!, second!]} />);
+
+    act(() => vi.advanceTimersByTime(3000));
+    act(() => motion.change(true));
+    act(() => vi.advanceTimersByTime(6000));
+    expect(screen.getByRole("heading", { name: first!.title })).toBeVisible();
+
+    act(() => motion.change(false));
+    act(() => vi.advanceTimersByTime(5999));
+    expect(screen.getByRole("heading", { name: first!.title })).toBeVisible();
+    act(() => vi.advanceTimersByTime(1));
+    expect(screen.getByRole("heading", { name: second!.title })).toBeVisible();
+  });
+
+  it("removes media and visibility listeners and clears the interval on unmount", () => {
+    vi.useFakeTimers();
+    const motion = setReducedMotion(false);
+    const addDocumentListener = vi.spyOn(document, "addEventListener");
+    const removeDocumentListener = vi.spyOn(document, "removeEventListener");
+    const setIntervalSpy = vi.spyOn(window, "setInterval");
+    const clearIntervalSpy = vi.spyOn(window, "clearInterval");
+    const { unmount } = render(<HeroCarousel items={[first!, second!]} />);
+    const visibilityListener = addDocumentListener.mock.calls.find(([type]) => type === "visibilitychange")?.[1];
+    const mediaListener = motion.addEventListener.mock.calls.find(([type]) => type === "change")?.[1];
+    const interval = setIntervalSpy.mock.results[0]?.value;
+
+    unmount();
+
+    expect(mediaListener).toBeDefined();
+    expect(motion.removeEventListener).toHaveBeenCalledWith("change", mediaListener);
+    expect(visibilityListener).toBeDefined();
+    expect(removeDocumentListener).toHaveBeenCalledWith("visibilitychange", visibilityListener);
+    expect(interval).toBeDefined();
+    expect(clearIntervalSpy).toHaveBeenCalledWith(interval);
   });
 });
