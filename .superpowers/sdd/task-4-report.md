@@ -58,3 +58,33 @@ cmd.exe /d /s /c "npm run build && npx playwright test tests/e2e/home.spec.ts te
 - 无已知功能担忧。
 - Playwright 输出存在环境级 `NO_COLOR` 被 `FORCE_COLOR` 覆盖的 Node 警告，不影响退出码或断言结果。
 - 工作树中仍保留其他工作者已有的 `.superpowers/sdd/task-3-report.md` 修改；本任务未改动或提交该文件。
+
+## 2026-07-14 复审修复
+
+### 状态
+
+完成全部复审 findings。
+
+- `index.astro` 仅在 `heroItems.length > 0` 时渲染轮播；空数组时显示 `QIFEI AI Work Discovery` 主标题和“暂无已发布内容”。
+- 分类 E2E 通过 `generatedDataset.items.filter` 独立计算期望，逐项比较详情 href 顺序并反查每项 track。
+- 精选 E2E 在测试内按 `featured`、`updatedAt`、`sortWeight`、`slug`、`id` 独立排序，验证最多 10 条详情 href 顺序及“查看更多”条件。
+- 四个分类路由已加入 title、description 和 QIFEI 品牌回归。
+
+### TDD 与验证
+
+- RED：`npx playwright test tests/e2e/home.spec.ts tests/e2e/security.spec.ts`
+  - 36 条用例，2 失败、30 通过、4 跳过。
+  - 两个失败均为桌面/移动端空 Hero 回退契约缺失，符合预期。
+- GREEN：`npm run build`
+  - 退出码 0；Astro check 70 个文件，0 错误、0 警告、0 提示；静态生成 19 页。
+- GREEN：`npx playwright test tests/e2e/home.spec.ts tests/e2e/security.spec.ts`
+  - 36 条用例，32 通过、4 个按设备条件跳过、0 失败，耗时 41.0 秒。
+
+### 提交
+
+`87dde54ebf1cf3d0008b0d03d02c8a6223190d45` (`fix: address category discovery review`)
+
+### 担忧
+
+- 无已知功能担忧。
+- Playwright 仍输出环境级 `NO_COLOR`/`FORCE_COLOR` 警告，不影响断言或退出码。
