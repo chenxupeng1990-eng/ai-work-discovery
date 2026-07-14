@@ -173,6 +173,28 @@ test("mobile navigation opens without resizing the header or overflowing", async
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport!.width);
 });
 
+test("320px header keeps its controls inside the viewport", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "320px header geometry only applies to the mobile project.");
+  await page.setViewportSize({ width: 320, height: 844 });
+  await page.goto("/");
+
+  const viewport = page.viewportSize()!;
+  const header = page.getByRole("banner");
+  expect(await header.evaluate((element) => element.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+
+  for (const control of [
+    page.locator(".brand img"),
+    page.getByRole("link", { name: "搜索" }),
+    page.locator("[data-mobile-menu-button]"),
+  ]) {
+    const box = await control.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.x).toBeGreaterThanOrEqual(0);
+    expect(box!.x + box!.width).toBeLessThanOrEqual(viewport.width);
+  }
+});
+
 test("header controls support Tab, Enter, focus visibility, and mobile menu dismissal", async ({ page }, testInfo) => {
   await page.goto("/");
 
