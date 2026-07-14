@@ -53,6 +53,24 @@ async function expectElementsNotToOverlap(elements: ReadonlyArray<readonly [stri
   }
 }
 
+async function expectHeroCoverMeetsReleaseRequirements(image: Locator) {
+  await image.scrollIntoViewIfNeeded();
+  await expect(image).toHaveAttribute("src", /^\/images\/content\//);
+  await expect.poll(() => image.evaluate((element) => (
+    (element as HTMLImageElement).complete
+    && (element as HTMLImageElement).naturalWidth > 0
+  ))).toBe(true);
+
+  const { naturalHeight, naturalWidth } = await image.evaluate((element) => ({
+    naturalHeight: (element as HTMLImageElement).naturalHeight,
+    naturalWidth: (element as HTMLImageElement).naturalWidth,
+  }));
+  expect(naturalWidth).toBeGreaterThanOrEqual(1536);
+  expect(naturalHeight).toBeGreaterThanOrEqual(960);
+  expect(naturalWidth / naturalHeight).toBeGreaterThanOrEqual(1.57);
+  expect(naturalWidth / naturalHeight).toBeLessThanOrEqual(1.63);
+}
+
 test("public routes share the QIFEI brand asset and copy", async ({ page }) => {
   const routes = [
     { route: "/", title: "QIFEI AI 工作灵感与实践 | QIFEI AI Work Discovery", description: undefined },
@@ -283,9 +301,11 @@ test("homepage carousel verifies every slide at each release viewport", async ({
 
       const title = activeSlide.getByRole("heading", { level: 1, name: item.title, exact: true });
       const cta = activeSlide.locator(".hero-carousel__cta");
+      const cover = activeSlide.locator(".hero-carousel__cover");
       await expect(title).toBeVisible();
       await expect(cta).toBeVisible();
       await expect(cta).toHaveAttribute("href", `/content/${item.slug}`);
+      await expectHeroCoverMeetsReleaseRequirements(cover);
 
       const checkpoint = `${viewport.width}x${viewport.height} slide ${index + 1}`;
       await expectElementsNotToOverlap([

@@ -52,7 +52,8 @@ Task 6 does not create `/content/<slug>` routes. Discovery cards therefore use `
 
 - Added a desktop-project release test in `apps/web/tests/e2e/home.spec.ts` that sets `1440x1000`, `1024x1000`, and `390x844` viewports.
 - It uses the component's actual accessible names: Hero region `精选内容` and next control `下一项精选`.
-- It verifies the featured-card limit, each content image's `/images/content/` source, `naturalWidth >= 1536`, `naturalHeight >= 960`, and a `1.57-1.63` natural-image ratio.
+- It verifies every active Hero slide's `.hero-carousel__cover` has an `/images/content/` source, `naturalWidth >= 1536`, `naturalHeight >= 960`, and a `1.57-1.63` natural-image ratio at all three viewports.
+- It retains the ordinary featured-card image assertions for source, declared dimensions, loading completion, natural dimensions, and rendered ratio.
 - At every viewport, it pauses autoplay through Hero hover/focus, traverses every Hero item through the carousel dots, waits for `aria-current`, the active slide label, title, and CTA, then checks pairwise geometry for the logo, title, CTA, dots, and arrow controls.
 - No product-code defect was identified and no production file was changed.
 
