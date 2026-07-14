@@ -11,9 +11,9 @@ const navigation = [
 
 <header class="site-header">
   <div class="header-inner container">
-    <a class="brand" href="/" aria-label="AI Work Discovery 首页">
-      <span class="brand-full">AI Work Discovery</span>
-      <span class="brand-short" aria-hidden="true">AI</span>
+    <a class="brand" href="/" aria-label="QIFEI AI Work Discovery 首页">
+      <span class="brand-mark"><img src="/images/brand/qifei-logo-white.png" alt="" width="100" height="52" /></span>
+      <span class="brand-full">QIFEI AI Work Discovery</span>
     </a>
 
     <nav class="desktop-navigation" aria-label="主导航">
@@ -68,12 +68,29 @@ const navigation = [
 
   .brand {
     flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-family: var(--font-sf-pro-display);
     font-weight: var(--font-weight-semibold);
     white-space: nowrap;
   }
 
-  .brand-short,
+  .brand-mark {
+    width: 100px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    background: var(--color-apple-ink);
+  }
+
+  .brand-mark img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+  }
+
   .mobile-discover {
     display: none;
   }
@@ -243,16 +260,8 @@ const navigation = [
       gap: 8px;
     }
 
-    .brand {
-      font-size: 14px;
-    }
-
     .brand-full {
       display: none;
-    }
-
-    .brand-short {
-      display: inline;
     }
 
     .submit-link {

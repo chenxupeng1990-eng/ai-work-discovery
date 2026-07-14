@@ -16,6 +16,24 @@ import {
 const screenshotDirectory = resolve("../../.superpowers/sdd/task-14-screenshots");
 const detailRoute = `/content/${generatedDataset.items[0]!.slug}`;
 
+test("public routes share the QIFEI brand asset and copy", async ({ page }) => {
+  const titles = [
+    ["/", "QIFEI AI 工作灵感与实践 | QIFEI AI Work Discovery"],
+    ["/discover", "发现 | QIFEI AI Work Discovery"],
+    ["/updates", "最近更新 | QIFEI AI Work Discovery"],
+    [detailRoute, `${generatedDataset.items[0]!.title} | QIFEI AI Work Discovery`],
+  ] as const;
+
+  for (const [route, title] of titles) {
+    await page.goto(route);
+    await expect(page).toHaveTitle(title);
+    await expect(page.locator(".brand")).toHaveAccessibleName("QIFEI AI Work Discovery 首页");
+    await expect(page.locator(".brand img")).toHaveAttribute("src", "/images/brand/qifei-logo-white.png");
+    await expect(page.locator(".brand-full")).toHaveText("QIFEI AI Work Discovery");
+    await expect(page.getByRole("contentinfo")).toContainText("QIFEI AI Work Discovery");
+  }
+});
+
 test("homepage exposes shared navigation and one main landmark", async ({ page }) => {
   await page.goto("/");
 
