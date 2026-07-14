@@ -1,0 +1,95 @@
+import { describe, expect, it } from "vitest";
+import type { RawFeishuRecord } from "../../scripts/feishu/client";
+import { BASE_FIELDS } from "../../scripts/feishu/fields";
+import {
+  ContentAuditError,
+  ContentAuditProposalSchema,
+  assertReleaseAudits,
+} from "../../scripts/audit/content-audit";
+
+const CONTENT = BASE_FIELDS.content;
+const NOW = new Date("2026-07-14T08:00:00.000Z");
+
+function record(record_id: string, fields: Record<string, unknown>): RawFeishuRecord {
+  return { record_id, fields };
+}
+
+function approvedPublishedRecord(overrides: Record<string, unknown> = {}): RawFeishuRecord {
+  return record("rec-published", {
+    [CONTENT.publicationStatus]: "已发布",
+    [CONTENT.valueVerdict]: "高价值",
+    [CONTENT.freshnessVerdict]: "当前有效",
+    [CONTENT.factualVerdict]: "符合当前实际",
+    [CONTENT.auditDecision]: "通过",
+    [CONTENT.auditNote]: "已按当前官方来源完成核验。",
+    [CONTENT.auditedAt]: "2026-07-14T07:00:00.000Z",
+    [CONTENT.nextReviewAt]: "2026-07-21T08:00:00.000Z",
+    ...overrides,
+  });
+}
+
+describe("ContentAuditProposalSchema", () => {
+  it("accepts a complete approved audit proposal", () => {
+    expect(ContentAuditProposalSchema.parse({
+      valueVerdict: "可保留",
+      freshnessVerdict: "当前有效",
+      factualVerdict: "符合当前实际",
+      auditDecision: "通过",
+      auditNote: "已按当前官方来源完成核验。",
+      auditedAt: "2026-07-14T07:00:00.000Z",
+      nextReviewAt: "2026-08-14T08:00:00.000Z",
+    })).toMatchObject({ auditDecision: "通过" });
+  });
+});
+
+describe("assertReleaseAudits", () => {
+  it("permits only complete current approved published records", () => {
+    expect(() => assertReleaseAudits([approvedPublishedRecord()], NOW)).not.toThrow();
+  });
+
+  it.each([
+    ["missing audit field", { [CONTENT.auditDecision]: undefined }],
+    ["expired freshness", { [CONTENT.freshnessVerdict]: "已过时" }],
+    ["unverifiable freshness", { [CONTENT.freshnessVerdict]: "无法确认" }],
+    ["unverifiable facts", { [CONTENT.factualVerdict]: "无法确认" }],
+    ["non-passing decision", { [CONTENT.auditDecision]: "待审核" }],
+    ["invalid audited timestamp", { [CONTENT.auditedAt]: "not-a-date" }],
+    ["invalid next review timestamp", { [CONTENT.nextReviewAt]: "not-a-date" }],
+    ["due next review timestamp", { [CONTENT.nextReviewAt]: NOW.toISOString() }],
+  ])("blocks a published record with %s", (_label, overrides) => {
+    expect(() => assertReleaseAudits([approvedPublishedRecord(overrides)], NOW))
+      .toThrow(ContentAuditError);
+  });
+
+  it("ignores draft and removed records without audit fields", () => {
+    expect(() => assertReleaseAudits([
+      approvedPublishedRecord({ [CONTENT.publicationStatus]: "草稿" }),
+      record("rec-removed", { [CONTENT.publicationStatus]: "已下架" }),
+    ], NOW)).not.toThrow();
+  });
+
+  it("reports only failed record ids without audit values or URLs", () => {
+    const unsafeUrl = "https://user:password@example.com/private";
+    let thrown: unknown;
+
+    try {
+      assertReleaseAudits([
+        approvedPublishedRecord({
+          [CONTENT.auditNote]: unsafeUrl,
+          [CONTENT.nextReviewAt]: unsafeUrl,
+        }),
+        record("rec-second", {
+          [CONTENT.publicationStatus]: "已发布",
+          [CONTENT.auditNote]: unsafeUrl,
+        }),
+      ], NOW);
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(ContentAuditError);
+    expect((thrown as ContentAuditError).recordIds).toEqual(["rec-published", "rec-second"]);
+    expect((thrown as Error).message).toBe("rec-published,rec-second");
+    expect((thrown as Error).message).not.toContain(unsafeUrl);
+  });
+});

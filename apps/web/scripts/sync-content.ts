@@ -5,6 +5,7 @@ import { loadSyncConfig, type SyncConfig } from "./config";
 import { FeishuClient, type RawFeishuRecord } from "./feishu/client";
 import { BASE_FIELDS } from "./feishu/fields";
 import { mapPublishedContent, normalizeAttachmentSourceUrl } from "./feishu/map-records";
+import { assertReleaseAudits } from "./audit/content-audit";
 import { processPendingInbox, type InboxProcessingSummary } from "./inbox/process-inbox";
 import {
   buildPublicDataset,
@@ -89,6 +90,12 @@ export async function runSync(dependencies: SyncDependencies): Promise<SyncSumma
         readTable(dependencies.client, dependencies.config.FEISHU_CONTENT_TABLE_ID, "content"),
         readTable(dependencies.client, dependencies.config.FEISHU_COPY_BLOCKS_TABLE_ID, "copy"),
       ]);
+
+      try {
+        assertReleaseAudits(contentRecords, dependencies.clock?.() ?? new Date());
+      } catch (error) {
+        throw new SyncRunError("CONTENT_AUDIT_FAILED", "audit-content", error);
+      }
 
       let mapped: ContentItem[];
       try {

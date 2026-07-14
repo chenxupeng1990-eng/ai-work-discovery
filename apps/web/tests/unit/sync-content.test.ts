@@ -66,6 +66,13 @@ function publishedRecord(overrides: Record<string, unknown> = {}): RawFeishuReco
     [CONTENT.updatedAt]: "2026-07-14T00:00:00.000Z",
     [CONTENT.publicationStatus]: "已发布",
     [CONTENT.publicLevel]: "公开",
+    [CONTENT.valueVerdict]: "高价值",
+    [CONTENT.freshnessVerdict]: "当前有效",
+    [CONTENT.factualVerdict]: "符合当前实际",
+    [CONTENT.auditDecision]: "通过",
+    [CONTENT.auditNote]: "已按当前官方来源完成核验。",
+    [CONTENT.auditedAt]: "2026-07-14T07:00:00.000Z",
+    [CONTENT.nextReviewAt]: "2026-07-21T08:00:00.000Z",
     ...overrides,
   });
 }
@@ -121,6 +128,19 @@ describe("runSync", () => {
       processInbox: async () => successfulInbox(),
       output,
     })).rejects.toMatchObject({ code: "CONTENT_MAPPING_FAILED" });
+    expect(output.replaceAtomically).not.toHaveBeenCalled();
+  });
+
+  it("does not replace the last good dataset when a published audit is invalid", async () => {
+    const output = memoryOutput();
+
+    await expect(runSync({
+      client: clientFor([publishedRecord({ [CONTENT.nextReviewAt]: "2026-07-14T08:00:00.000Z" })]),
+      config,
+      processInbox: async () => successfulInbox(),
+      output,
+      clock: () => new Date("2026-07-14T08:00:00.000Z"),
+    })).rejects.toMatchObject({ code: "CONTENT_AUDIT_FAILED", stage: "audit-content" });
     expect(output.replaceAtomically).not.toHaveBeenCalled();
   });
 
