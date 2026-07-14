@@ -224,6 +224,82 @@ test("preference picker reranks recommendations and supports keyboard input", as
   );
 });
 
+test("quick-match panel uses the Chinese glass visual contract", async ({ page }) => {
+  await page.goto("/discover");
+  await waitForExplorer(page);
+
+  const styles = await page.locator(".starter-picker").evaluate((panel) => {
+    const panelStyle = getComputedStyle(panel);
+    const headingStyle = getComputedStyle(panel.querySelector("h2")!);
+    const controlsStyle = getComputedStyle(panel.querySelector(".starter-picker__controls")!);
+
+    return {
+      backdropFilter: panelStyle.backdropFilter,
+      backgroundColor: panelStyle.backgroundColor,
+      fontFamily: headingStyle.fontFamily,
+      fontWeight: headingStyle.fontWeight,
+      gridColumns: controlsStyle.gridTemplateColumns.split(" ").filter(Boolean),
+      mutedColor: getComputedStyle(panel.querySelector(".preference-group legend")!).color,
+    };
+  });
+
+  expect(styles.backdropFilter).toContain("blur(");
+  expect(styles.backgroundColor).toBe("rgba(245, 245, 247, 0.72)");
+  expect(styles.fontFamily).toContain("PingFang SC");
+  expect(styles.fontWeight).toBe("500");
+  expect(styles.mutedColor).toBe("rgb(112, 112, 112)");
+
+  const width = page.viewportSize()!.width;
+  const expectedColumns = width > 1180 ? 4 : width > 720 ? 2 : 1;
+  expect(styles.gridColumns).toHaveLength(expectedColumns);
+
+  const clippedGroups = await page.locator(".preference-group").evaluateAll((groups) => groups.filter((group) => {
+    const groupBox = group.getBoundingClientRect();
+    return [...group.querySelectorAll("button")].some((button) => {
+      const buttonBox = button.getBoundingClientRect();
+      return buttonBox.right > groupBox.right + 1;
+    });
+  }).length);
+  expect(clippedGroups).toBe(0);
+});
+
+test("quick-match recommendations do not clip text at the middle breakpoint", async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 1000 });
+  await page.goto("/discover");
+  await waitForExplorer(page);
+
+  const clippedText = await page.locator(
+    ".starter-result > p, .starter-result__takeaway",
+  ).evaluateAll((elements) => elements.filter((element) => (
+    element.scrollHeight > element.clientHeight + 1
+  )).length);
+
+  expect(clippedText).toBe(0);
+});
+
+test("mobile recommendation links stay inside their clamped headings", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/discover");
+  await waitForExplorer(page);
+
+  const escapedLinks = await page.locator(".starter-result h3").evaluateAll((headings) => headings.filter((heading) => {
+    const headingBox = heading.getBoundingClientRect();
+    const linkBox = heading.querySelector("a")!.getBoundingClientRect();
+    return linkBox.bottom > headingBox.bottom + 1;
+  }).length);
+
+  expect(escapedLinks).toBe(0);
+});
+
+test("Chinese display typography keeps zero letter spacing", async ({ page }) => {
+  await page.goto("/discover");
+  await waitForExplorer(page);
+
+  await expect.poll(() => page.locator("#discover-title").evaluate((heading) => (
+    getComputedStyle(heading).letterSpacing
+  ))).toMatch(/^(normal|0px)$/);
+});
+
 test("discovery page avoids horizontal overflow and overlapping cards", async ({ page }) => {
   await page.goto("/discover");
   await waitForExplorer(page);

@@ -58,4 +58,40 @@ No actionable P0, P1, or P2 differences remain.
 - Images load with stable dimensions; cards do not overlap; desktop and mobile pages have no horizontal overflow.
 - Public pages expose no private release markers, draft data, or internal asset URLs.
 
+## Chinese Typography and Liquid Glass Iteration
+
+- Source screenshot: `C:\Users\Qifei\AppData\Local\Temp\codex-clipboard-046a8387-1c9a-40b5-a7f1-243e8189d503.png`.
+- Desktop implementation: `.superpowers/sdd/task-14-screenshots/discover-glass-desktop-1920-final.png` at `1920x1080`.
+- Mobile implementation: `.superpowers/sdd/task-14-screenshots/discover-glass-mobile-final.png` at `390x844`.
+- Side-by-side evidence: `.superpowers/sdd/task-14-screenshots/discover-glass-comparison-final.png`.
+
+### Iteration 1
+
+- P2: four desktop preference groups used horizontally scrolling button rows, leaving two groups with clipped final options.
+- Fix: changed each group to a wrapping flex row while retaining the four-column desktop layout and two-/one-column responsive layouts.
+- Evidence: the visual-contract E2E detects any button extending past its preference group; it passes at the final state.
+
+### Final comparison
+
+- Typography: Chinese fallbacks now prioritize PingFang SC, Noto Sans CJK SC, and Microsoft YaHei. Section, recommendation, and listing-card headings use weight 500 with more relaxed Chinese line height.
+- Spacing: the quick-match tool has a wider heading gap, four balanced desktop preference groups, and a larger separation before its recommendation results.
+- Glass: the panel uses a translucent Fog surface, 1px tokenized border, 22px backdrop blur, and short settle/hover transitions without gradients or shadows.
+- Responsive behavior: controls collapse to two columns below 1180px and one column below 720px. Mobile recommendations remain single-column with no horizontal overflow.
+- Motion accessibility: reduced-motion mode removes the panel entrance animation and interactive transforms.
+- Content and imagery: no content, route, image, Feishu field, search, filter, or copy behavior changed.
+
+### Iteration 2
+
+- P2: the relaxed recommendation line height exceeded two fixed text containers at the 1024px breakpoint, and two 12px muted labels fell below WCAG AA contrast.
+- Fix: increased the bounded text regions to their measured three-line height and changed muted labels from Slate to Graphite.
+- Evidence: the final E2E checks 1024px vertical overflow, adaptive 4/2/1-column breakpoints, exact glass opacity, muted-label color, and zero display letter spacing.
+
+### Iteration 3
+
+- P2: on 390px screens, a three-line recommendation title was visually clamped by its `h3`, but the nested link retained a taller click box and could extend below the viewport after scrolling.
+- Fix: moved the two-line clamp to the link itself so its visual text and interactive bounds are identical.
+- Evidence: the targeted link-boundary regression and the 390x844 release-page test both pass.
+
+No actionable P0, P1, or P2 differences remain.
+
 final result: passed
