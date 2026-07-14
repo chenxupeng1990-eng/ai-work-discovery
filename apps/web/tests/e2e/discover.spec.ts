@@ -56,6 +56,7 @@ test("category chips filter results without moving the control bar", async ({ pa
   await waitForExplorer(page);
 
   const controls = page.locator("[data-discovery-controls]");
+  await controls.scrollIntoViewIfNeeded();
   const before = await controls.boundingBox();
   const category = page.getByRole("button", { name: "产品信号", exact: true });
 
@@ -142,7 +143,7 @@ test("listing cards link every item to its internal detail page", async ({ page 
   }
 
   await expect(page.locator('[href^="#"]')).toHaveCount(0);
-  await expect(page.locator('[href^="/content/"]')).toHaveCount(10);
+  await expect(page.locator(".discovery-grid").locator('[href^="/content/"]')).toHaveCount(10);
 });
 
 test("discovery page avoids horizontal overflow and overlapping cards", async ({ page }) => {

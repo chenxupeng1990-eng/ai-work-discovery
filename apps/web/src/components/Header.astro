@@ -51,11 +51,12 @@ const navigation = [
 
 <style>
   .site-header {
-    position: relative;
+    position: sticky;
+    top: 0;
     z-index: 10;
-    height: 72px;
-    border-bottom: 1px solid var(--frost);
-    background: var(--canvas);
+    height: 48px;
+    background: color-mix(in srgb, var(--color-pure-white) 86%, transparent);
+    backdrop-filter: saturate(180%) blur(20px);
   }
 
   .header-inner {
@@ -67,7 +68,8 @@ const navigation = [
 
   .brand {
     flex: 0 0 auto;
-    font-weight: 400;
+    font-family: var(--font-sf-pro-display);
+    font-weight: var(--font-weight-semibold);
     white-space: nowrap;
   }
 
@@ -82,15 +84,15 @@ const navigation = [
     align-items: center;
     gap: 18px;
     margin-left: auto;
-    color: var(--steel);
-    font-size: 14px;
+    color: var(--color-charcoal);
+    font-size: 12px;
     font-weight: 400;
     white-space: nowrap;
   }
 
   .desktop-navigation a:hover,
   .mobile-navigation a:hover {
-    color: var(--indigo);
+    color: var(--color-link-blue);
   }
 
   .header-actions {
@@ -100,22 +102,28 @@ const navigation = [
   }
 
   .icon-button {
-    width: 44px;
-    height: 44px;
+    width: 36px;
+    height: 36px;
     padding: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--frost);
-    border-radius: 4px;
+    border: 0;
+    border-radius: var(--radius-button);
     color: var(--ink);
     background: var(--canvas);
     cursor: pointer;
   }
 
   .icon-button:hover {
-    border-color: var(--lavender);
-    color: var(--indigo);
+    color: var(--color-link-blue);
+    background: var(--color-ash);
+  }
+
+  .submit-link {
+    min-height: 36px;
+    padding-inline: var(--spacing-16);
+    font-size: 14px;
   }
 
   .submit-link[aria-disabled="true"] {
@@ -180,10 +188,10 @@ const navigation = [
     top: calc(100% + 10px);
     right: 0;
     width: min(280px, calc(100vw - 32px));
-    padding: 8px;
+    padding: var(--spacing-8);
     display: grid;
-    border: 1px solid var(--frost);
-    border-radius: 4px;
+    border: 0;
+    border-radius: var(--radius-card);
     background: var(--canvas);
   }
 
@@ -228,7 +236,7 @@ const navigation = [
 
   @media (max-width: 720px) {
     .site-header {
-      height: 64px;
+      height: 56px;
     }
 
     .header-inner {
@@ -248,14 +256,14 @@ const navigation = [
     }
 
     .submit-link {
-      min-height: 40px;
+      min-height: 36px;
       padding-inline: 12px;
       font-size: 14px;
     }
 
     .icon-button {
-      width: 40px;
-      height: 40px;
+      width: 36px;
+      height: 36px;
     }
   }
 

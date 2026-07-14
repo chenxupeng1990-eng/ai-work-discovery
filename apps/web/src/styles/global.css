@@ -1,16 +1,16 @@
 :root {
-  --ink: #061b31;
-  --slate: #64748d;
-  --steel: #50617a;
-  --canvas: #ffffff;
-  --mist: #f8fafd;
-  --frost: #e5edf5;
-  --indigo: #533afd;
-  --indigo-hover: #7389ff;
-  --lavender: #b9b9f9;
-  --wash: #e8e9ff;
-  --max-width: 1320px;
-  font-family: Inter, "Noto Sans SC", system-ui, sans-serif;
+  --ink: var(--color-apple-ink);
+  --slate: var(--color-slate);
+  --steel: var(--color-graphite);
+  --canvas: var(--color-pure-white);
+  --mist: var(--color-fog-canvas);
+  --frost: var(--color-ash);
+  --indigo: var(--color-electric-blue);
+  --indigo-hover: #0077ed;
+  --lavender: var(--color-divider);
+  --wash: var(--color-ash);
+  --max-width: var(--page-max-width);
+  font-family: var(--font-sf-pro-text);
   color: var(--ink);
   background: var(--canvas);
   letter-spacing: 0;
@@ -60,8 +60,9 @@ p {
 h1,
 h2,
 h3 {
-  font-weight: 300;
-  line-height: 1.15;
+  font-family: var(--font-sf-pro-display);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--leading-heading-sm);
 }
 
 .container {
@@ -91,15 +92,15 @@ h3 {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border-radius: 4px;
-  font-weight: 400;
+  border-radius: var(--radius-button);
+  font-weight: var(--font-weight-regular);
   white-space: nowrap;
 }
 
 .button-primary {
   color: var(--canvas);
-  background: var(--indigo);
-  border: 1px solid var(--indigo);
+  background: var(--color-electric-blue);
+  border: 1px solid var(--color-electric-blue);
 }
 
 .button-primary:hover {
@@ -108,13 +109,14 @@ h3 {
 }
 
 .button-secondary {
-  color: var(--indigo);
+  color: var(--color-apple-ink);
   background: var(--canvas);
-  border: 1px solid var(--lavender);
+  border: 1px solid var(--color-apple-ink);
 }
 
 .button-secondary:hover {
-  background: var(--wash);
+  color: var(--color-pure-white);
+  background: var(--color-apple-ink);
 }
 
 .tag {
@@ -122,10 +124,10 @@ h3 {
   padding: 0 14px;
   display: inline-flex;
   align-items: center;
-  border: 1px solid var(--frost);
-  border-radius: 999px;
+  border: 0;
+  border-radius: var(--radius-tag);
   color: var(--steel);
-  background: var(--canvas);
+  background: var(--color-fog-canvas);
   font-size: 14px;
 }
 
