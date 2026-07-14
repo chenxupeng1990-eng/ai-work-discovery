@@ -123,8 +123,8 @@ export function HeroCarousel({ items }: HeroCarouselProps) {
                 className="hero-carousel__cover"
                 src={item.coverImage}
                 alt=""
-                width="1920"
-                height="1080"
+                width="1536"
+                height="960"
                 loading={index === 0 ? "eager" : "lazy"}
                 fetchPriority={index === 0 ? "high" : "auto"}
                 data-home-content-image={index === 0 ? true : undefined}

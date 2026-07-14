@@ -72,6 +72,8 @@ describe("HeroCarousel", () => {
     expect(slides[0]).not.toHaveAttribute("inert");
     expect(slides[0]?.querySelector("h1")).toHaveTextContent(first!.title);
     expect(slides[0]?.querySelector("a")).toHaveAttribute("href", `/content/${first!.slug}`);
+    expect(slides[0]?.querySelector(".hero-carousel__cover")).toHaveAttribute("width", "1536");
+    expect(slides[0]?.querySelector(".hero-carousel__cover")).toHaveAttribute("height", "960");
     expect(slides[1]).toHaveAttribute("aria-hidden", "true");
     expect(slides[1]).toHaveAttribute("inert");
   });
