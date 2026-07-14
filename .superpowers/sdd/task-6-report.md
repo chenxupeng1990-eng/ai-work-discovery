@@ -45,3 +45,39 @@ Task 6 does not create `/content/<slug>` routes. Discovery cards therefore use `
 - `apps/web/tests/e2e/discover.spec.ts`
 - `apps/web/tests/unit/schema.test.ts`
 - `.superpowers/sdd/task-6-report.md`
+
+## Release Verification Addendum (2026-07-14)
+
+### Added E2E Coverage
+
+- Added a desktop-project release test in `apps/web/tests/e2e/home.spec.ts` that sets `1440x1000`, `1024x1000`, and `390x844` viewports.
+- It uses the component's actual accessible names: Hero region `精选内容` and next control `下一项精选`.
+- It verifies the featured-card limit, each content image's `/images/content/` source, `naturalWidth >= 1536`, `naturalHeight >= 960`, and a `1.57-1.63` natural-image ratio.
+- It checks pairwise geometry for the active Hero logo, title, CTA, dots, and arrow controls at all three viewports.
+- The focused E2E passed on its first run, so no product-code defect was identified and no production file was changed.
+
+### Command Results
+
+- `npm run test:e2e -- tests/e2e/home.spec.ts --project=desktop --grep "homepage carousel meets release accessibility"`: 1 passed.
+- `npm test -- --run`: 20 test files and 561 tests passed.
+- `npm run check`: 70 files checked; 0 errors, 0 warnings, 0 hints.
+- `npm run build`: static build completed; 19 pages built.
+- `npm run verify:public`: passed; scanned 52 `dist` files and 1 tracked public text artifact.
+- `npm run test:e2e`: 86 passed and 4 deliberate project-condition skips out of 90 tests.
+- `npx playwright test --reporter=dot`: repeated the full 90-test run with the same 86 passes and 4 deliberate skips.
+- `git diff --check`: clean before the report update.
+
+### Screenshot Review
+
+- [Homepage desktop](/C:/Users/Qifei/.feishu-codex-bridge/projects/t/.worktrees/ai-work-discovery/.superpowers/sdd/task-14-screenshots/home-desktop.png)
+- [Homepage mobile](/C:/Users/Qifei/.feishu-codex-bridge/projects/t/.worktrees/ai-work-discovery/.superpowers/sdd/task-14-screenshots/home-mobile.png)
+- [Populated category desktop](/C:/Users/Qifei/.feishu-codex-bridge/projects/t/.worktrees/ai-work-discovery/.superpowers/sdd/task-14-screenshots/category-inspiration-desktop.png)
+- [Populated category mobile](/C:/Users/Qifei/.feishu-codex-bridge/projects/t/.worktrees/ai-work-discovery/.superpowers/sdd/task-14-screenshots/category-inspiration-mobile.png)
+- [Empty frontier category desktop](/C:/Users/Qifei/.feishu-codex-bridge/projects/t/.worktrees/ai-work-discovery/.superpowers/sdd/task-14-screenshots/category-frontier-desktop.png)
+- [Empty frontier category mobile](/C:/Users/Qifei/.feishu-codex-bridge/projects/t/.worktrees/ai-work-discovery/.superpowers/sdd/task-14-screenshots/category-frontier-mobile.png)
+- [Discover desktop](/C:/Users/Qifei/.feishu-codex-bridge/projects/t/.worktrees/ai-work-discovery/.superpowers/sdd/task-14-screenshots/discover-desktop.png)
+- [Discover mobile](/C:/Users/Qifei/.feishu-codex-bridge/projects/t/.worktrees/ai-work-discovery/.superpowers/sdd/task-14-screenshots/discover-mobile.png)
+- [Detail desktop](/C:/Users/Qifei/.feishu-codex-bridge/projects/t/.worktrees/ai-work-discovery/.superpowers/sdd/task-14-screenshots/detail-desktop.png)
+- [Detail mobile](/C:/Users/Qifei/.feishu-codex-bridge/projects/t/.worktrees/ai-work-discovery/.superpowers/sdd/task-14-screenshots/detail-mobile.png)
+
+The screenshot review found QIFEI branding in the first viewport, the next homepage section visible, consistent image materials and lighting, no generated-text artifacts, and no visible horizontal overflow, clipped Chinese text, nested cards, or overlapping carousel controls. Full-page captures can repeat the sticky header at a scroll boundary; the viewport assertions cover the actual interactive layout.

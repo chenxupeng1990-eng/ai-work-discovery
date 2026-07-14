@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
 import { CATEGORY_DEFINITIONS } from "../../src/lib/categories";
 import { selectHeroItems } from "../../src/lib/home-content";
 import { generatedDataset } from "../fixtures/generated-dataset";
@@ -34,6 +34,24 @@ const categoryRoutes = [
   "/category/team-practice",
   "/category/frontier-signals",
 ] as const;
+
+async function expectElementsNotToOverlap(elements: ReadonlyArray<readonly [string, Locator]>) {
+  const boxes = await Promise.all(elements.map(async ([name, element]) => {
+    const box = await element.boundingBox();
+    expect(box, `${name} should have a visible bounding box`).not.toBeNull();
+    return [name, box!] as const;
+  }));
+
+  for (const [index, [firstName, firstBox]] of boxes.entries()) {
+    for (const [secondName, secondBox] of boxes.slice(index + 1)) {
+      const overlaps = firstBox.x < secondBox.x + secondBox.width
+        && secondBox.x < firstBox.x + firstBox.width
+        && firstBox.y < secondBox.y + secondBox.height
+        && secondBox.y < firstBox.y + firstBox.height;
+      expect(overlaps, `${firstName} overlaps ${secondName}`).toBe(false);
+    }
+  }
+}
 
 test("public routes share the QIFEI brand asset and copy", async ({ page }) => {
   const routes = [
@@ -227,6 +245,52 @@ test("homepage carousel hydrates and supports manual navigation", async ({ page 
   await hero.focus();
   await page.keyboard.press("ArrowRight");
   await expect(hero.getByRole("heading", { name: heroItems[1]!.title })).toBeVisible();
+});
+
+test("homepage carousel meets release accessibility, image, and responsive geometry requirements", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Release viewport checkpoints run once in the desktop project.");
+
+  for (const viewport of [
+    { width: 1440, height: 1000 },
+    { width: 1024, height: 1000 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/");
+
+    const hero = page.getByRole("region", { name: "精选内容" });
+    const next = hero.getByRole("button", { name: "下一项精选" });
+    await expect(hero).toBeVisible();
+    await expect(next).toBeVisible();
+    await expect(page.locator('[data-home-section="featured"] [data-content-card]')).toHaveCount(
+      Math.min(10, generatedDataset.items.length),
+    );
+
+    const contentImages = page.locator("img[data-home-content-image]");
+    for (const image of await contentImages.all()) {
+      await image.scrollIntoViewIfNeeded();
+      await expect(image).toHaveAttribute("src", /^\/images\/content\//);
+      await expect(image).toHaveJSProperty("complete", true);
+      const { naturalHeight, naturalWidth } = await image.evaluate((element) => ({
+        naturalHeight: (element as HTMLImageElement).naturalHeight,
+        naturalWidth: (element as HTMLImageElement).naturalWidth,
+      }));
+      expect(naturalWidth).toBeGreaterThanOrEqual(1536);
+      expect(naturalHeight).toBeGreaterThanOrEqual(960);
+      expect(naturalWidth / naturalHeight).toBeGreaterThanOrEqual(1.57);
+      expect(naturalWidth / naturalHeight).toBeLessThanOrEqual(1.63);
+    }
+
+    const activeSlide = hero.locator(".hero-carousel__slide.is-active");
+    await expect(activeSlide).toHaveCount(1);
+    await expectElementsNotToOverlap([
+      ["logo", activeSlide.locator(".hero-carousel__brand")],
+      ["title", activeSlide.getByRole("heading", { level: 1 })],
+      ["CTA", activeSlide.locator(".hero-carousel__cta")],
+      ["dots", hero.locator(".hero-carousel__dots")],
+      ["arrows", hero.locator(".hero-carousel__arrows")],
+    ]);
+  }
 });
 
 test("homepage keeps the next section visible and avoids horizontal overflow", async ({ page }) => {
