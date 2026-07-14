@@ -223,7 +223,13 @@ function linkedRecordIds(value: unknown): string[] {
   return value.flatMap((entry) => {
     if (typeof entry === "string" && entry) return [entry];
     if (typeof entry === "object" && entry !== null && !Array.isArray(entry)) {
-      const recordId = (entry as Record<string, unknown>).record_id;
+      const source = entry as Record<string, unknown>;
+      if (Array.isArray(source.record_ids)) {
+        return source.record_ids.filter((recordId): recordId is string => (
+          typeof recordId === "string" && Boolean(recordId)
+        ));
+      }
+      const recordId = source.record_id ?? source.id;
       return typeof recordId === "string" && recordId ? [recordId] : [];
     }
     return [];

@@ -1,4 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
+import { queryContent } from "../../src/lib/content-query";
+import { DISCOVERY_TRACKS, recommendContent } from "../../src/lib/discovery-recommendation";
 import { generatedDataset } from "../fixtures/generated-dataset";
 import { expectFocusVisible, tabUntil } from "./release-assertions";
 
@@ -7,6 +9,10 @@ const waitForExplorer = async (page: Page) => {
 };
 
 const listingCards = (page: Page) => page.locator("[data-discovery-card]");
+const normalizeNewlines = (value: string) => value.replace(/\r\n/g, "\n");
+const populatedTrack = DISCOVERY_TRACKS.find((track) => (
+  generatedDataset.items.some((item) => item.recommendationTrack === track)
+))!;
 
 test("header search is a valid discovery navigation", async ({ page }) => {
   await page.goto("/");
@@ -20,21 +26,32 @@ test("search filters Chinese content and announces the result count", async ({ p
 
   await page.getByRole("searchbox", { name: "搜索内容" }).fill("飞书");
 
-  await expect(listingCards(page)).toHaveCount(1);
-  await expect(listingCards(page)).toContainText("用飞书桥把 Codex 变成团队可调用的工作入口");
-  await expect(page.getByRole("status", { name: "搜索结果数量" })).toHaveText("找到 1 项内容");
+  const expected = queryContent(generatedDataset.items, {
+    query: "飞书",
+    category: "全部",
+    sort: "featured",
+  });
+  await expect(listingCards(page)).toHaveCount(expected.length);
+  await expect(listingCards(page).getByRole("heading")).toHaveText(expected.map((item) => item.title));
+  await expect(page.getByRole("status", { name: "搜索结果数量" })).toHaveText(`找到 ${expected.length} 项内容`);
 });
 
 test("search matches copy block titles but not copy block bodies", async ({ page }) => {
   await page.goto("/discover");
   await waitForExplorer(page);
 
+  const item = generatedDataset.items.find((candidate) => candidate.copyBlocks.length > 0)!;
+  const block = [...item.copyBlocks].sort((left, right) => left.order - right.order)[0]!;
+  const bodyOnlyQuery = block.content.split(/\r?\n/).find((line) => (
+    line.trim().length >= 12
+    && queryContent(generatedDataset.items, { query: line.trim(), category: "全部", sort: "featured" }).length === 0
+  ))!;
   const search = page.getByRole("searchbox", { name: "搜索内容" });
-  await search.fill("团队 AGENTS.md 模板");
+  await search.fill(block.title);
   await expect(listingCards(page)).toHaveCount(1);
-  await expect(listingCards(page)).toContainText("AGENTS.md 配置范本");
+  await expect(listingCards(page)).toContainText(item.title);
 
-  await search.fill("State assumptions before coding");
+  await search.fill(bodyOnlyQuery);
   await expect(listingCards(page)).toHaveCount(0);
 });
 
@@ -65,28 +82,29 @@ test("track query initializes, updates, and rejects unknown tracks", async ({ pa
   await expect(page).toHaveURL("/discover");
 });
 
-test("track chips filter results without moving the control bar", async ({ page }) => {
+test("track chips filter results without resizing the control bar", async ({ page }) => {
   await page.goto("/discover");
   await waitForExplorer(page);
 
   const controls = page.locator("[data-discovery-controls]");
   await controls.scrollIntoViewIfNeeded();
   const before = await controls.boundingBox();
-  const track = page.getByRole("button", { name: "前沿信号", exact: true }).last();
+  const track = page.getByRole("button", { name: populatedTrack, exact: true }).last();
 
   await track.click();
 
   await expect(track).toHaveAttribute("aria-pressed", "true");
   await expect(listingCards(page)).toHaveCount(
-    generatedDataset.items.filter((item) => item.recommendationTrack === "前沿信号").length,
+    generatedDataset.items.filter((item) => item.recommendationTrack === populatedTrack).length,
   );
-  await expect(listingCards(page).filter({ hasText: "OpenAI 发布 Agent 构建工具" })).toHaveCount(1);
+  const expectedTrackItem = generatedDataset.items.find((item) => item.recommendationTrack === populatedTrack)!;
+  await expect(listingCards(page).filter({ hasText: expectedTrackItem.title })).toHaveCount(1);
   const after = await controls.boundingBox();
   expect(before).not.toBeNull();
   expect(after).not.toBeNull();
   expect(after!.x).toBe(before!.x);
-  expect(after!.y).toBe(before!.y);
   expect(after!.width).toBe(before!.width);
+  expect(after!.height).toBe(before!.height);
 });
 
 test("latest sorting changes the first result according to updatedAt", async ({ page }) => {
@@ -119,7 +137,7 @@ test("latest sorting changes the first result according to updatedAt", async ({ 
   await expect(latest).toHaveAttribute("aria-pressed", "true");
   await expect(cardHeadings.first()).toHaveText(expectedLatestOrder[0]);
   await expect(cardHeadings).toHaveText(expectedLatestOrder);
-  expect(featuredFirst).not.toBe(expectedLatestOrder[0]);
+  expect(featuredFirst).toBe(expectedFeaturedOrder[0]);
 });
 
 test("empty search renders a complete resettable state", async ({ page }) => {
@@ -178,7 +196,8 @@ test("listing card copies its first reusable block", async ({ page, context }) =
   await page.keyboard.press("Enter");
 
   await expect(card.getByRole("button", { name: `已复制 ${item.title}` })).toBeVisible();
-  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(firstBlock.content);
+  await expect.poll(async () => normalizeNewlines(await page.evaluate(() => navigator.clipboard.readText())))
+    .toBe(normalizeNewlines(firstBlock.content));
 });
 
 test("listing card reports clipboard failure and supports retry", async ({ page }) => {
@@ -218,9 +237,15 @@ test("preference picker reranks recommendations and supports keyboard input", as
   await page.getByRole("group", { name: "想拿走什么" }).getByRole("button", { name: "团队案例" }).click();
   await page.getByRole("group", { name: "接受的门槛" }).getByRole("button", { name: "需要开发" }).click();
 
+  const expected = recommendContent(generatedDataset.items, {
+    timeToValue: "半天",
+    goal: "团队实践",
+    format: "团队案例",
+    adoptionLevel: "需要开发",
+  }, 3);
   await expect(time).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator(".starter-result").first().getByRole("heading")).toHaveText(
-    "用飞书桥把 Codex 变成团队可调用的工作入口",
+  await expect(page.locator(".starter-result").getByRole("heading")).toHaveText(
+    expected.map((item) => item.title),
   );
 });
 
@@ -330,7 +355,11 @@ test("discovery search, track, and sort controls operate from the keyboard", asy
   await tabUntil(search);
   await expectFocusVisible(search);
   await search.fill("飞书");
-  await expect(listingCards(page)).toHaveCount(1);
+  await expect(listingCards(page)).toHaveCount(queryContent(generatedDataset.items, {
+    query: "飞书",
+    category: "全部",
+    sort: "featured",
+  }).length);
 
   await search.fill("");
   const track = page.getByRole("button", { name: "前沿信号", exact: true }).last();

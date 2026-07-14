@@ -1,6 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { expect, test } from "@playwright/test";
+import { DISCOVERY_TRACKS } from "../../src/lib/discovery-recommendation";
 import { generatedDataset } from "../fixtures/generated-dataset";
 import {
   expectCardsAreSeparate,
@@ -13,6 +14,7 @@ import {
 } from "./release-assertions";
 
 const screenshotDirectory = resolve("../../.superpowers/sdd/task-14-screenshots");
+const detailRoute = `/content/${generatedDataset.items[0]!.slug}`;
 
 test("homepage exposes shared navigation and one main landmark", async ({ page }) => {
   await page.goto("/");
@@ -40,17 +42,16 @@ test("homepage exposes shared navigation and one main landmark", async ({ page }
   await expect(page.getByRole("contentinfo")).toBeVisible();
 });
 
-test("homepage track links use tracks present in the public dataset and filter discovery", async ({ page }) => {
+test("homepage track links use the supported discovery tracks and filter discovery", async ({ page }) => {
   await page.goto("/");
 
   const links = page.getByRole("navigation", { name: "发现方向" }).getByRole("link");
   await expect(links).toHaveCount(4);
-  const actualTracks = new Set<string>(generatedDataset.items.map((item) => item.recommendationTrack));
   for (const link of await links.all()) {
     const href = await link.getAttribute("href");
     expect(href).toMatch(/^\/discover\?track=.+/);
     const track = new URL(href!, "https://example.test").searchParams.get("track");
-    expect(actualTracks.has(track!)).toBe(true);
+    expect(DISCOVERY_TRACKS).toContain(track);
   }
 
   const targetTrack = "灵感实验";
@@ -73,16 +74,15 @@ test("homepage prioritizes bounded discovery content over a rigid course", async
   await expect(page.locator('[data-home-section="spotlight"]')).toHaveCount(1);
   await expect(page.locator('[data-home-section="worth-trying"] [data-content-card]')).toHaveCount(5);
   const signalItems = page.locator('[data-home-section="ai-signals"] [data-signal-item]');
-  const signalCount = await signalItems.count();
-  expect(signalCount).toBeGreaterThanOrEqual(3);
-  expect(signalCount).toBeLessThanOrEqual(5);
+  const expectedSignalCount = Math.min(4, generatedDataset.items.filter((item) => item.type === "AI Signal").length);
+  await expect(signalItems).toHaveCount(expectedSignalCount);
   await expect(page.locator('[data-home-section="ready-to-use"] [data-ready-item]')).toHaveCount(3);
   await expect(page.locator('[data-home-section="recent"] [data-recent-item]')).toHaveCount(6);
 
   const contentImages = page.locator('[data-home-content-image]');
   await expect(contentImages).toHaveCount(6);
   for (const image of await contentImages.all()) {
-    await expect(image).toHaveAttribute("src", /^\/images\/fixtures\/.+\.png$/);
+    await expect(image).toHaveAttribute("src", /^\/images\/content\/[a-zA-Z0-9_-]+\/.+\.png$/);
     await expect(image).toHaveAttribute("width", /\d+/);
     await expect(image).toHaveAttribute("height", /\d+/);
     await expect(image).toHaveJSProperty("complete", true);
@@ -208,7 +208,7 @@ for (const checkpoint of [
   { name: "home", route: "/" },
   { name: "discover", route: "/discover" },
   { name: "updates", route: "/updates" },
-  { name: "detail", route: "/content/codex-environment-dependency-checklist" },
+  { name: "detail", route: detailRoute },
 ]) {
   test(`${checkpoint.name} release framing and screenshot`, async ({ page }, testInfo) => {
     await page.goto(checkpoint.route);
@@ -241,7 +241,7 @@ test("390x844 release pages keep exact document width", async ({ page }, testInf
   test.skip(testInfo.project.name !== "mobile", "Narrow mobile checkpoint only applies to mobile.");
   await page.setViewportSize({ width: 390, height: 844 });
 
-  for (const route of ["/", "/discover", "/updates", "/content/codex-environment-dependency-checklist"]) {
+  for (const route of ["/", "/discover", "/updates", detailRoute]) {
     await page.goto(route);
     await expectNoHorizontalOverflow(page);
     await expectControlsInBounds(page);

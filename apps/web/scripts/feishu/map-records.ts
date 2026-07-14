@@ -168,7 +168,13 @@ function linkedRecordIds(value: unknown): string[] {
   return value.flatMap((entry) => {
     if (typeof entry === "string" && entry) return [entry];
     if (typeof entry === "object" && entry !== null && !Array.isArray(entry)) {
-      const recordId = (entry as Record<string, unknown>).record_id;
+      const source = entry as Record<string, unknown>;
+      if (Array.isArray(source.record_ids)) {
+        return source.record_ids.filter((recordId): recordId is string => (
+          typeof recordId === "string" && Boolean(recordId)
+        ));
+      }
+      const recordId = source.record_id ?? source.id;
       return typeof recordId === "string" && recordId ? [recordId] : [];
     }
     return [];
@@ -203,10 +209,15 @@ function requireBoolean(record: RawFeishuRecord, field: string): boolean {
 
 function requireNumber(record: RawFeishuRecord, field: string): number {
   const value = requireValue(record, field);
-  if (typeof value !== "number" || !Number.isFinite(value)) {
+  const numeric = typeof value === "number"
+    ? value
+    : typeof value === "string" && value.trim()
+      ? Number(value)
+      : Number.NaN;
+  if (!Number.isFinite(numeric)) {
     throw fieldError(record.record_id, field, "必须是有限数字");
   }
-  return value;
+  return numeric;
 }
 
 function requireDate(record: RawFeishuRecord, field: string): string {

@@ -147,7 +147,7 @@ describe("PublicDatasetSchema", () => {
     expect(copyBlockResult.success).toBe(false);
   });
 
-  it("validates realistic fixtures and their generated JSON", () => {
+  it("validates realistic fixtures and the current generated dataset", () => {
     expect(fixtureDataset.items).toHaveLength(10);
     expect(new Set(fixtureDataset.items.map((item) => item.type))).toEqual(new Set([
       "Case",
@@ -171,7 +171,8 @@ describe("PublicDatasetSchema", () => {
       "getting-started-codex-dependencies",
     ]);
     expect(PublicDatasetSchema.parse(fixtureDataset)).toEqual(fixtureDataset);
-    expect(PublicDatasetSchema.parse(generatedDataset)).toEqual(fixtureDataset);
+    expect(PublicDatasetSchema.parse(generatedDataset)).toEqual(generatedDataset);
+    expect(generatedDataset.items.length).toBeGreaterThan(0);
   });
 
   it("uses meaningful fixture update times that can drive latest sorting", () => {
@@ -190,11 +191,12 @@ describe("PublicDatasetSchema", () => {
     expect(signals.every((item) => Boolean(item.originalUrl))).toBe(true);
   });
 
-  it("keeps the generated content JSON synchronized with fixtures", () => {
+  it("keeps the generated content JSON valid and synchronized with its module import", () => {
     const generatedDataPath = resolve("src/generated/content.json");
 
     expect(existsSync(generatedDataPath)).toBe(true);
-    expect(PublicDatasetSchema.parse(JSON.parse(readFileSync(generatedDataPath, "utf8")))).toEqual(fixtureDataset);
+    expect(PublicDatasetSchema.parse(JSON.parse(readFileSync(generatedDataPath, "utf8"))))
+      .toEqual(generatedDataset);
   });
 
   it("uses interface screenshots instead of the Feishu auth QR code", () => {

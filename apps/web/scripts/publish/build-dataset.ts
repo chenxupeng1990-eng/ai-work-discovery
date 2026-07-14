@@ -31,6 +31,7 @@ export interface BuildPublicDatasetOptions {
   assets?: AssetSources;
   clock?: () => Date;
   downloadAsset?: (sourceUrl: string) => Promise<string>;
+  hasExistingAsset?: (publicPath: string) => Promise<boolean>;
 }
 
 export interface WritePublicDatasetOptions {
@@ -49,6 +50,7 @@ export async function buildPublicDataset(
   options: BuildPublicDatasetOptions = {},
 ): Promise<PublicDataset> {
   const downloader = options.downloadAsset ?? retrieveAsset;
+  const hasExistingAsset = options.hasExistingAsset ?? existingPublicAsset;
   const publicItems = await Promise.all(items.map(async (item) => {
     const publicItem = copyPublicItem(item);
     const sourceUrl = getAssetSource(options.assets, item.coverImage);
@@ -61,6 +63,12 @@ export async function buildPublicDataset(
     try {
       downloadedPath = await downloader(sourceUrl);
     } catch {
+      if (
+        CONTROLLED_DOWNLOADED_PATH.test(publicItem.coverImage)
+        && await hasExistingAsset(publicItem.coverImage)
+      ) {
+        return ContentItemSchema.parse(publicItem);
+      }
       publicItem.coverImage = FALLBACK_BY_TYPE[publicItem.type];
       return ContentItemSchema.parse(publicItem);
     }
@@ -81,6 +89,15 @@ export async function buildPublicDataset(
     generatedAt: (options.clock ?? (() => new Date()))().toISOString(),
     items: publicItems,
   });
+}
+
+async function existingPublicAsset(publicPath: string): Promise<boolean> {
+  try {
+    await access(resolve("public", `.${publicPath}`));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function writePublicDataset(

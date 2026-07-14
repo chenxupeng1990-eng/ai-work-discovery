@@ -9,7 +9,7 @@ import { publicDataset } from "../lib/public-dataset";
 
 const items = publicDataset.items;
 const featured = getFeatured(items);
-const spotlight = featured[0];
+const spotlight = featured[0] ?? getRecent(items, 1)[0];
 const worthTrying = [
   ...featured.slice(1),
   ...getRecent(items.filter((item) => !item.featured), 5),
@@ -32,7 +32,7 @@ const discoveryTracks = [
   title="AI 工作灵感与实践 | AI Work Discovery"
   description="发现可直接应用于工作的 AI 灵感、协作方式、案例与工具。"
 >
-  <FeaturedSpotlight item={spotlight} />
+  {spotlight && <FeaturedSpotlight item={spotlight} />}
 
   <nav class="category-strip" aria-label="发现方向">
     <div class="container category-strip__inner">

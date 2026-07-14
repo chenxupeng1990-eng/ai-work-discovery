@@ -10,7 +10,7 @@ const publicRoutes = [
 ];
 
 test("every public route responds without private release markers", async ({ request }) => {
-  expect(publicRoutes).toHaveLength(13);
+  expect(publicRoutes).toHaveLength(3 + generatedDataset.items.length);
 
   for (const route of publicRoutes) {
     const response = await request.get(route);

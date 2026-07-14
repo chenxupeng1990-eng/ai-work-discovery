@@ -1,390 +1,536 @@
 {
-  "generatedAt": "2026-07-13T12:00:00.000Z",
+  "generatedAt": "2026-07-14T10:04:56.705Z",
   "items": [
     {
-      "id": "case-feishu-bridge",
-      "slug": "feishu-bridge-team-entry",
-      "title": "用飞书桥把 Codex 变成团队可调用的工作入口",
-      "type": "Case",
-      "category": "团队案例",
-      "summary": "把飞书机器人、Codex 工作区和公开文档串成一个低门槛入口，让非技术同事也能提交任务并接收结果。",
-      "recommendationReason": "适合希望把个人 AI 工具升级为团队协作能力的负责人参考。",
-      "recommendationTrack": "团队实践",
-      "timeToValue": "半天",
-      "adoptionLevel": "需要开发",
+      "id": "recvpkOJPUSQj9",
+      "slug": "feishu-cli-codex-quick-start",
+      "title": "飞书 CLI 快速安装：让 Codex 获得飞书文档与任务能力",
+      "type": "Getting Started",
+      "category": "快速开始",
+      "summary": "三步完成接入：安装 lark-cli、安装官方 Skills、按授权链接完成用户授权；之后 Codex 才能以你的身份读取或写入飞书。",
+      "recommendationReason": "适合需要在 Codex 中直接处理飞书资料和协作任务的团队，安装路径短，权限与身份边界清晰。",
+      "recommendationTrack": "工作提效",
+      "timeToValue": "10 分钟",
+      "adoptionLevel": "需要配置",
       "networkRequirement": "无需 VPN",
-      "takeaway": "完成一个飞书入口到 Codex 的团队工作入口搭建。",
-      "coverImage": "/images/fixtures/codex_environment_screen.png",
+      "takeaway": "复制安装命令完成 CLI 与 Skills 安装，再用测试任务验证文档读取、创建和权限身份。",
+      "coverImage": "/images/content/recvpkOJPUSQj9/recvpkOJPUSQj9.png",
       "tags": [
         "Codex",
         "飞书",
-        "Bridge"
-      ],
-      "audience": [
-        "团队负责人",
-        "运营",
-        "研发"
-      ],
-      "scenario": "团队 AI 工作入口",
-      "sourceName": "团队实践",
-      "featured": true,
-      "sortWeight": 100,
-      "publishedAt": "2026-07-13T00:00:00.000Z",
-      "updatedAt": "2026-07-13T10:00:00.000Z",
-      "copyBlocks": [
-        {
-          "id": "feishu-bridge-config",
-          "title": "飞书桥任务约束",
-          "type": "Configuration",
-          "language": "markdown",
-          "content": "只处理当前工作区内的文件；执行前说明假设；完成后返回测试命令、关键输出和报告路径。",
-          "order": 0,
-          "note": "可放入机器人任务模板。"
-        }
-      ]
-    },
-    {
-      "id": "inspiration-storyboarding-video",
-      "slug": "storyboarding-ai-video-workflow",
-      "title": "先做分镜，再让 AI 生成视频：一套可复审的短视频工作流",
-      "type": "Inspiration",
-      "category": "视频工作流",
-      "summary": "先固定叙事节奏、镜头目标和画面证据，再进入生成与剪辑，减少返工和风格漂移。",
-      "recommendationReason": "把抽象创意拆成可逐镜审核的交付物，适合多人参与的视频项目。",
-      "recommendationTrack": "灵感实验",
-      "timeToValue": "1 小时",
-      "adoptionLevel": "直接使用",
-      "networkRequirement": "部分资源需要 VPN",
-      "takeaway": "复制分镜审查提示词并产出一版可评审分镜。",
-      "coverImage": "/images/fixtures/codex_environment_screen.png",
-      "tags": [
-        "视频",
-        "分镜",
-        "工作流"
-      ],
-      "audience": [
-        "内容团队",
-        "设计师",
-        "市场"
-      ],
-      "scenario": "AI 视频策划",
-      "sourceName": "内容制作复盘",
-      "featured": true,
-      "sortWeight": 90,
-      "publishedAt": "2026-07-12T08:00:00.000Z",
-      "updatedAt": "2026-07-12T12:00:00.000Z",
-      "copyBlocks": [
-        {
-          "id": "storyboard-prompt",
-          "title": "分镜评审提示词",
-          "type": "Prompt",
-          "language": "text",
-          "content": "逐镜检查信息目标、主体动作、景别、时长和转场。指出缺少证据或无法拍摄的镜头，不要直接润色文案。",
-          "order": 0
-        }
-      ]
-    },
-    {
-      "id": "skill-codex-skills-roundup",
-      "slug": "codex-skills-practical-roundup",
-      "title": "Codex Skills 实用清单：把重复工作固化为可复用流程",
-      "type": "Skill",
-      "category": "Codex Skills",
-      "summary": "按代码审查、调试、文档、数据和媒体任务整理 Skills，并说明每类能力的触发时机。",
-      "recommendationReason": "帮助团队从临时提示词转向有边界、有验证步骤的稳定工作流。",
-      "recommendationTrack": "工作提效",
-      "timeToValue": "10 分钟",
-      "adoptionLevel": "直接使用",
-      "networkRequirement": "部分资源需要 VPN",
-      "takeaway": "拿到一份可照着启用的 Codex Skills 清单。",
-      "coverImage": "/images/fixtures/codex_environment_page.png",
-      "tags": [
-        "Codex",
         "Skills",
         "自动化"
       ],
       "audience": [
-        "开发者",
-        "AI 工程师"
+        "运营团队",
+        "研发团队",
+        "AI 初学者"
       ],
-      "scenario": "复用标准操作流程",
-      "originalUrl": "https://developers.openai.com/codex/skills",
-      "sourceName": "OpenAI Developers",
+      "scenario": "安装飞书 CLI、给 Codex 增加飞书 Skills，并通过用户授权读取或写入团队资料。",
+      "originalUrl": "https://waytoagi.feishu.cn/wiki/Zsp2wxsKEiRTEjkajJFc7FBGnh3",
+      "sourceName": "WayToAGI",
       "featured": true,
-      "sortWeight": 80,
-      "publishedAt": "2026-07-11T08:00:00.000Z",
-      "updatedAt": "2026-07-11T12:00:00.000Z",
+      "sortWeight": 0,
+      "publishedAt": "2026-07-14T09:52:00.000Z",
+      "updatedAt": "2026-07-14T09:22:07.000Z",
       "copyBlocks": [
         {
-          "id": "skills-path",
-          "title": "个人 Skills 目录",
-          "type": "Path",
-          "language": "text",
-          "content": "~/.codex/skills",
-          "order": 0
+          "id": "recvpkSvfOhvhd",
+          "title": "安装飞书 CLI 与官方 Skills",
+          "type": "Command",
+          "language": "shell",
+          "content": "npm install -g @larksuite/cli\nnpx skills add https://github.com/larksuite/cli -y -g",
+          "order": 1,
+          "note": "安装后按终端给出的链接完成应用创建和用户二次授权；授权时核对当前用户与 Bot 身份。"
         }
       ]
     },
     {
-      "id": "configuration-agents-md",
-      "slug": "agents-md-team-configuration",
-      "title": "AGENTS.md 配置范本：让编码 Agent 先澄清、少改动、可验证",
+      "id": "recvpkPmXg47kl",
+      "slug": "moneyprinterturbo-short-video-pipeline",
+      "title": "MoneyPrinterTurbo：从主题、脚本到配音字幕的一键短视频流水线",
+      "type": "Tool",
+      "category": "视频工作流",
+      "summary": "输入主题或文案后，自动组织脚本、素材、配音、字幕、背景音乐并合成横版或竖版短视频，支持批量生成和本地素材。",
+      "recommendationReason": "对电商内容团队的价值是把重复的脚本到成片环节变成可批处理流水线，但素材版权、模型接口、品牌视觉和成片审核仍需人工把关。",
+      "recommendationTrack": "工作提效",
+      "timeToValue": "半天",
+      "adoptionLevel": "需要配置",
+      "networkRequirement": "部分资源需要 VPN",
+      "takeaway": "在本机跑通一条 30-60 秒竖屏样片，并确认脚本、素材、配音、字幕和导出五个环节可替换。",
+      "coverImage": "/images/content/recvpkPmXg47kl/recvpkPmXg47kl.png",
+      "tags": [
+        "AI",
+        "视频生成",
+        "内容工作流",
+        "开源"
+      ],
+      "audience": [
+        "内容团队",
+        "运营团队",
+        "市场团队",
+        "研发团队"
+      ],
+      "scenario": "批量制作知识解读、清单、资讯和素材混剪类竖屏视频；不适合要求人物、产品和连续场景高度一致的复杂广告片。",
+      "originalUrl": "https://github.com/harry0703/MoneyPrinterTurbo",
+      "sourceName": "Vibe Coding 雷达 / GitHub",
+      "featured": true,
+      "sortWeight": 0,
+      "publishedAt": "2026-07-14T09:52:00.000Z",
+      "updatedAt": "2026-07-14T09:22:07.000Z",
+      "copyBlocks": [
+        {
+          "id": "recvpl119CVd8f",
+          "title": "先体检 MoneyPrinterTurbo，再生成样片",
+          "type": "Prompt",
+          "language": "text",
+          "content": "请阅读 https://github.com/harry0703/MoneyPrinterTurbo 的当前 README 和配置示例，先不要安装。检查这台 Windows 电脑的 Python、FFmpeg、磁盘、模型接口、TTS、字幕和素材来源条件，列出缺失依赖、是否需要 VPN、预计费用与版权风险。目标是用我提供的文案和本地素材生成一条 30-60 秒、1080x1920 的测试视频。先给最小实施计划和验收清单，确认后再安装；不得自动发布。",
+          "order": 1,
+          "note": "适合模板化素材混剪，不用于承诺人物、产品或连续场景一致性。"
+        }
+      ]
+    },
+    {
+      "id": "recvpkQUuE2XwZ",
+      "slug": "design-md-visual-context-for-codex",
+      "title": "给 Codex 一份设计规则文件：把品牌视觉变成可执行上下文",
       "type": "Skill",
       "category": "工作区配置",
-      "summary": "用一份仓库级说明约束 Agent 的假设、改动范围、测试方式和完成报告。",
-      "recommendationReason": "适合多人共享仓库，能降低过度实现和无关重构的概率。",
-      "recommendationTrack": "工作提效",
-      "timeToValue": "10 分钟",
-      "adoptionLevel": "需要配置",
-      "networkRequirement": "无需 VPN",
-      "takeaway": "补齐一份可直接放入仓库的 AGENTS.md 约束模板。",
-      "coverImage": "/images/fixtures/codex_environment_page_after_config.png",
-      "tags": [
-        "AGENTS.md",
-        "配置",
-        "工程规范"
-      ],
-      "audience": [
-        "研发团队",
-        "技术负责人"
-      ],
-      "scenario": "统一 Agent 行为",
-      "originalUrl": "https://agents.md/",
-      "sourceName": "AGENTS.md",
-      "featured": false,
-      "sortWeight": 70,
-      "publishedAt": "2026-07-10T08:00:00.000Z",
-      "updatedAt": "2026-07-13T11:00:00.000Z",
-      "copyBlocks": [
-        {
-          "id": "agents-md-template",
-          "title": "团队 AGENTS.md 模板",
-          "type": "Configuration",
-          "language": "markdown",
-          "content": "# Working agreement\n- State assumptions before coding.\n- Touch only files required by the task.\n- Run the smallest relevant test first, then the full verification command.",
-          "order": 0
-        }
-      ]
-    },
-    {
-      "id": "signal-ai-hot-agent-workflows",
-      "slug": "ai-hot-agent-workflows-signal",
-      "title": "AI HOT 信号：Agent 产品正在从聊天窗口走向可审计工作流",
-      "type": "AI Signal",
-      "category": "行业信号",
-      "summary": "越来越多产品把计划、工具调用、产物和验证记录放进同一条任务链，而不只展示最终回答。",
-      "recommendationReason": "值得产品和工程团队关注，因为可追溯性正在成为 Agent 落地的基础能力。",
-      "recommendationTrack": "前沿信号",
-      "timeToValue": "10 分钟",
-      "adoptionLevel": "直接使用",
-      "networkRequirement": "无需 VPN",
-      "takeaway": "完成一次关于 Agent 可审计工作流方向的趋势速读。",
-      "coverImage": "/images/fixtures/codex_environment_screen.png",
-      "tags": [
-        "AI HOT",
-        "Agent",
-        "趋势"
-      ],
-      "audience": [
-        "产品经理",
-        "技术负责人",
-        "投资研究"
-      ],
-      "scenario": "AI 行业观察",
-      "originalUrl": "https://www.aibase.com/zh/news",
-      "sourceName": "AIbase",
-      "featured": true,
-      "sortWeight": 60,
-      "publishedAt": "2026-07-09T08:00:00.000Z",
-      "updatedAt": "2026-07-10T12:00:00.000Z",
-      "copyBlocks": []
-    },
-    {
-      "id": "signal-openai-agent-building-tools",
-      "slug": "openai-agent-building-tools-signal",
-      "title": "OpenAI 发布 Agent 构建工具：模型能力开始围绕可执行工作流组合",
-      "type": "AI Signal",
-      "category": "产品信号",
-      "summary": "OpenAI 将 Responses API、内置工具、Agents SDK 与可观测能力组合为面向 Agent 应用的开发栈。",
-      "recommendationReason": "这表明行业竞争正在从单次模型回答转向工具调用、编排、追踪和评估组成的完整工作流。",
-      "recommendationTrack": "前沿信号",
-      "timeToValue": "10 分钟",
-      "adoptionLevel": "直接使用",
-      "networkRequirement": "需要 VPN",
-      "takeaway": "带走一份评估 Agent 平台建设方向的要点摘要。",
-      "coverImage": "/images/fixtures/codex_environment_page.png",
-      "tags": [
-        "OpenAI",
-        "Agent",
-        "开发平台"
-      ],
-      "audience": [
-        "产品经理",
-        "开发者",
-        "技术负责人"
-      ],
-      "scenario": "Agent 平台趋势观察",
-      "originalUrl": "https://openai.com/index/new-tools-for-building-agents/",
-      "sourceName": "OpenAI",
-      "featured": false,
-      "sortWeight": 59,
-      "publishedAt": "2025-03-11T00:00:00.000Z",
-      "updatedAt": "2026-07-09T12:00:00.000Z",
-      "copyBlocks": []
-    },
-    {
-      "id": "signal-anthropic-model-context-protocol",
-      "slug": "anthropic-model-context-protocol-signal",
-      "title": "Anthropic 发布 MCP：AI 应用与外部数据源开始形成开放连接标准",
-      "type": "AI Signal",
-      "category": "生态信号",
-      "summary": "Model Context Protocol 用统一协议连接 AI 助手、数据源和工具，减少每个集成单独开发的成本。",
-      "recommendationReason": "开放协议扩大了工具生态的可移植性，也让企业需要更早考虑权限、审计和连接器治理。",
-      "recommendationTrack": "前沿信号",
-      "timeToValue": "10 分钟",
-      "adoptionLevel": "直接使用",
-      "networkRequirement": "需要 VPN",
-      "takeaway": "理解 MCP 对连接器、权限和审计治理的直接影响。",
-      "coverImage": "/images/fixtures/codex_environment_page_after_config.png",
-      "tags": [
-        "Anthropic",
-        "MCP",
-        "开放标准"
-      ],
-      "audience": [
-        "平台团队",
-        "开发者",
-        "技术负责人"
-      ],
-      "scenario": "AI 工具生态观察",
-      "originalUrl": "https://www.anthropic.com/news/model-context-protocol",
-      "sourceName": "Anthropic",
-      "featured": false,
-      "sortWeight": 58,
-      "publishedAt": "2024-11-25T00:00:00.000Z",
-      "updatedAt": "2026-07-08T12:00:00.000Z",
-      "copyBlocks": []
-    },
-    {
-      "id": "tool-github-codex-skills",
-      "slug": "github-openai-skills-project",
-      "title": "GitHub 项目：用仓库管理 Codex Skills 的版本、评审与分发",
-      "type": "Tool",
-      "category": "开源项目",
-      "summary": "把 Skill 说明、脚本和参考资料纳入 Git 版本控制，通过代码审查维护团队共用能力。",
-      "recommendationReason": "适合已经积累多套 Agent 流程、需要统一升级和回滚机制的团队。",
+      "summary": "先把品牌表达、颜色、字体、间距、按钮、卡片、图片、动效、移动端规则和禁止项写成 DESIGN.md，确认后再让 Codex 实现并截图验收。",
+      "recommendationReason": "电商和内容生产最容易出现品牌风格漂移；DESIGN.md 能把颜色、字体、间距、组件规则、禁用项和移动端要求固化为 Agent 可复用上下文。",
       "recommendationTrack": "工作提效",
       "timeToValue": "1 小时",
       "adoptionLevel": "需要配置",
       "networkRequirement": "部分资源需要 VPN",
-      "takeaway": "完成一次 Skills 仓库克隆并建立团队维护入口。",
-      "coverImage": "/images/fixtures/codex_environment_page.png",
+      "takeaway": "复制 DESIGN.md 生成模板，先产出并审核设计规则，再进入编码和浏览器截图验收。",
+      "coverImage": "/images/content/recvpkQUuE2XwZ/recvpkQUuE2XwZ.png",
       "tags": [
-        "GitHub",
         "Codex",
+        "产品设计",
+        "内容工作流",
         "Skills"
       ],
       "audience": [
-        "开发者",
-        "平台团队"
+        "内容团队",
+        "市场团队",
+        "设计团队",
+        "研发团队"
       ],
-      "scenario": "团队 Skill 管理",
-      "originalUrl": "https://github.com/openai/skills",
-      "sourceName": "GitHub",
-      "featured": false,
-      "sortWeight": 50,
-      "publishedAt": "2026-07-08T08:00:00.000Z",
-      "updatedAt": "2026-07-08T10:00:00.000Z",
+      "scenario": "制作品牌官网、商品专题页、营销活动页或内容工具时，为 Codex 提供稳定的视觉规范。",
+      "originalUrl": "https://waytoagi.feishu.cn/wiki/BtcmwsCDMiZJPbkbIYhcJO9xnLb",
+      "sourceName": "WayToAGI",
+      "featured": true,
+      "sortWeight": 0,
+      "publishedAt": "2026-07-14T09:52:00.000Z",
+      "updatedAt": "2026-07-14T09:22:07.000Z",
       "copyBlocks": [
         {
-          "id": "skills-clone-command",
-          "title": "克隆项目",
-          "type": "Command",
-          "language": "shell",
-          "content": "git clone https://github.com/openai/skills.git",
-          "order": 0
-        }
-      ]
-    },
-    {
-      "id": "collaboration-ai-work-discovery-review",
-      "slug": "ai-work-discovery-weekly-review",
-      "title": "每周 AI 工作发现会：用 30 分钟筛选值得团队复用的方法",
-      "type": "Collaboration",
-      "category": "协作方法",
-      "summary": "成员提交本周发现，会议只讨论适用场景、证据、复用成本和下一位验证者。",
-      "recommendationReason": "避免链接收藏不断增长却无人实践，让新方法经过小范围验证后再进入公共知识库。",
-      "recommendationTrack": "团队实践",
-      "timeToValue": "半天",
-      "adoptionLevel": "需要配置",
-      "networkRequirement": "无需 VPN",
-      "takeaway": "落地一套每周 30 分钟的 AI 发现评审流程。",
-      "coverImage": "/images/fixtures/codex_environment_page_after_config.png",
-      "tags": [
-        "协作",
-        "知识管理",
-        "复盘"
-      ],
-      "audience": [
-        "团队负责人",
-        "知识库维护者"
-      ],
-      "scenario": "团队 AI 情报筛选",
-      "sourceName": "团队协作方法",
-      "featured": false,
-      "sortWeight": 40,
-      "publishedAt": "2026-07-07T08:00:00.000Z",
-      "updatedAt": "2026-07-07T12:00:00.000Z",
-      "copyBlocks": [
-        {
-          "id": "weekly-review-agenda",
-          "title": "30 分钟评审议程",
+          "id": "recvpkSvHzu8CB",
+          "title": "先生成 DESIGN.md，再开始编码",
           "type": "Prompt",
           "language": "text",
-          "content": "每条发现依次回答：解决什么问题？证据是什么？谁会使用？复用成本多高？下一步由谁验证？",
-          "order": 0
+          "content": "先不要写代码。请根据我的业务目标、受众和参考资料生成 DESIGN.md，至少包含：页面表达、主参考与不参考项、颜色、中文字体、间距、圆角、按钮、卡片、图片、动效、移动端规则和禁止出现的 AI 模板味。把可机器读取的 tokens 与设计理由分开写。完成后先停，等我确认；未经确认不要实现页面。",
+          "order": 1,
+          "note": "参考网站只借设计语言，不复制品牌、文案、图片和完整结构。"
         }
       ]
     },
     {
-      "id": "getting-started-codex-dependencies",
-      "slug": "codex-environment-dependency-checklist",
-      "title": "开始使用前的依赖清单：Node.js、Git、浏览器与工作区权限一次检查",
-      "type": "Getting Started",
-      "category": "快速开始",
-      "summary": "在执行项目任务前确认运行时、包管理器、Git 身份、浏览器能力和目录权限，减少中途阻塞。",
-      "recommendationReason": "适合第一次接入 Codex 的成员，也可作为新电脑和 CI 环境的验收清单。",
+      "id": "recvpkQwnq2SSL",
+      "slug": "codex-goal-outcome-boundaries-proof",
+      "title": "Codex /goal：用结果、边界和验收条件驱动长任务",
+      "type": "Skill",
+      "category": "协作方法",
+      "summary": "把普通操作指令改成可审计目标：说明最终结果、可触碰范围、禁止事项、完成证据、停止条件和预算，让 Codex 持续执行到验证完成。",
+      "recommendationReason": "减少反复催促 Agent 的成本，尤其适合长任务；关键不是写得长，而是把完成条件和安全停止点写清楚。",
       "recommendationTrack": "工作提效",
       "timeToValue": "10 分钟",
       "adoptionLevel": "直接使用",
-      "networkRequirement": "无需 VPN",
-      "takeaway": "跑完依赖检查并确认本机可进入 Codex 工作流。",
-      "coverImage": "/images/fixtures/codex_environment_page_after_config.png",
+      "networkRequirement": "需要 VPN",
+      "takeaway": "复制一份包含 Outcome、Scope、Constraints、Done when、Stop if 和预算的 /goal 模板。",
+      "coverImage": "/images/content/recvpkQwnq2SSL/recvpkQwnq2SSL.png",
       "tags": [
-        "入门",
-        "依赖",
-        "环境配置"
+        "Codex",
+        "Agent",
+        "自动化",
+        "团队协作"
       ],
       "audience": [
-        "新用户",
-        "开发者",
-        "IT 支持"
+        "运营团队",
+        "研发团队",
+        "管理者",
+        "AI 初学者"
       ],
-      "scenario": "Codex 环境准备",
-      "sourceName": "Codex 环境配置截图",
-      "featured": false,
-      "sortWeight": 30,
-      "publishedAt": "2026-07-06T08:00:00.000Z",
-      "updatedAt": "2026-07-06T12:00:00.000Z",
+      "scenario": "需要跨多轮完成开发、资料整理、迁移、审计或上线准备，并且可以明确完成证据的任务。",
+      "originalUrl": "https://waytoagi.feishu.cn/docx/WTRzd4vewo4XuRxSDlGcJCFtnog",
+      "sourceName": "WayToAGI / ziwenxu",
+      "featured": true,
+      "sortWeight": 0,
+      "publishedAt": "2026-07-14T09:52:00.000Z",
+      "updatedAt": "2026-07-14T09:22:07.000Z",
       "copyBlocks": [
         {
-          "id": "dependency-check-command",
-          "title": "基础依赖检查",
+          "id": "recvpkSvv3xZnv",
+          "title": "可审计的 /goal 模板",
+          "type": "Prompt",
+          "language": "text",
+          "content": "/goal 让【最终结果】成为事实。\nScope:【允许处理的文件、系统或时间范围】\n\nConstraints:\n- 不改变【必须保持不变的内容】\n- 所有外部写入、发送、删除操作先确认\n- 本轮预算不超过【预算】\n\nDone when:\n1. 【可验证条件一】\n2. 【测试、命令、文件或结果证据】\n3. 输出已完成项、遗留风险和验证证据\n\nStop if:\n- 需要新增付费依赖或人工凭证\n- 需要删除文件、改数据库结构或公开发布\n- 遇到与目标无关的失败",
+          "order": 1,
+          "note": "先在 Plan 模式把成功条件写清楚，退出 Plan 模式后再启动目标。"
+        }
+      ]
+    },
+    {
+      "id": "recvpkXZI0nwGd",
+      "slug": "nvidia-skillspector-scan-before-install",
+      "title": "NVIDIA SkillSpector：第三方 Skill 安装前先做安全扫描",
+      "type": "Tool",
+      "category": "Codex Skills",
+      "summary": "可扫描 Git 仓库、URL、Zip、目录或单个 SKILL.md，先做静态分析，也可选接入兼容模型做语义复核，并输出终端、JSON、Markdown 或 SARIF 风险报告。",
+      "recommendationReason": "Skill 会被 Agent 以较高信任执行，安装前扫描比出问题后排查成本低；报告是风险提示，仍需人工复核来源、权限和脚本。",
+      "recommendationTrack": "团队实践",
+      "timeToValue": "1 小时",
+      "adoptionLevel": "需要配置",
+      "networkRequirement": "部分资源需要 VPN",
+      "takeaway": "对一个候选 Skill 生成 Markdown 安全报告，按风险等级决定安装、隔离测试或拒绝。",
+      "coverImage": "/images/content/recvpkXZI0nwGd/recvpkXZI0nwGd.png",
+      "tags": [
+        "Codex",
+        "Skills",
+        "Agent",
+        "MCP"
+      ],
+      "audience": [
+        "研发团队",
+        "管理者",
+        "AI 初学者"
+      ],
+      "scenario": "从 GitHub、压缩包或外部渠道安装第三方 Skill 前，检查提示词注入、密钥读取、外传、提权、危险脚本和供应链风险。",
+      "originalUrl": "https://github.com/NVIDIA/SkillSpector",
+      "sourceName": "Vibe Coding 雷达 / NVIDIA GitHub",
+      "featured": false,
+      "sortWeight": 0,
+      "publishedAt": "2026-07-14T09:52:00.000Z",
+      "updatedAt": "2026-07-14T09:22:07.000Z",
+      "copyBlocks": [
+        {
+          "id": "recvpl1xeG7T6B",
+          "title": "对 Skill 做静态安全扫描",
           "type": "Command",
           "language": "shell",
-          "content": "node --version\nnpm --version\ngit --version",
-          "order": 0,
-          "note": "三个命令都应返回版本号。"
+          "content": "skillspector scan ./待检查的-skill --no-llm --format markdown --output skillspector-report.md",
+          "order": 1,
+          "note": "先在隔离目录安装 SkillSpector；静态扫描不需要模型 Key。报告出现 HIGH 或 CRITICAL 时不要安装，先人工检查命中的文件和权限。"
+        }
+      ]
+    },
+    {
+      "id": "recvpl0DKg7J5i",
+      "slug": "lark-cli-meeting-decisions-tasks",
+      "title": "用飞书 CLI 把近 3 天会议纪要整理成决定与待办",
+      "type": "Case",
+      "category": "协作方法",
+      "summary": "先检索指定时间范围内的会议，再读取纪要，按会议输出关键决定、待办、负责人、截止时间和未决问题；缺失信息必须标为待确认。",
+      "recommendationReason": "它不是泛化总结，而是把会议信息转成可检查的行动清单；适合周一复盘、项目推进和跨团队协作。",
+      "recommendationTrack": "团队实践",
+      "timeToValue": "10 分钟",
+      "adoptionLevel": "需要配置",
+      "networkRequirement": "无需 VPN",
+      "takeaway": "获得一张会议行动表，并在人工确认后把明确待办写入飞书任务。",
+      "coverImage": "/images/content/recvpl0DKg7J5i/recvpl0DKg7J5i.png",
+      "tags": [
+        "飞书",
+        "自动化",
+        "团队协作",
+        "Agent"
+      ],
+      "audience": [
+        "运营团队",
+        "市场团队",
+        "管理者"
+      ],
+      "scenario": "会议较多、行动项容易遗漏，需要按时间范围汇总会议、决定、负责人和截止时间。",
+      "originalUrl": "https://waytoagi.feishu.cn/wiki/Zsp2wxsKEiRTEjkajJFc7FBGnh3",
+      "sourceName": "WayToAGI 飞书 CLI 案例",
+      "featured": false,
+      "sortWeight": 0,
+      "publishedAt": "2026-07-14T09:52:00.000Z",
+      "updatedAt": "2026-07-14T09:22:07.000Z",
+      "copyBlocks": [
+        {
+          "id": "recvpkSweEEiYa",
+          "title": "近 3 天会议转行动表",
+          "type": "Prompt",
+          "language": "text",
+          "content": "查找我近 3 天参加过且有纪要的会议。逐场读取后输出表格：会议、时间、关键决定、待办、负责人、截止时间、未决问题、纪要链接。不要猜负责人和日期，缺失项写“待确认”。先只生成行动表，不创建任务；等我确认后再把明确待办写入飞书任务。",
+          "order": 1,
+          "note": "适合周一复盘；先读纪要、后建任务，避免错误分派。"
+        }
+      ]
+    },
+    {
+      "id": "recvpl0Doh2epV",
+      "slug": "lark-cli-wiki-restructure",
+      "title": "用飞书 CLI 重组知识库：先盘点节点，再按用户任务归类",
+      "type": "Case",
+      "category": "协作方法",
+      "summary": "让飞书 CLI 读取节点清单，识别平铺、大小悬殊和分类缺失问题，先输出 7-10 个按用户任务组织的板块方案，再经确认后移动节点并验证链接。",
+      "recommendationReason": "把知识库整理从逐页拖拽变成“盘点、归类、审批、迁移、验证”的流程，适合公司内部长期积累但结构失控的资料库。",
+      "recommendationTrack": "团队实践",
+      "timeToValue": "1 小时",
+      "adoptionLevel": "需要配置",
+      "networkRequirement": "无需 VPN",
+      "takeaway": "得到节点清单、分类方案、迁移映射表、重点内容清单和迁移后验证报告。",
+      "coverImage": "/images/content/recvpl0Doh2epV/recvpl0Doh2epV.png",
+      "tags": [
+        "飞书",
+        "自动化",
+        "Agent",
+        "团队协作"
+      ],
+      "audience": [
+        "内容团队",
+        "运营团队",
+        "管理者"
+      ],
+      "scenario": "知识库一级目录过多、活动和资料混在一起、重点内容被埋没，需要先审计再重组。",
+      "originalUrl": "https://waytoagi.feishu.cn/docx/Q1eJdDa8Noe3jWxCP5BceASBnGd",
+      "sourceName": "WayToAGI 飞书 CLI 案例",
+      "featured": false,
+      "sortWeight": 0,
+      "publishedAt": "2026-07-14T09:52:00.000Z",
+      "updatedAt": "2026-07-14T09:22:07.000Z",
+      "copyBlocks": [
+        {
+          "id": "recvpkSvZ5his5",
+          "title": "知识库重组任务模板",
+          "type": "Prompt",
+          "language": "text",
+          "content": "请读取【知识库节点】下的全部一级节点，只做审计，不要移动或删除。输出：1. 节点清单与文档数量；2. 平铺、重复、命名和重点埋没问题；3. 按“用户来这里要完成什么”设计 7-10 个板块；4. 现有节点到新板块的迁移映射；5. 需要人工判断的条目；6. 迁移后的链接与数量验证清单。等我确认方案后再执行移动。",
+          "order": 1,
+          "note": "先审计后迁移，移动、删除和改权限必须人工确认。"
+        }
+      ]
+    },
+    {
+      "id": "recvpl0E5evRKY",
+      "slug": "codex-remotion-repeatable-video-pipeline",
+      "title": "Codex + Remotion：把日更视频变成可维护的模板生产线",
+      "type": "Case",
+      "category": "视频工作流",
+      "summary": "Codex 负责把脚本拆成数据和组件，Remotion 负责按时间轴渲染字幕、图片、音频与动画；把画幅、安全区、字幕和验收规则写进 AGENTS.md。",
+      "recommendationReason": "适合重复结构的视频日更，可维护一套模板持续喂入新内容；不适合高度依赖实拍情绪和临场剪辑的素材。",
+      "recommendationTrack": "工作提效",
+      "timeToValue": "半天",
+      "adoptionLevel": "需要开发",
+      "networkRequirement": "需要 VPN",
+      "takeaway": "搭建一个 1080x1920 模板，输入脚本 JSON 后可渲染封面、关键帧和 MP4，并通过字幕溢出检查。",
+      "coverImage": "/images/content/recvpl0E5evRKY/recvpl0E5evRKY.png",
+      "tags": [
+        "Codex",
+        "视频生成",
+        "内容工作流",
+        "自动化"
+      ],
+      "audience": [
+        "内容团队",
+        "市场团队",
+        "研发团队"
+      ],
+      "scenario": "知识卡片、AI 工具教程、数据可视化、产品更新、课程切片等结构稳定但内容频繁变化的视频。",
+      "originalUrl": "https://waytoagi.feishu.cn/docx/P1BudkVP3o1eNExck9bcBDAln8d",
+      "sourceName": "WayToAGI / Zesee",
+      "featured": false,
+      "sortWeight": 0,
+      "publishedAt": "2026-07-14T09:52:00.000Z",
+      "updatedAt": "2026-07-14T09:22:07.000Z",
+      "copyBlocks": [
+        {
+          "id": "recvpl11xrvOQr",
+          "title": "竖屏视频项目 AGENTS.md 最小规则",
+          "type": "Configuration",
+          "language": "markdown",
+          "content": "# 视频项目规则\n\n- 默认输出 1080x1920、30fps、45-75 秒。\n- 字幕必须在安全区内，不能遮挡商品、人物脸部和关键数据。\n- 标题最多两行，每行不超过 14 个中文字符。\n- 品牌色、字体、片头片尾和转场只能使用 DESIGN.md 中的规则。\n- 每次修改模板后先渲染封面帧、30% 帧、60% 帧和结尾帧检查布局。\n- 检查字幕溢出、错字、素材版权、音量峰值和空白帧。\n- 最终 MP4 输出到 outputs/，不得自动发布。",
+          "order": 1,
+          "note": "把稳定规则写入项目，日更时只替换脚本和素材数据。"
+        }
+      ]
+    },
+    {
+      "id": "recvpl0EQNsUbm",
+      "slug": "gpt-image-generate-codex-skill",
+      "title": "gpt-image-generate Skill：在 Codex 中一句话生成并保存配图",
+      "type": "Skill",
+      "category": "Codex Skills",
+      "summary": "把 gpt-image-generate 放入 Codex skills 目录，通过支持 /v1/responses 与 image_generation 的 provider 调用生图，并自动解析 base64 保存 PNG、JPEG 或 WebP。",
+      "recommendationReason": "避免手写接口请求和图片解析逻辑；但能否成功取决于当前 provider 是否真正支持图片生成工具，安装前应先确认接口能力。",
+      "recommendationTrack": "工作提效",
+      "timeToValue": "10 分钟",
+      "adoptionLevel": "需要配置",
+      "networkRequirement": "部分资源需要 VPN",
+      "takeaway": "安装 Skill，完成一次带品牌风格约束的配图生成，并在本地得到可用图片文件。",
+      "coverImage": "/images/content/recvpl0EQNsUbm/recvpl0EQNsUbm.png",
+      "tags": [
+        "Codex",
+        "Skills",
+        "AI",
+        "内容工作流"
+      ],
+      "audience": [
+        "内容团队",
+        "市场团队",
+        "设计团队",
+        "研发团队"
+      ],
+      "scenario": "为文章、商品专题页、封面和项目卡片快速生成本地图片文件。",
+      "originalUrl": "https://waytoagi.feishu.cn/docx/Rpm0dGkn0oA3B8xKR9dcOTuSnAh",
+      "sourceName": "WayToAGI / BINGO906",
+      "featured": false,
+      "sortWeight": 0,
+      "publishedAt": "2026-07-14T09:52:00.000Z",
+      "updatedAt": "2026-07-14T09:22:07.000Z",
+      "copyBlocks": [
+        {
+          "id": "recvpl12jQDKCx",
+          "title": "生成品牌一致的内容配图",
+          "type": "Prompt",
+          "language": "text",
+          "content": "$gpt-image-generate 使用该技能生图：为【内容主题/商品】生成一张【用途：封面/专题页/卡片】图片。严格遵循项目 DESIGN.md 的颜色、光线、构图和留白；不要出现真实品牌 Logo、乱码文字或无关装饰；输出【比例】并保存为 PNG。生成后检查主体完整、文字区域和移动端裁切安全。",
+          "order": 1,
+          "note": "Windows Skill 目录通常为 C:\\Users\\你的用户名\\.codex\\skills；provider 必须支持 /v1/responses 和 image_generation。"
+        }
+      ]
+    },
+    {
+      "id": "recvpl0EvpWN0x",
+      "slug": "chengfeng-videocut-skill-storyboard-preview",
+      "title": "chengfeng-videocut-skills：口播从字幕对齐到分镜预览",
+      "type": "Skill",
+      "category": "视频工作流",
+      "summary": "安装剪辑 Skills 后，先输出剪后口播与对齐字幕，再用 /口播成片生成分镜核对页，人工按片段反馈后进入时间线预览和合成。",
+      "recommendationReason": "把人工动作从逐帧排时间线变成审核分镜与指出问题，保留人在素材选择、节奏和品牌表达上的判断。",
+      "recommendationTrack": "工作提效",
+      "timeToValue": "1 小时",
+      "adoptionLevel": "需要配置",
+      "networkRequirement": "部分资源需要 VPN",
+      "takeaway": "获得剪后口播、对齐字幕、可审核分镜页、时间线预览和最终合成文件。",
+      "coverImage": "/images/content/recvpl0EvpWN0x/recvpl0EvpWN0x.png",
+      "tags": [
+        "Codex",
+        "Skills",
+        "视频生成",
+        "内容工作流"
+      ],
+      "audience": [
+        "内容团队",
+        "运营团队",
+        "市场团队"
+      ],
+      "scenario": "已有口播视频和文字稿，希望自动剪口播、对齐字幕、生成 HTML 分镜页并按时间线预览。",
+      "originalUrl": "https://waytoagi.feishu.cn/docx/WJNzdG76woyJPdxqdxacRLqJnng",
+      "sourceName": "WayToAGI / 成峰",
+      "featured": false,
+      "sortWeight": 0,
+      "publishedAt": "2026-07-14T09:52:00.000Z",
+      "updatedAt": "2026-07-14T09:22:07.000Z",
+      "copyBlocks": [
+        {
+          "id": "recvpl11VyJiz4",
+          "title": "安装剪辑 Skills",
+          "type": "Command",
+          "language": "shell",
+          "content": "npx chengfeng-videocut-skills install",
+          "order": 1,
+          "note": "安装后先用“剪口播”得到对齐视频与字幕，再在项目里输入 /口播成片生成分镜核对页。"
+        }
+      ]
+    },
+    {
+      "id": "recvpl0FB56298",
+      "slug": "openmontage-agentic-video-production",
+      "title": "OpenMontage：让 Codex 编排研究、脚本、素材和成片",
+      "type": "Tool",
+      "category": "视频工作流",
+      "summary": "Agent 读取可审计的 pipeline、阶段 Skill 和验收门禁，完成调研、脚本、素材检索或生成、配音字幕、时间线合成与渲染后检查；支持从参考视频分析节奏和结构。",
+      "recommendationReason": "比单个文生视频模型更接近完整制作流程，能先给工具路径、成本和样片再全量生产；代价是依赖 Python、Node.js、FFmpeg 和可选媒体 API。",
+      "recommendationTrack": "灵感实验",
+      "timeToValue": "半天",
+      "adoptionLevel": "需要开发",
+      "networkRequirement": "部分资源需要 VPN",
+      "takeaway": "完成零 Key Demo 或一条 30 秒样片，拿到成本估算、决策日志、字幕和最终视频，并通过渲染后检查。",
+      "coverImage": "/images/content/recvpl0FB56298/recvpl0FB56298.png",
+      "tags": [
+        "Codex",
+        "视频生成",
+        "内容工作流",
+        "开源"
+      ],
+      "audience": [
+        "内容团队",
+        "市场团队",
+        "研发团队"
+      ],
+      "scenario": "产品发布短片、动画解说、长视频切片、真实素材混剪和参考视频结构复刻。",
+      "originalUrl": "https://github.com/calesthio/OpenMontage",
+      "sourceName": "Vibe Coding 雷达 / GitHub",
+      "featured": false,
+      "sortWeight": 0,
+      "publishedAt": "2026-07-14T09:52:00.000Z",
+      "updatedAt": "2026-07-14T09:22:07.000Z",
+      "copyBlocks": [
+        {
+          "id": "recvpl132fIyVe",
+          "title": "OpenMontage Windows 开工体检",
+          "type": "Prompt",
+          "language": "text",
+          "content": "请先阅读 https://github.com/calesthio/OpenMontage 的 README、AGENT_GUIDE 和 provider 文档，不要直接执行 make setup。检查这台 Windows 电脑是否具备 Python 3.10+、Node.js 18+、FFmpeg、Git 和可用的 make/替代安装路径，并列出需要 VPN 或 API Key 的环节。目标：先跑零 Key Demo；若通过，再用我提供的参考视频生成一条 30 秒差异化样片。先输出工具路径、预计成本、素材版权、人工审批点和验收门禁，确认后再安装。",
+          "order": 1,
+          "note": "Windows 先做依赖体检；参考视频只复用节奏、结构和镜头逻辑，不复制人物、品牌与素材。"
+        }
+      ]
+    },
+    {
+      "id": "recvpl0FflYBSW",
+      "slug": "codex-office-five-step-loop",
+      "title": "Codex 办公五步法：接工具、写规则、执行、验收、沉淀",
+      "type": "Collaboration",
+      "category": "协作方法",
+      "summary": "统一采用五步循环：连接最小必要工具、把规则与来源写进工作区、明确输入输出和验收、到真实系统检查结果、把有效提示和清单沉淀为下次可复用资产。",
+      "recommendationReason": "把 Codex 从一次性聊天工具变成可复用工作台，同时保留来源、审批和真实场景验收，适合非研发团队低风险起步。",
+      "recommendationTrack": "团队实践",
+      "timeToValue": "1 小时",
+      "adoptionLevel": "需要配置",
+      "networkRequirement": "需要 VPN",
+      "takeaway": "选一个真实任务跑完五步循环，并沉淀 rules、来源清单、输出模板和审核清单。",
+      "coverImage": "/images/content/recvpl0FflYBSW/recvpl0FflYBSW.png",
+      "tags": [
+        "Codex",
+        "飞书",
+        "自动化",
+        "团队协作"
+      ],
+      "audience": [
+        "内容团队",
+        "运营团队",
+        "市场团队",
+        "管理者"
+      ],
+      "scenario": "调研简报、会议总结、周报、产品上线方案、内容审核和多来源信息汇总。",
+      "originalUrl": "https://waytoagi.feishu.cn/docx/B2G5dajXho10HXxiNwAcaBzEn0f",
+      "sourceName": "WayToAGI / Gorden Sun",
+      "featured": false,
+      "sortWeight": 0,
+      "publishedAt": "2026-07-14T09:52:00.000Z",
+      "updatedAt": "2026-07-14T09:22:07.000Z",
+      "copyBlocks": [
+        {
+          "id": "recvpl12F18vXX",
+          "title": "办公任务五步执行模板",
+          "type": "Prompt",
+          "language": "text",
+          "content": "我要完成【具体成果】。\n来源：【飞书文档/消息/本地文件/数据链接】；只使用我有权限访问的资料。\n输出：【文档、表格、方案或审核队列】。\n要求：准确优先；重要事实附来源链接；区分源材料事实、你的推断和待确认项；发送、删除、修改外部系统前先确认。\n开工前先回答：还缺什么信息、你做了哪些假设、验收标准是什么。完成后到成果实际使用的位置检查，并列出可沉淀到 rules、模板和检查清单的内容。",
+          "order": 1,
+          "note": "先选低风险、真实、可检查的任务跑一轮，再考虑自动化。"
         }
       ]
     }

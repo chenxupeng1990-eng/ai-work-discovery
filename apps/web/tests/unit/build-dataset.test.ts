@@ -633,6 +633,19 @@ describe("buildPublicDataset", () => {
     expect(dataset.items[0].coverImage).toBe(fallback);
   });
 
+  it("keeps an existing controlled cover when the remote refresh fails", async () => {
+    const item = contentItem({
+      coverImage: "/images/content/rec-public/cover.png",
+    });
+    const dataset = await buildPublicDataset([item], {
+      assets: { [item.coverImage]: "https://cdn.example.com/cover.png" },
+      downloadAsset: async () => { throw new Error("network"); },
+      hasExistingAsset: async (path) => path === item.coverImage,
+    });
+
+    expect(dataset.items[0].coverImage).toBe(item.coverImage);
+  });
+
   it("rejects a downloaded path outside the controlled content directory", async () => {
     const item = contentItem();
 

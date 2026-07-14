@@ -76,7 +76,7 @@ describe("mapPublishedContent", () => {
   it("links copy blocks by linked record id and sorts by display order", () => {
     const copyRecords = [
       record("copy-late", {
-        [COPY.relatedContent]: [{ record_id: "rec-public" }],
+        [COPY.relatedContent]: [{ record_ids: ["rec-public"] }],
         [COPY.title]: "第二步",
         [COPY.type]: "Command",
         [COPY.language]: "shell",
@@ -179,6 +179,14 @@ describe("mapPublishedContent", () => {
       networkRequirement: "部分资源需要 VPN",
       takeaway: "完成一套可直接复用的团队案例模板。",
     });
+  });
+
+  it("accepts finite numeric strings returned by the Feishu number field API", () => {
+    const [item] = mapPublishedContent([
+      record("rec-public", publishedFields({ [CONTENT.sortWeight]: "12" })),
+    ], []);
+
+    expect(item?.sortWeight).toBe(12);
   });
 
   it("includes output field context when schema validation fails", () => {

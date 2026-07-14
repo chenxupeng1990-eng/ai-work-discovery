@@ -640,25 +640,23 @@ const featuredItem = items.find((item) => item.featured) ?? items[0];
   }
 
   :global(.starter-result > p) {
-    height: 82px;
+    min-height: 82px;
     margin-bottom: 0;
     display: -webkit-box;
-    overflow: hidden;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
+    overflow-wrap: anywhere;
     color: var(--color-graphite);
     font-size: var(--text-body-sm);
     line-height: 1.58;
   }
 
   :global(.starter-result__takeaway) {
-    height: 104px;
+    min-height: 104px;
     padding-left: var(--spacing-12);
     display: grid;
     align-content: start;
     gap: var(--spacing-8);
     border-left: 2px solid var(--color-link-blue);
-    overflow: hidden;
+    overflow-wrap: anywhere;
   }
 
   :global(.starter-result__takeaway span) {
@@ -667,10 +665,6 @@ const featuredItem = items.find((item) => item.featured) ?? items[0];
   }
 
   :global(.starter-result__takeaway strong) {
-    display: -webkit-box;
-    overflow: hidden;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
     font-size: var(--text-body-sm);
     font-weight: var(--font-weight-medium);
     line-height: var(--leading-body-sm);
