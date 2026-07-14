@@ -52,7 +52,7 @@ npm run build
 ```
 
 - Focused tests：2 个文件、36 项通过。
-- 全量 Vitest：21 个文件、602 项通过。
+- 全量 Vitest：21 个文件、611 项通过（完整证据修复后）。
 - `npm run check`：72 个文件，0 errors、0 warnings、0 hints。
 - `npm run build`：检查通过，静态构建完成 19 页。
 
