@@ -46,9 +46,11 @@ describe("GitHub Actions workflows", () => {
       "npm test",
       "npm run check",
       "npm run build",
+      "npm run verify:public",
       "npx playwright install --with-deps chromium",
       "npm run test:e2e",
     ]));
+    expect(commands.indexOf("npm run verify:public")).toBe(commands.indexOf("npm run build") + 1);
     expect(workflow.source).not.toContain("secrets.");
   });
 
@@ -78,8 +80,11 @@ describe("GitHub Actions workflows", () => {
       "npm run typecheck",
       "npm run check",
       "npm run build",
+      "npm run verify:public",
     ]));
     const commitCommand = commands.find((command: string) => command.includes("git add"));
+    expect(commands.indexOf("npm run verify:public")).toBe(commands.indexOf("npm run build") + 1);
+    expect(commands.indexOf("npm run verify:public")).toBeLessThan(commands.indexOf(commitCommand));
     expect(commitCommand).toContain("git add -- apps/web/src/generated/content.json");
     expect(commitCommand).toContain("git add -- apps/web/public/images/content");
     expect(commitCommand).toContain("git diff --cached --quiet");

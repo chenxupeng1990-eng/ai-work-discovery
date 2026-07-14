@@ -40,6 +40,22 @@ describe("queryContent", () => {
     expect(queryContent(items, searchOptions(query)).map((item) => item.slug)).toEqual([slug]);
   });
 
+  it("matches copy block titles but not copy block content", () => {
+    const items = [{
+      ...baseItem,
+      id: "copy-search",
+      slug: "copy-search",
+      copyBlocks: [{
+        ...baseItem.copyBlocks[0]!,
+        title: "团队配置模板",
+        content: "正文中的私有检索词",
+      }],
+    }];
+
+    expect(queryContent(items, searchOptions("团队配置模板")).map((item) => item.slug)).toEqual(["copy-search"]);
+    expect(queryContent(items, searchOptions("私有检索词"))).toEqual([]);
+  });
+
   it("filters by category while 全部 keeps every item", () => {
     const items = [
       { ...baseItem, id: "one", slug: "one", category: "团队案例" },

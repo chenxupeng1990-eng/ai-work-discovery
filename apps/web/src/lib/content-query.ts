@@ -47,6 +47,7 @@ export function queryContent(items: ContentItem[], options: QueryOptions): Conte
           item.recommendationReason,
           item.sourceName,
           ...item.tags,
+          ...item.copyBlocks.map((block) => block.title),
         ].join(" ")).includes(query);
       }),
     options.sort,

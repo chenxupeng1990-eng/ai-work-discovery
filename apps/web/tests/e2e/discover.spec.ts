@@ -23,6 +23,34 @@ test("search filters Chinese content and announces the result count", async ({ p
   await expect(page.getByRole("status", { name: "搜索结果数量" })).toHaveText("找到 1 项内容");
 });
 
+test("search matches copy block titles but not copy block bodies", async ({ page }) => {
+  await page.goto("/discover");
+  await waitForExplorer(page);
+
+  const search = page.getByRole("searchbox", { name: "搜索内容" });
+  await search.fill("团队 AGENTS.md 模板");
+  await expect(page.getByRole("article")).toHaveCount(1);
+  await expect(page.getByRole("article")).toContainText("AGENTS.md 配置范本");
+
+  await search.fill("State assumptions before coding");
+  await expect(page.getByRole("article")).toHaveCount(0);
+});
+
+test("category query initializes, updates, and rejects unknown categories", async ({ page }) => {
+  await page.goto("/discover?category=产品信号");
+  await waitForExplorer(page);
+
+  await expect(page.getByRole("button", { name: "产品信号", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("article")).toHaveCount(1);
+
+  await page.getByRole("button", { name: "团队案例", exact: true }).click();
+  await expect(page).toHaveURL(/\/discover\?category=%E5%9B%A2%E9%98%9F%E6%A1%88%E4%BE%8B$/);
+
+  await page.goto("/discover?category=不存在");
+  await expect(page.getByRole("button", { name: "全部", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("article")).toHaveCount(generatedDataset.items.length);
+});
+
 test("category chips filter results without moving the control bar", async ({ page }) => {
   await page.goto("/discover");
   await waitForExplorer(page);

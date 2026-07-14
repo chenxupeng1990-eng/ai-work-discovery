@@ -17,15 +17,41 @@ const screenshotDirectory = resolve("../../.superpowers/sdd/task-14-screenshots"
 test("homepage exposes shared navigation and one main landmark", async ({ page }) => {
   await page.goto("/");
 
+  const expectedNavigation = [
+    ["发现", "/discover"],
+    ["实践案例", "/discover?category=团队案例"],
+    ["协作方式", "/discover?category=协作方法"],
+    ["工具与资源", "/discover?category=开源项目"],
+    ["AI信号", "/discover?category=行业信号"],
+    ["最近更新", "/updates"],
+  ] as const;
+  const navigation = page.locator('nav[aria-label="主导航"]');
+
   await expect(page.getByRole("banner")).toBeVisible();
   await expect(page.getByRole("main")).toHaveCount(1);
-  await expect(page.getByRole("link", { name: "发现", exact: true })).toBeVisible();
+  await expect(navigation.locator("a")).toHaveCount(expectedNavigation.length);
+  for (const [label, href] of expectedNavigation) {
+    await expect(navigation.locator("a", { hasText: label })).toHaveAttribute("href", href);
+  }
   await expect(page.getByRole("link", { name: "搜索" })).toHaveAttribute("href", "/discover");
-  await expect(page.locator('a[href="/cases"], a[href="/collaboration"], a[href="/resources"], a[href="/signals"]')).toHaveCount(0);
   await expect(page.locator('a[href="/updates"]')).toHaveCount(2);
   await expect(page.getByRole("button", { name: "提交内容" })).toHaveAttribute("aria-disabled", "true");
   await expect(page.locator('a[href="#discover"], a[href="#ready"], a[href="#submit"]')).toHaveCount(0);
   await expect(page.getByRole("contentinfo")).toBeVisible();
+});
+
+test("homepage category links use categories present in the public dataset", async ({ page }) => {
+  await page.goto("/");
+
+  const links = page.getByRole("navigation", { name: "发现方向" }).getByRole("link");
+  await expect(links).toHaveCount(8);
+  const actualCategories = new Set(generatedDataset.items.map((item) => item.category));
+  for (const link of await links.all()) {
+    const href = await link.getAttribute("href");
+    expect(href).toMatch(/^\/discover\?category=.+/);
+    const category = new URL(href!, "https://example.test").searchParams.get("category");
+    expect(actualCategories.has(category!)).toBe(true);
+  }
 });
 
 test("homepage prioritizes bounded discovery content over a rigid course", async ({ page }) => {
@@ -115,6 +141,7 @@ test("mobile navigation opens without resizing the header or overflowing", async
   await expect(menu).toHaveAttribute("aria-expanded", "true");
   await expect(menu).toHaveAccessibleName("关闭导航");
   await expect(navigation).toBeVisible();
+  await expect(navigation.getByRole("link")).toHaveCount(6);
   expect(await header.evaluate((element) => element.getBoundingClientRect().height)).toBe(initialHeight);
 
   const viewport = page.viewportSize();
@@ -134,7 +161,7 @@ test("header controls support Tab, Enter, focus visibility, and mobile menu dism
   await page.goto("/");
   const updates = testInfo.project.name === "desktop"
     ? page.getByRole("navigation", { name: "主导航" }).getByRole("link", { name: "最近更新" })
-    : page.getByRole("link", { name: "发现", exact: true });
+    : page.getByRole("link", { name: "发现", exact: true }).first();
   await tabUntil(updates);
   await expectFocusVisible(updates);
   await page.keyboard.press("Enter");

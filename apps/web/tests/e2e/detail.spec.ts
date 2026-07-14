@@ -18,7 +18,7 @@ test("all public dataset items have static detail routes and unknown slugs retur
   expect(missing.status()).toBe(404);
 });
 
-test("detail page renders maintained fields and prioritizes the Feishu source", async ({ page }) => {
+test("detail page renders maintained fields and preserves the original source", async ({ page }) => {
   await page.goto(`/content/${agentsItem.slug}`);
 
   await expect(page.getByRole("heading", { level: 1, name: agentsItem.title })).toBeVisible();
@@ -32,9 +32,8 @@ test("detail page renders maintained fields and prioritizes the Feishu source", 
   for (const tag of agentsItem.tags) await expect(page.getByText(tag, { exact: true }).first()).toBeVisible();
 
   const sourceLinks = page.locator("[data-source-actions] a");
-  await expect(sourceLinks).toHaveCount(2);
-  await expect(sourceLinks.nth(0)).toHaveAttribute("href", agentsItem.feishuDocumentUrl!);
-  await expect(sourceLinks.nth(1)).toHaveAttribute("href", agentsItem.originalUrl!);
+  await expect(sourceLinks).toHaveCount(1);
+  await expect(sourceLinks.first()).toHaveAttribute("href", agentsItem.originalUrl!);
   for (const link of await sourceLinks.all()) {
     await expect(link).toHaveAttribute("target", "_blank");
     expect((await link.getAttribute("rel"))?.split(/\s+/)).toEqual(
@@ -46,22 +45,14 @@ test("detail page renders maintained fields and prioritizes the Feishu source", 
   await expect(page.getByText(String(agentsItem.sortWeight), { exact: true })).toHaveCount(0);
 });
 
-test("Feishu document card uses maintained fields and is omitted without a public URL", async ({ page }) => {
+test("Feishu document card is omitted without an explicitly public URL", async ({ page }) => {
   await page.goto(`/content/${agentsItem.slug}`);
 
-  const card = page.locator("[data-feishu-document-card]");
-  await expect(card).toHaveCount(1);
-  await expect(card.getByRole("heading", { name: agentsItem.title })).toBeVisible();
-  await expect(card.getByText(agentsItem.summary, { exact: true })).toBeVisible();
-  await expect(card.getByRole("img", { name: `${agentsItem.title}飞书文档预览` })).toHaveAttribute("src", agentsItem.coverImage);
-  for (const tag of agentsItem.tags) await expect(card.getByText(tag, { exact: true })).toBeVisible();
-  const link = card.getByRole("link", { name: "打开飞书原文" });
-  await expect(link).toHaveAttribute("href", agentsItem.feishuDocumentUrl!);
-  await expect(link).toHaveAttribute("target", "_blank");
-  expect((await link.getAttribute("rel"))?.split(/\s+/)).toEqual(expect.arrayContaining(["noopener", "noreferrer"]));
-
-  await page.goto(`/content/${bridgeItem.slug}`);
   await expect(page.locator("[data-feishu-document-card]")).toHaveCount(0);
+  await expect(page.getByRole("link", { name: `打开原始来源：${agentsItem.sourceName}` })).toHaveAttribute(
+    "href",
+    agentsItem.originalUrl!,
+  );
 });
 
 test("copy block reports success without shifting its button", async ({ page, context }) => {
@@ -153,7 +144,7 @@ test("updates groups all items by date in descending updatedAt order", async ({ 
   expect(hrefs).toEqual(expectedItems.map((item) => `/content/${item.slug}`));
 });
 
-test("copy and external source actions operate from the keyboard", async ({ page, context }) => {
+test("copy and original source actions operate from the keyboard", async ({ page, context }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.goto(`/content/${agentsItem.slug}`);
 
@@ -163,7 +154,7 @@ test("copy and external source actions operate from the keyboard", async ({ page
   await page.keyboard.press("Enter");
   await expect(copy).toHaveAccessibleName(/^已复制 /);
 
-  const external = page.getByRole("link", { name: "打开飞书原文" }).first();
+  const external = page.getByRole("link", { name: `打开原始来源：${agentsItem.sourceName}` });
   await tabUntil(external);
   await expectFocusVisible(external);
   await external.evaluate((element) => {
@@ -174,5 +165,5 @@ test("copy and external source actions operate from the keyboard", async ({ page
   });
   await page.keyboard.press("Enter");
   await expect.poll(() => page.locator("html").getAttribute("data-keyboard-external-href"))
-    .toBe(agentsItem.feishuDocumentUrl!);
+    .toBe(agentsItem.originalUrl!);
 });

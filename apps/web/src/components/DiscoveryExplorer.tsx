@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { queryContent, type QueryOptions } from "../lib/content-query";
 import type { ContentItem } from "../lib/schema";
 
@@ -15,6 +15,38 @@ export function DiscoveryExplorer({ items }: { items: ContentItem[] }) {
     [items],
   );
   const results = useMemo(() => queryContent(items, options), [items, options]);
+
+  useEffect(() => {
+    const syncCategoryFromUrl = () => {
+      const url = new URL(window.location.href);
+      const requested = url.searchParams.get("category");
+      const category = requested && categories.includes(requested) ? requested : "全部";
+      setOptions((current) => current.category === category ? current : { ...current, category });
+      if (requested && category === "全部") {
+        url.searchParams.delete("category");
+        window.history.replaceState(null, "", url);
+      }
+    };
+
+    syncCategoryFromUrl();
+    window.addEventListener("popstate", syncCategoryFromUrl);
+    return () => window.removeEventListener("popstate", syncCategoryFromUrl);
+  }, [categories]);
+
+  const selectCategory = (category: string) => {
+    setOptions((current) => ({ ...current, category }));
+    const url = new URL(window.location.href);
+    if (category === "全部") url.searchParams.delete("category");
+    else url.searchParams.set("category", category);
+    window.history.replaceState(null, "", url);
+  };
+
+  const resetOptions = () => {
+    setOptions(initialOptions);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("category");
+    window.history.replaceState(null, "", url);
+  };
 
   return (
     <section className="discovery-explorer" aria-labelledby="discovery-results-title">
@@ -38,7 +70,7 @@ export function DiscoveryExplorer({ items }: { items: ContentItem[] }) {
                 key={category}
                 type="button"
                 aria-pressed={options.category === category}
-                onClick={() => setOptions({ ...options, category })}
+                onClick={() => selectCategory(category)}
               >
                 {category}
               </button>
@@ -105,7 +137,7 @@ export function DiscoveryExplorer({ items }: { items: ContentItem[] }) {
         <div className="discovery-empty">
           <h2>没有找到匹配内容</h2>
           <p>试试缩短关键词，或清除筛选查看全部内容。</p>
-          <button type="button" className="button-secondary" onClick={() => setOptions(initialOptions)}>
+          <button type="button" className="button-secondary" onClick={resetOptions}>
             清除筛选
           </button>
         </div>

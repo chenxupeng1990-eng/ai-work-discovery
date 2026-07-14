@@ -5,6 +5,7 @@ import {
   normalizeAttachmentSourceUrl,
   type RawFeishuRecord,
 } from "../../scripts/feishu/map-records";
+import { BASE_VALUES } from "../../scripts/feishu/fields";
 
 const record = (
   record_id: string,
@@ -30,22 +31,33 @@ const publishedFields = (overrides: Record<string, unknown> = {}) => ({
   发布时间: 1783900800000,
   更新时间: "2026-07-13T12:00:00.000Z",
   发布状态: "已发布",
-  公开级别: "公开",
+  公开级别: BASE_VALUES.content.publicLevels.public,
   内部备注: "不得发布",
   来源收件箱记录ID: "inbox-internal-only",
   ...overrides,
 });
 
 describe("mapPublishedContent", () => {
-  it("只发布已发布且公开的记录", () => {
+  it("发布公开和脱敏案例记录并拒绝禁止发布", () => {
     const records = [
       record("rec-public", publishedFields()),
       record("rec-draft", publishedFields({ 标题: "草稿", 发布状态: "草稿" })),
-      record("rec-forbidden", publishedFields({ 标题: "禁止", 公开级别: "禁止发布" })),
-      record("rec-desensitized", publishedFields({ 标题: "脱敏", 公开级别: "脱敏案例" })),
+      record("rec-forbidden", publishedFields({
+        标题: "禁止",
+        公开级别: BASE_VALUES.content.publicLevels.forbidden,
+      })),
+      record("rec-desensitized", publishedFields({
+        标题: "脱敏",
+        公开级别: BASE_VALUES.content.publicLevels.desensitized,
+      })),
     ];
 
-    expect(mapPublishedContent(records, []).map((item) => item.title)).toEqual(["公开案例"]);
+    expect(BASE_VALUES.content.publicLevels).toEqual({
+      public: "公开",
+      desensitized: "脱敏案例",
+      forbidden: "禁止发布",
+    });
+    expect(mapPublishedContent(records, []).map((item) => item.title)).toEqual(["公开案例", "脱敏"]);
   });
 
   it("缺少必填字段时报告 record id 和中文字段名", () => {

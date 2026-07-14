@@ -1,12 +1,14 @@
 import { basename, extname } from "node:path";
 import { ContentItemSchema, type ContentItem, type CopyBlock } from "../../src/lib/schema";
-import { BASE_FIELDS } from "./fields";
+import { BASE_FIELDS, BASE_VALUES } from "./fields";
 import type { RawFeishuRecord } from "./client";
 
 export type { RawFeishuRecord } from "./client";
 
 const CONTENT = BASE_FIELDS.content;
 const COPY = BASE_FIELDS.copyBlock;
+const PUBLIC_LEVELS = BASE_VALUES.content.publicLevels;
+const PUBLISHABLE_PUBLIC_LEVELS = [PUBLIC_LEVELS.public, PUBLIC_LEVELS.desensitized] as const;
 
 const OUTPUT_TO_BASE_FIELD: Partial<Record<keyof ContentItem, string>> = {
   slug: CONTENT.slug,
@@ -35,7 +37,9 @@ export function mapPublishedContent(
 ): ContentItem[] {
   const publishedRecords = records.filter(({ fields }) => (
     fields[CONTENT.publicationStatus] === "已发布"
-    && fields[CONTENT.publicLevel] === "公开"
+    && PUBLISHABLE_PUBLIC_LEVELS.includes(
+      fields[CONTENT.publicLevel] as typeof PUBLISHABLE_PUBLIC_LEVELS[number],
+    )
   ));
   const publishedIds = new Set(publishedRecords.map(({ record_id }) => record_id));
   const copiesByContentId = groupCopyBlocks(copyRecords, publishedIds);

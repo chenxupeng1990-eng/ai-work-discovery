@@ -82,6 +82,11 @@ export const PRIVATE_BASE_FIELD_NAMES = {
 export const BASE_VALUES = {
   content: {
     draft: "草稿",
+    publicLevels: {
+      public: "公开",
+      desensitized: "脱敏案例",
+      forbidden: "禁止发布",
+    },
   },
   inbox: {
     pending: "待处理",

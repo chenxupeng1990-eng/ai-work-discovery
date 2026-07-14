@@ -20,7 +20,16 @@ const readyToUse = readyTypeOrder
   .flatMap((type) => getRecent(items.filter((item) => item.type === type && item.copyBlocks.length > 0), 3))
   .slice(0, 3);
 const recent = getRecent(items, 6);
-const categories = ["灵感", "协作", "效率工具", "内容生产", "行业观察", "案例", "Skills 与 MCP", "快速开始"];
+const categories = [
+  { label: "灵感", category: "视频工作流" },
+  { label: "协作", category: "协作方法" },
+  { label: "效率工具", category: "开源项目" },
+  { label: "内容生产", category: "工作区配置" },
+  { label: "行业观察", category: "行业信号" },
+  { label: "案例", category: "团队案例" },
+  { label: "Skills 与 MCP", category: "Codex Skills" },
+  { label: "快速开始", category: "快速开始" },
+];
 ---
 
 <BaseLayout
@@ -29,11 +38,13 @@ const categories = ["灵感", "协作", "效率工具", "内容生产", "行业�
 >
   <FeaturedSpotlight item={spotlight} />
 
-  <div class="category-strip" aria-label="发现方向">
+  <nav class="category-strip" aria-label="发现方向">
     <div class="container category-strip__inner">
-      {categories.map((category) => <span>{category}</span>)}
+      {categories.map(({ label, category }) => (
+        <a href={`/discover?category=${encodeURIComponent(category)}`}>{label}</a>
+      ))}
     </div>
-  </div>
+  </nav>
 
   <section class="worth section" data-home-section="worth-trying" aria-labelledby="worth-title">
     <div class="container">
@@ -100,8 +111,12 @@ const categories = ["灵感", "协作", "效率工具", "内容生产", "行业�
     display: none;
   }
 
-  .category-strip span {
+  .category-strip a {
     flex: 0 0 auto;
+  }
+
+  .category-strip a:hover {
+    color: var(--indigo);
   }
 
   .section-heading {
