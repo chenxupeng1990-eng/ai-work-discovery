@@ -68,3 +68,10 @@ npm run build
 ## 备注
 
 `ContentAuditProposalSchema` 接受设计中定义的所有审查枚举值，以便 LLM 能返回“需复核”“下架”等人工决策建议；发布门禁只放行其中要求的通过组合。
+
+## 本次 Feishu datetime 兼容修复
+
+- 存储态的 `auditedAt` 和 `nextReviewAt` 同时接受 Feishu Base 返回的有限、安全正整数毫秒时间戳，以及原有带时区 ISO 字符串。
+- 数字时间戳必须达到毫秒量级、通过 `Date` 有效范围校验；秒级值、`NaN`、`Infinity`、负数、非整数和溢出值均被拒绝，不进行秒到毫秒猜测或转换。
+- `ContentAuditProposalSchema` 的 `auditedAt` 和 `nextReviewAt` 仍保持 ISO 字符串要求。
+- 新增真实 API 数字字段形状测试，并覆盖上述非法数字边界；本次 focused 测试共 38 项通过。

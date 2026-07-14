@@ -18,6 +18,19 @@ const AUDIT_FIELDS = [
   CONTENT.auditedAt,
   CONTENT.nextReviewAt,
 ] as const;
+const AUDIT_TIMESTAMP_FIELDS = [CONTENT.auditedAt, CONTENT.nextReviewAt] as const;
+const VALID_AUDITED_AT = Date.parse("2026-07-14T07:00:00.000Z");
+const VALID_NEXT_REVIEW_AT = Date.parse("2026-07-21T08:00:00.000Z");
+const INVALID_FEISHU_DATETIMES = [
+  ["seconds", Math.floor(VALID_NEXT_REVIEW_AT / 1_000)],
+  ["zero", 0],
+  ["negative", -1],
+  ["fractional", VALID_NEXT_REVIEW_AT + 0.5],
+  ["NaN", Number.NaN],
+  ["Infinity", Number.POSITIVE_INFINITY],
+  ["unsafe integer", Number.MAX_SAFE_INTEGER + 1],
+  ["date overflow", 8_640_000_000_000_001],
+] as const;
 
 function record(record_id: string, fields: Record<string, unknown>): RawFeishuRecord {
   return { record_id, fields };
@@ -59,6 +72,13 @@ describe("assertReleaseAudits", () => {
     expect(() => assertReleaseAudits([approvedPublishedRecord()], NOW)).not.toThrow();
   });
 
+  it("accepts Feishu Base datetime fields returned as millisecond timestamps", () => {
+    expect(() => assertReleaseAudits([approvedPublishedRecord({
+      [CONTENT.auditedAt]: VALID_AUDITED_AT,
+      [CONTENT.nextReviewAt]: VALID_NEXT_REVIEW_AT,
+    })], NOW)).not.toThrow();
+  });
+
   it.each(AUDIT_FIELDS)("blocks a published record missing %s", (fieldName) => {
     const fields = approvedPublishedRecord().fields;
     delete fields[fieldName];
@@ -77,6 +97,13 @@ describe("assertReleaseAudits", () => {
     ["due next review timestamp", { [CONTENT.nextReviewAt]: NOW.toISOString() }],
   ])("blocks a published record with %s", (_label, overrides) => {
     expect(() => assertReleaseAudits([approvedPublishedRecord(overrides)], NOW))
+      .toThrow(ContentAuditError);
+  });
+
+  it.each(AUDIT_TIMESTAMP_FIELDS.flatMap((fieldName) =>
+    INVALID_FEISHU_DATETIMES.map(([label, value]) => [fieldName, label, value] as const)
+  ))("blocks a published record with invalid %s value (%s)", (fieldName, _label, value) => {
+    expect(() => assertReleaseAudits([approvedPublishedRecord({ [fieldName]: value })], NOW))
       .toThrow(ContentAuditError);
   });
 

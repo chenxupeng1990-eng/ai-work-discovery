@@ -5,6 +5,7 @@ import { BASE_FIELDS } from "../feishu/fields";
 const CONTENT = BASE_FIELDS.content;
 const AuditTimestampSchema = z.iso.datetime({ offset: true });
 const AuditNoteSchema = z.string().trim().min(1).max(500);
+const MIN_MILLISECOND_TIMESTAMP = 1_000_000_000_000;
 
 export const ContentAuditProposalSchema = z.object({
   valueVerdict: z.enum(["高价值", "可保留", "低价值"]),
@@ -37,7 +38,9 @@ export function assertReleaseAudits(records: readonly RawFeishuRecord[], now: Da
 
 function isApprovedReleaseAudit(record: RawFeishuRecord, now: Date): boolean {
   const fields = record.fields;
+  const auditedAt = parseAuditTimestamp(fields[CONTENT.auditedAt]);
   const nextReviewAt = fields[CONTENT.nextReviewAt];
+  const nextReviewTimestamp = parseAuditTimestamp(nextReviewAt);
 
   return (
     (fields[CONTENT.valueVerdict] === "高价值" || fields[CONTENT.valueVerdict] === "可保留")
@@ -45,12 +48,26 @@ function isApprovedReleaseAudit(record: RawFeishuRecord, now: Date): boolean {
     && fields[CONTENT.factualVerdict] === "符合当前实际"
     && fields[CONTENT.auditDecision] === "通过"
     && AuditNoteSchema.safeParse(fields[CONTENT.auditNote]).success
-    && isValidAuditTimestamp(fields[CONTENT.auditedAt])
-    && isValidAuditTimestamp(nextReviewAt)
-    && new Date(nextReviewAt).getTime() > now.getTime()
+    && auditedAt !== null
+    && nextReviewTimestamp !== null
+    && nextReviewTimestamp > now.getTime()
   );
 }
 
-function isValidAuditTimestamp(value: unknown): value is string {
-  return AuditTimestampSchema.safeParse(value).success;
+function parseAuditTimestamp(value: unknown): number | null {
+  if (typeof value === "number") {
+    if (
+      !Number.isFinite(value)
+      || !Number.isSafeInteger(value)
+      || value < MIN_MILLISECOND_TIMESTAMP
+    ) return null;
+
+    const timestamp = new Date(value).getTime();
+    return Number.isFinite(timestamp) ? timestamp : null;
+  }
+
+  if (typeof value !== "string" || !AuditTimestampSchema.safeParse(value).success) return null;
+
+  const timestamp = new Date(value).getTime();
+  return Number.isFinite(timestamp) ? timestamp : null;
 }
