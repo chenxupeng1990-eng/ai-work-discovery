@@ -8,7 +8,7 @@ import { mapPublishedContent, normalizeAttachmentSourceUrl } from "./feishu/map-
 import { processPendingInbox, type InboxProcessingSummary } from "./inbox/process-inbox";
 import {
   buildPublicDataset,
-  writePublicDataset,
+  publishDatasetAtomically,
   type BuildPublicDatasetOptions,
 } from "./publish/build-dataset";
 import { PublicDatasetSchema, type ContentItem, type PublicDataset } from "../src/lib/schema";
@@ -167,7 +167,7 @@ async function readTable(
   }
 }
 
-const defaultOutput: SyncOutput = { replaceAtomically: writePublicDataset };
+export const defaultOutput: SyncOutput = { replaceAtomically: publishDatasetAtomically };
 const consoleLogger: SyncLogger = {
   info: (message) => console.log(message),
   error: (message) => console.error(message),

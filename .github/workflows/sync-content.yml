@@ -51,10 +51,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- apps/web/src/generated/content.json
-          if [ -d apps/web/public/images/content ]; then
-            git add -- apps/web/public/images/content
-          fi
+          git add -A -- apps/web/src/generated/content.json apps/web/public/images/content
           if git diff --cached --quiet; then
             echo "No public content changes to commit."
             exit 0

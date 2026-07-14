@@ -1,4 +1,4 @@
-import { mkdir, open, readFile, rename, rm } from "node:fs/promises";
+import { access, mkdir, mkdtemp, open, readFile, readdir, rename, rm } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import {
   ContentItemSchema,
@@ -10,7 +10,10 @@ import {
 import { downloadAsset as retrieveAsset } from "./assets";
 
 const DEFAULT_GENERATED_DIRECTORY = resolve("src/generated");
+const DEFAULT_ASSET_DIRECTORY = resolve("public/images/content");
+const DEFAULT_QUARANTINE_ROOT = resolve(".asset-quarantine");
 const CONTROLLED_DOWNLOADED_PATH = /^\/images\/content\/(?:[A-Za-z0-9][A-Za-z0-9._-]*\/)*[A-Za-z0-9][A-Za-z0-9._-]*\.(?:jpe?g|png|webp)$/;
+const CONTROLLED_HASH_ASSET = /^[a-f0-9]{64}\.(?:jpe?g|png|webp)$/;
 
 const FALLBACK_BY_TYPE: Record<ContentItem["type"], string> = {
   "AI Signal": "/images/fallback-ai-signal.webp",
@@ -32,6 +35,12 @@ export interface BuildPublicDatasetOptions {
 
 export interface WritePublicDatasetOptions {
   generatedDir?: string;
+}
+
+export interface PublishDatasetOptions extends WritePublicDatasetOptions {
+  assetDir?: string;
+  quarantineRoot?: string;
+  renameFile?: (source: string, destination: string) => Promise<void>;
 }
 
 export async function buildPublicDataset(
@@ -100,6 +109,87 @@ export async function writePublicDataset(
   }
 }
 
+export async function publishDatasetAtomically(
+  dataset: PublicDataset,
+  options: PublishDatasetOptions = {},
+): Promise<void> {
+  const generatedDir = options.generatedDir ?? DEFAULT_GENERATED_DIRECTORY;
+  const assetDir = options.assetDir ?? DEFAULT_ASSET_DIRECTORY;
+  const quarantineRoot = options.quarantineRoot ?? DEFAULT_QUARANTINE_ROOT;
+  const renameFile = options.renameFile ?? rename;
+  const temporaryPath = join(generatedDir, "content.tmp.json");
+  const finalPath = join(generatedDir, "content.json");
+  const referencedAssets = collectReferencedAssets(dataset);
+  let quarantineDir: string | undefined;
+  let oldDatasetMoved = false;
+  let newDatasetPublished = false;
+  const movedAssets: Array<{ source: string; quarantine: string }> = [];
+
+  await mkdir(generatedDir, { recursive: true });
+  await mkdir(assetDir, { recursive: true });
+  await writeValidatedTemporaryDataset(dataset, temporaryPath);
+
+  try {
+    const orphanNames = (await readdir(assetDir))
+      .filter((name) => CONTROLLED_HASH_ASSET.test(name) && !referencedAssets.has(name));
+    quarantineDir = await mkdtemp(`${quarantineRoot}-`);
+    const oldDatasetPath = join(quarantineDir, "content.json");
+    const assetQuarantineDir = join(quarantineDir, "assets");
+
+    if (await pathExists(finalPath)) {
+      await renameFile(finalPath, oldDatasetPath);
+      oldDatasetMoved = true;
+    }
+    await renameFile(temporaryPath, finalPath);
+    newDatasetPublished = true;
+
+    if (orphanNames.length > 0) {
+      await mkdir(assetQuarantineDir, { recursive: true });
+      for (const name of orphanNames) {
+        const source = join(assetDir, name);
+        const quarantine = join(assetQuarantineDir, name);
+        await renameFile(source, quarantine);
+        movedAssets.push({ source, quarantine });
+      }
+    }
+
+    await rm(quarantineDir, { recursive: true, force: true });
+    quarantineDir = undefined;
+  } catch (error) {
+    const rollbackErrors: unknown[] = [];
+    for (const moved of movedAssets.reverse()) {
+      try {
+        await renameFile(moved.quarantine, moved.source);
+      } catch (rollbackError) {
+        rollbackErrors.push(rollbackError);
+      }
+    }
+    if (newDatasetPublished) {
+      try {
+        await rm(finalPath, { force: true });
+      } catch (rollbackError) {
+        rollbackErrors.push(rollbackError);
+      }
+    }
+    if (oldDatasetMoved && quarantineDir) {
+      try {
+        await renameFile(join(quarantineDir, "content.json"), finalPath);
+      } catch (rollbackError) {
+        rollbackErrors.push(rollbackError);
+      }
+    }
+    await rm(temporaryPath, { force: true }).catch((rollbackError) => rollbackErrors.push(rollbackError));
+    if (quarantineDir) {
+      await rm(quarantineDir, { recursive: true, force: true })
+        .catch((rollbackError) => rollbackErrors.push(rollbackError));
+    }
+    if (rollbackErrors.length > 0) {
+      throw new AggregateError([error, ...rollbackErrors], "Dataset publication failed and rollback was incomplete");
+    }
+    throw error;
+  }
+}
+
 function copyPublicItem(item: ContentItem): ContentItem {
   return {
     id: item.id,
@@ -149,4 +239,39 @@ function compareText(left: string, right: string): number {
   if (left < right) return -1;
   if (left > right) return 1;
   return 0;
+}
+
+async function writeValidatedTemporaryDataset(dataset: PublicDataset, temporaryPath: string): Promise<void> {
+  let file: Awaited<ReturnType<typeof open>> | undefined;
+  try {
+    file = await open(temporaryPath, "wx");
+    await file.writeFile(`${JSON.stringify(dataset, null, 2)}\n`, "utf8");
+    await file.sync();
+    await file.close();
+    file = undefined;
+    PublicDatasetSchema.parse(JSON.parse(await readFile(temporaryPath, "utf8")));
+  } catch (error) {
+    await file?.close().catch(() => undefined);
+    await rm(temporaryPath, { force: true }).catch(() => undefined);
+    throw error;
+  }
+}
+
+function collectReferencedAssets(dataset: PublicDataset): Set<string> {
+  const referenced = new Set<string>();
+  for (const item of dataset.items) {
+    const match = /^\/images\/content\/([^/]+)$/.exec(item.coverImage);
+    if (match?.[1] && CONTROLLED_HASH_ASSET.test(match[1])) referenced.add(match[1]);
+  }
+  return referenced;
+}
+
+async function pathExists(path: string): Promise<boolean> {
+  try {
+    await access(path);
+    return true;
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT") return false;
+    throw error;
+  }
 }

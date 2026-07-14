@@ -1,23 +1,39 @@
-# Final Fixes Report: Product And Operations Integration, Round 1
+# Final Fixes Report: Secure Asset Pipeline, Round 2
 
 ## Scope
 
-Completed the first whole-branch review fix round from starting HEAD `e525b3a`. Changes are limited to CI/sync workflow contracts, Feishu record publication mapping, public fixtures/generated data, content search, discovery navigation and URL state, E2E/unit coverage, and operations documentation.
+Completed the second whole-branch asset pipeline fix round from starting HEAD `65bc644`. Changes are limited to the metadata transport exports, asset retrieval and normalization, dataset publication, sync output wiring, dependency/workflow contracts, focused tests, and this report. No UI files were changed.
 
-The asset download implementation was not modified. `FeishuDocumentCard.astro` remains available for future records with a verified anonymous public Feishu URL. No live third-party network acceptance test was added.
+## Public Network Transport
 
-## Fixes
+- Asset downloads no longer use the global Fetch implementation.
+- `fetch-metadata.ts` now exports its existing default resolver, pinned Undici transport factory, and public-target resolver without changing metadata behavior.
+- Every asset URL and redirect hop must use HTTPS, contain no URL credentials, and resolve entirely to public addresses.
+- Each hop creates a transport whose TCP/TLS lookup is pinned to the resolver-approved address set while the original hostname remains in the request URL for Host and SNI handling.
+- Requests use manual redirects, a five-hop limit, one total ten-second deadline, `credentials: "omit"`, an empty referrer, and no authorization or cookie headers.
+- Redirect transports are closed before the next hop. The active transport is destroyed on request, validation, streaming, timeout, or redirect errors.
+- Unit tests use controlled resolvers and transports only; no asset test performs a live network request.
 
-- CI and sync workflows now run `npm run verify:public` immediately after build. Sync runs the scan before the step that stages or commits generated content.
-- `BASE_VALUES` now owns the three public-level values: `公开`, `脱敏案例`, and `禁止发布`. Published mapping accepts the first two and rejects the third.
-- Existing Inbox processing still creates drafts without setting `公开级别`; the unit contract explicitly verifies this behavior.
-- Removed the login-gated WayToAGI `feishuDocumentUrl` from the test fixture and generated public dataset without adding a replacement. The valid `originalUrl` remains.
-- Detail E2E now verifies that records without an explicitly anonymous Feishu URL omit the Feishu card and still expose the original source.
-- Search now includes `copyBlocks[].title` and continues to exclude copy block body content.
-- Header navigation now contains six valid destinations: discovery, cases, collaboration, tools/resources, AI signals, and updates.
-- Homepage discovery directions are eight lightweight links to categories that exist in the generated dataset.
-- Discovery category state initializes from the URL after hydration, accepts only current categories, normalizes invalid values to `全部`, updates the URL on interaction, and responds to history navigation.
-- The operations guide documents both publishable public levels, manual public-level selection for AI drafts, incognito Feishu-link verification, and the build-to-public-scan workflow order.
+## Image Normalization
+
+- Added `sharp` as a direct runtime dependency.
+- Download input remains streamed to disk with MIME, magic-byte, declared-length, and observed-length enforcement at 8 MB.
+- Images are decoded with fixed dimension, pixel-count, and single-page limits before publication.
+- Valid inputs are auto-oriented and encoded as deterministic WebP with fixed encoder parameters.
+- Metadata is stripped by default, including EXIF/GPS, XMP, ICC, and comments. Tests verify both sharp metadata and marker-byte absence for generated JPEG and PNG inputs.
+- Normalized output is checked against the 8 MB limit, hashed after normalization, and written only as `/images/content/<sha256>.webp`.
+- Invalid and oversized decoded images are rejected. Repeated normalization of the same input produces the same path and bytes.
+
+## Transactional Publication And Pruning
+
+- Added `publishDatasetAtomically` for the default filesystem output while preserving `writePublicDataset` for injected in-memory and narrow output tests.
+- The candidate dataset is fsynced and schema-validated before publication.
+- The previous `content.json` is moved to a quarantine directory outside `public`, then the candidate dataset is renamed into place.
+- Only root-level hash-named JPEG, PNG, or WebP files are controlled for pruning. Unknown files are preserved.
+- Assets referenced by the new dataset are never moved. Retired or replaced controlled assets are moved to quarantine and deleted only after the transaction succeeds.
+- A move failure restores every moved asset and the prior dataset. A dataset replace failure occurs before pruning and restores the prior dataset.
+- The default sync output now uses transactional publication. Injected `SyncOutput` behavior is unchanged.
+- The sync workflow stages additions, modifications, and deletions with `git add -A -- apps/web/src/generated/content.json apps/web/public/images/content`.
 
 ## Verification
 
@@ -25,16 +41,15 @@ Run from `apps/web`:
 
 | Command | Result |
 | --- | --- |
-| `npm test` | PASS: 16 files, 480 tests |
-| `npm test -- tests/unit/workflows.test.ts` | PASS: 2 workflow contract tests |
+| `npm test -- tests/unit/fetch-metadata.test.ts tests/unit/build-dataset.test.ts tests/unit/sync-content.test.ts tests/unit/workflows.test.ts` | PASS: 4 files, 141 tests |
+| `npm test` | PASS: 16 files, 495 tests |
 | `npm run typecheck` | PASS |
+| `npm run sync:content:check` | PASS |
 | `npm run check` | PASS: 59 files, 0 errors, 0 warnings, 0 hints |
 | `npm run build` | PASS: 13 static pages |
 | `npm run verify:public` | PASS: 32 dist files and 1 tracked public text artifact scanned |
-| `npm run test:e2e -- --reporter=line` | PASS: 62 passed, 2 project-specific skips |
+| `npm run test:e2e -- --reporter=line` | PASS: 62 passed, 2 existing project-specific skips |
 
-The existing screenshot acceptance generated fresh desktop and mobile homepage captures. Header inspection confirmed all six desktop links fit without overflow; the mobile header remains compact and the six-link menu opens, closes, supports keyboard dismissal, and stays within the viewport. The 390x844 width checkpoint also passed.
+## Acceptance Boundary
 
-## External Acceptance Boundary
-
-This round does not claim live Feishu availability. Editors must verify every Feishu document URL in an incognito window before publication; if anonymous access is not confirmed, the field remains empty and the original source is used instead.
+The network security tests intentionally use controlled transports and resolvers so they can prove DNS filtering, lookup pinning, redirect behavior, and transport cleanup without depending on external DNS or third-party availability.

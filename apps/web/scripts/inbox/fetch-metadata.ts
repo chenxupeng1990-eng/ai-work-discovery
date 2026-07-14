@@ -57,7 +57,7 @@ export interface SourceMetadata {
   imageUrl?: string;
 }
 
-const defaultResolver: HostResolver = async (hostname) => lookup(hostname, {
+export const defaultResolver: HostResolver = async (hostname) => lookup(hostname, {
   all: true,
   verbatim: true,
 });
@@ -75,7 +75,7 @@ export function createMetadataTransportFactory(
   };
 }
 
-const defaultTransportFactory = createMetadataTransportFactory({
+export const defaultTransportFactory = createMetadataTransportFactory({
   fetch: (url, init) => undiciFetch(url, init as unknown as UndiciRequestInit) as unknown as Promise<Response>,
   agentFactory: (pinnedLookup) => new Agent({ connect: { lookup: pinnedLookup } }),
 });
@@ -285,7 +285,7 @@ function parseRequestUrl(source: string | URL, baseUrl?: URL): URL {
   return url;
 }
 
-async function resolvePublicTarget(
+export async function resolvePublicTarget(
   url: URL,
   resolver: HostResolver,
   signal: AbortSignal,

@@ -7,10 +7,15 @@ import { describe, expect, it, vi } from "vitest";
 import type { SyncConfig } from "../../scripts/config";
 import type { RawFeishuRecord } from "../../scripts/feishu/client";
 import { BASE_FIELDS } from "../../scripts/feishu/fields";
-import { buildPublicDataset, writePublicDataset } from "../../scripts/publish/build-dataset";
+import {
+  buildPublicDataset,
+  publishDatasetAtomically,
+  writePublicDataset,
+} from "../../scripts/publish/build-dataset";
 import {
   SyncRunError,
   createSynchronizationLock,
+  defaultOutput,
   runSync,
   type SyncLogger,
   type SyncOutput,
@@ -81,6 +86,10 @@ function memoryOutput(): SyncOutput & { replaceAtomically: ReturnType<typeof vi.
 }
 
 describe("runSync", () => {
+  it("uses transactional dataset publication for the default filesystem output", () => {
+    expect(defaultOutput.replaceAtomically).toBe(publishDatasetAtomically);
+  });
+
   it("does not replace the last good dataset when a required Feishu read fails", async () => {
     const output = memoryOutput();
     const client = clientFor();

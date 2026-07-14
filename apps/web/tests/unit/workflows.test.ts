@@ -85,10 +85,11 @@ describe("GitHub Actions workflows", () => {
     const commitCommand = commands.find((command: string) => command.includes("git add"));
     expect(commands.indexOf("npm run verify:public")).toBe(commands.indexOf("npm run build") + 1);
     expect(commands.indexOf("npm run verify:public")).toBeLessThan(commands.indexOf(commitCommand));
-    expect(commitCommand).toContain("git add -- apps/web/src/generated/content.json");
-    expect(commitCommand).toContain("git add -- apps/web/public/images/content");
+    expect(commitCommand).toContain(
+      "git add -A -- apps/web/src/generated/content.json apps/web/public/images/content",
+    );
     expect(commitCommand).toContain("git diff --cached --quiet");
     expect(commitCommand).toContain("git push origin HEAD:${{ github.event.repository.default_branch }}");
-    expect(commitCommand).not.toMatch(/git add\s+(?:\.|-A|--all)/);
+    expect(commitCommand).not.toMatch(/git add\s+(?:\.|--all)/);
   });
 });
