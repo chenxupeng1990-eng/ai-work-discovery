@@ -83,3 +83,16 @@ export async function expectFocusVisible(locator: Locator) {
     return style.outlineStyle !== "none" && Number.parseFloat(style.outlineWidth) >= 2;
   })).toBe(true);
 }
+
+export async function tabUntil(locator: Locator, max = 40) {
+  const page = locator.page();
+  for (let attempt = 0; attempt < max; attempt += 1) {
+    await page.keyboard.press("Tab");
+    if (await locator.evaluate((element) => element === document.activeElement)) {
+      await expect(locator).toBeFocused();
+      return;
+    }
+  }
+
+  throw new Error(`Target was not reachable with Tab after ${max} presses`);
+}

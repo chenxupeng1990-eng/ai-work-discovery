@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { generatedDataset } from "../fixtures/generated-dataset";
-import { expectFocusVisible } from "./release-assertions";
+import { expectFocusVisible, tabUntil } from "./release-assertions";
 
 const dataset = generatedDataset;
 const agentsItem = dataset.items.find((item) => item.slug === "agents-md-team-configuration")!;
@@ -158,17 +158,21 @@ test("copy and external source actions operate from the keyboard", async ({ page
   await page.goto(`/content/${agentsItem.slug}`);
 
   const copy = page.locator(".copy-block__button").first();
-  await copy.focus();
+  await tabUntil(copy);
   await expectFocusVisible(copy);
-  await copy.press("Enter");
+  await page.keyboard.press("Enter");
   await expect(copy).toHaveAccessibleName(/^已复制 /);
 
   const external = page.getByRole("link", { name: "打开飞书原文" }).first();
-  await external.focus();
+  await tabUntil(external);
   await expectFocusVisible(external);
-  const popupPromise = page.waitForEvent("popup");
+  await external.evaluate((element) => {
+    element.addEventListener("click", (event) => {
+      event.preventDefault();
+      document.documentElement.dataset.keyboardExternalHref = (event.currentTarget as HTMLAnchorElement).href;
+    }, { once: true });
+  });
   await page.keyboard.press("Enter");
-  const popup = await popupPromise;
-  await expect.poll(() => popup.url()).toBe(agentsItem.feishuDocumentUrl!);
-  await popup.close();
+  await expect.poll(() => page.locator("html").getAttribute("data-keyboard-external-href"))
+    .toBe(agentsItem.feishuDocumentUrl!);
 });

@@ -1,6 +1,6 @@
 import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { generatedDataset } from "../fixtures/generated-dataset";
 import {
   expectCardsAreSeparate,
@@ -9,17 +9,10 @@ import {
   expectFocusVisible,
   expectImagesLoaded,
   expectNoHorizontalOverflow,
+  tabUntil,
 } from "./release-assertions";
 
 const screenshotDirectory = resolve("../../.superpowers/sdd/task-14-screenshots");
-
-async function tabTo(page: Page, target: Locator) {
-  for (let attempt = 0; attempt < 12; attempt += 1) {
-    await page.keyboard.press("Tab");
-    if (await target.evaluate((element) => element === document.activeElement)) return;
-  }
-  throw new Error("Target was not reachable with Tab");
-}
 
 test("homepage exposes shared navigation and one main landmark", async ({ page }) => {
   await page.goto("/");
@@ -133,7 +126,7 @@ test("header controls support Tab, Enter, focus visibility, and mobile menu dism
   await page.goto("/");
 
   const search = page.getByRole("link", { name: "搜索" });
-  await tabTo(page, search);
+  await tabUntil(search);
   await expectFocusVisible(search);
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/discover\/?$/);
@@ -142,14 +135,14 @@ test("header controls support Tab, Enter, focus visibility, and mobile menu dism
   const updates = testInfo.project.name === "desktop"
     ? page.getByRole("navigation", { name: "主导航" }).getByRole("link", { name: "最近更新" })
     : page.getByRole("link", { name: "发现", exact: true });
-  await tabTo(page, updates);
+  await tabUntil(updates);
   await expectFocusVisible(updates);
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(testInfo.project.name === "desktop" ? /\/updates\/?$/ : /\/discover\/?$/);
 
   await page.goto("/");
   const submit = page.getByRole("button", { name: "提交内容" });
-  await tabTo(page, submit);
+  await tabUntil(submit);
   await expectFocusVisible(submit);
   const beforeSubmit = page.url();
   await page.keyboard.press("Enter");
@@ -157,7 +150,7 @@ test("header controls support Tab, Enter, focus visibility, and mobile menu dism
 
   if (testInfo.project.name === "mobile") {
     const menu = page.locator("[data-mobile-menu-button]");
-    await tabTo(page, menu);
+    await tabUntil(menu);
     await expectFocusVisible(menu);
     await page.keyboard.press("Enter");
     await expect(menu).toHaveAttribute("aria-expanded", "true");
@@ -168,6 +161,13 @@ test("header controls support Tab, Enter, focus visibility, and mobile menu dism
     await expect(menu).toHaveAccessibleName("打开导航");
     await expect(page.getByRole("navigation", { name: "移动端主导航" })).toBeHidden();
     await expect(menu).toBeFocused();
+
+    await page.keyboard.press("Enter");
+    await expect(menu).toHaveAttribute("aria-expanded", "true");
+    await page.keyboard.press("Enter");
+    await expect(menu).toHaveAttribute("aria-expanded", "false");
+    await expect(menu).toHaveAccessibleName("打开导航");
+    await expect(page.getByRole("navigation", { name: "移动端主导航" })).toBeHidden();
   }
 });
 
