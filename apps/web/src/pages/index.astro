@@ -1,15 +1,16 @@
 ---
 import AISignals from "../components/AISignals.astro";
 import ContentCard from "../components/ContentCard.astro";
-import FeaturedSpotlight from "../components/FeaturedSpotlight.astro";
+import { HeroCarousel } from "../components/HeroCarousel";
 import ReadyToUse from "../components/ReadyToUse.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { getFeatured, getRecent } from "../lib/content";
+import { selectHeroItems } from "../lib/home-content";
 import { publicDataset } from "../lib/public-dataset";
 
 const items = publicDataset.items;
 const featured = getFeatured(items);
-const spotlight = featured[0] ?? getRecent(items, 1)[0];
+const heroItems = selectHeroItems(items);
 const worthTrying = [
   ...featured.slice(1),
   ...getRecent(items.filter((item) => !item.featured), 5),
@@ -32,7 +33,9 @@ const discoveryTracks = [
   title="QIFEI AI 工作灵感与实践 | QIFEI AI Work Discovery"
   description="发现可直接应用于工作的 AI 灵感、协作方式、案例与工具。"
 >
-  {spotlight && <FeaturedSpotlight item={spotlight} />}
+  {heroItems.length > 0
+    ? <HeroCarousel items={heroItems} client:load />
+    : <section class="home-empty"><h1>QIFEI AI Work Discovery</h1><p>暂无已发布内容</p></section>}
 
   <nav class="category-strip" aria-label="发现方向">
     <div class="container category-strip__inner">
@@ -88,6 +91,14 @@ const discoveryTracks = [
 </BaseLayout>
 
 <style>
+  .home-empty {
+    min-height: 500px;
+    padding: 80px 24px;
+    display: grid;
+    place-content: center;
+    text-align: center;
+  }
+
   .category-strip {
     border-bottom: 1px solid var(--frost);
   }
