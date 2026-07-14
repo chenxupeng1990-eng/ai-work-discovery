@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-14T10:04:56.705Z",
+  "generatedAt": "2026-07-14T15:11:58.526Z",
   "items": [
     {
       "id": "recvpkOJPUSQj9",
@@ -138,7 +138,7 @@
     {
       "id": "recvpkQwnq2SSL",
       "slug": "codex-goal-outcome-boundaries-proof",
-      "title": "Codex /goal：用结果、边界和验收条件驱动长任务",
+      "title": "Codex 目标模式：用结果、边界和验收条件驱动长任务",
       "type": "Skill",
       "category": "协作方法",
       "summary": "把普通操作指令改成可审计目标：说明最终结果、可触碰范围、禁止事项、完成证据、停止条件和预算，让 Codex 持续执行到验证完成。",
@@ -147,7 +147,7 @@
       "timeToValue": "10 分钟",
       "adoptionLevel": "直接使用",
       "networkRequirement": "需要 VPN",
-      "takeaway": "复制一份包含 Outcome、Scope、Constraints、Done when、Stop if 和预算的 /goal 模板。",
+      "takeaway": "复制一份包含 Outcome、Scope、Constraints、Done when、Stop if 和预算的目标模式模板。",
       "coverImage": "/images/content/recvpkQwnq2SSL/recvpkQwnq2SSL.png",
       "tags": [
         "Codex",
@@ -171,12 +171,12 @@
       "copyBlocks": [
         {
           "id": "recvpkSvv3xZnv",
-          "title": "可审计的 /goal 模板",
+          "title": "可审计的目标模式模板",
           "type": "Prompt",
           "language": "text",
-          "content": "/goal 让【最终结果】成为事实。\nScope:【允许处理的文件、系统或时间范围】\n\nConstraints:\n- 不改变【必须保持不变的内容】\n- 所有外部写入、发送、删除操作先确认\n- 本轮预算不超过【预算】\n\nDone when:\n1. 【可验证条件一】\n2. 【测试、命令、文件或结果证据】\n3. 输出已完成项、遗留风险和验证证据\n\nStop if:\n- 需要新增付费依赖或人工凭证\n- 需要删除文件、改数据库结构或公开发布\n- 遇到与目标无关的失败",
+          "content": "开启目标模式，让【最终结果】成为事实。\nScope:【允许处理的文件、系统或时间范围】\n\nConstraints:\n- 不改变【必须保持不变的内容】\n- 所有外部写入、发送、删除操作先确认\n- 本轮预算不超过【预算】\n\nDone when:\n1. 【可验证条件一】\n2. 【测试、命令、文件或结果证据】\n3. 输出已完成项、遗留风险和验证证据\n\nStop if:\n- 需要新增付费依赖或人工凭证\n- 需要删除文件、改数据库结构或公开发布\n- 遇到与目标无关的失败",
           "order": 1,
-          "note": "先在 Plan 模式把成功条件写清楚，退出 Plan 模式后再启动目标。"
+          "note": "先在 Plan 模式把成功条件写清楚，再明确要求 Codex 开启目标模式；具体入口以当前客户端能力为准。"
         }
       ]
     },
@@ -357,57 +357,12 @@
       ]
     },
     {
-      "id": "recvpl0EQNsUbm",
-      "slug": "gpt-image-generate-codex-skill",
-      "title": "gpt-image-generate Skill：在 Codex 中一句话生成并保存配图",
-      "type": "Skill",
-      "category": "Codex Skills",
-      "summary": "把 gpt-image-generate 放入 Codex skills 目录，通过支持 /v1/responses 与 image_generation 的 provider 调用生图，并自动解析 base64 保存 PNG、JPEG 或 WebP。",
-      "recommendationReason": "避免手写接口请求和图片解析逻辑；但能否成功取决于当前 provider 是否真正支持图片生成工具，安装前应先确认接口能力。",
-      "recommendationTrack": "工作提效",
-      "timeToValue": "10 分钟",
-      "adoptionLevel": "需要配置",
-      "networkRequirement": "部分资源需要 VPN",
-      "takeaway": "安装 Skill，完成一次带品牌风格约束的配图生成，并在本地得到可用图片文件。",
-      "coverImage": "/images/content/recvpl0EQNsUbm/recvpl0EQNsUbm.png",
-      "tags": [
-        "Codex",
-        "Skills",
-        "AI",
-        "内容工作流"
-      ],
-      "audience": [
-        "内容团队",
-        "市场团队",
-        "设计团队",
-        "研发团队"
-      ],
-      "scenario": "为文章、商品专题页、封面和项目卡片快速生成本地图片文件。",
-      "originalUrl": "https://waytoagi.feishu.cn/docx/Rpm0dGkn0oA3B8xKR9dcOTuSnAh",
-      "sourceName": "WayToAGI / BINGO906",
-      "featured": false,
-      "sortWeight": 0,
-      "publishedAt": "2026-07-14T09:52:00.000Z",
-      "updatedAt": "2026-07-14T09:22:07.000Z",
-      "copyBlocks": [
-        {
-          "id": "recvpl12jQDKCx",
-          "title": "生成品牌一致的内容配图",
-          "type": "Prompt",
-          "language": "text",
-          "content": "$gpt-image-generate 使用该技能生图：为【内容主题/商品】生成一张【用途：封面/专题页/卡片】图片。严格遵循项目 DESIGN.md 的颜色、光线、构图和留白；不要出现真实品牌 Logo、乱码文字或无关装饰；输出【比例】并保存为 PNG。生成后检查主体完整、文字区域和移动端裁切安全。",
-          "order": 1,
-          "note": "Windows Skill 目录通常为 C:\\Users\\你的用户名\\.codex\\skills；provider 必须支持 /v1/responses 和 image_generation。"
-        }
-      ]
-    },
-    {
       "id": "recvpl0EvpWN0x",
       "slug": "chengfeng-videocut-skill-storyboard-preview",
       "title": "chengfeng-videocut-skills：口播从字幕对齐到分镜预览",
       "type": "Skill",
       "category": "视频工作流",
-      "summary": "安装剪辑 Skills 后，先输出剪后口播与对齐字幕，再用 /口播成片生成分镜核对页，人工按片段反馈后进入时间线预览和合成。",
+      "summary": "安装剪辑 Skills 后，先输出剪后口播与对齐字幕，再使用已安装的口播成片 Skill 生成分镜核对页；实际触发方式以安装后的 SKILL.md 为准，人工按片段反馈后再进入时间线预览和合成。",
       "recommendationReason": "把人工动作从逐帧排时间线变成审核分镜与指出问题，保留人在素材选择、节奏和品牌表达上的判断。",
       "recommendationTrack": "工作提效",
       "timeToValue": "1 小时",
@@ -439,9 +394,9 @@
           "title": "安装剪辑 Skills",
           "type": "Command",
           "language": "shell",
-          "content": "npx chengfeng-videocut-skills install",
+          "content": "npx chengfeng-videocut-skills install --target codex",
           "order": 1,
-          "note": "安装后先用“剪口播”得到对齐视频与字幕，再在项目里输入 /口播成片生成分镜核对页。"
+          "note": "安装后在 Codex 中使用 chengfeng-videocut-skills 下的剪口播、字幕和口播成片 Skills；实际触发语法以安装后的 SKILL.md 为准。"
         }
       ]
     },
