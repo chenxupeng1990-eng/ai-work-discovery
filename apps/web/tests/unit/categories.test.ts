@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { ContentItem } from "../../src/lib/schema";
+import { RECOMMENDATION_TRACKS, type ContentItem } from "../../src/lib/schema";
 import { CATEGORY_DEFINITIONS, categoryForSlug, itemsForCategory, slugForTrack } from "../../src/lib/categories";
 
 const item = (id: string, recommendationTrack: ContentItem["recommendationTrack"]): ContentItem => ({
@@ -33,6 +33,10 @@ describe("category metadata", () => {
       "inspiration", "productivity", "team-practice", "frontier-signals",
     ]);
     expect(new Set(CATEGORY_DEFINITIONS.map(({ track }) => track)).size).toBe(4);
+  });
+
+  it("covers every schema recommendation track in schema order", () => {
+    expect(CATEGORY_DEFINITIONS.map(({ track }) => track)).toEqual(RECOMMENDATION_TRACKS);
   });
 
   it("maps slugs and Chinese tracks in both directions", () => {

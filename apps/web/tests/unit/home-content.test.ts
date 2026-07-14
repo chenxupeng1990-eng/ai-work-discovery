@@ -48,6 +48,12 @@ describe("homepage content selection", () => {
     expect(selectHeroItems(input, 0)).toEqual([]);
   });
 
+  it("never exceeds the public hero and homepage caps", () => {
+    const input = Array.from({ length: 12 }, (_, index) => item(`item-${index}`));
+    expect(selectHeroItems(input, 5)).toHaveLength(4);
+    expect(selectHomepageItems(input, 11)).toHaveLength(10);
+  });
+
   it("uses sort weight, slug, and id as deterministic tie-breakers", () => {
     const sameDate = "2026-01-01T00:00:00.000Z";
     const input = [
