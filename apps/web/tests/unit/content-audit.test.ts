@@ -94,7 +94,12 @@ describe("assertReleaseAudits", () => {
     ["non-passing decision", { [CONTENT.auditDecision]: "待审核" }],
     ["invalid audited timestamp", { [CONTENT.auditedAt]: "not-a-date" }],
     ["invalid next review timestamp", { [CONTENT.nextReviewAt]: "not-a-date" }],
+    ["future audited timestamp", { [CONTENT.auditedAt]: "2026-07-14T09:00:00.000Z" }],
     ["due next review timestamp", { [CONTENT.nextReviewAt]: NOW.toISOString() }],
+    ["next review before audit", {
+      [CONTENT.auditedAt]: "2026-07-15T09:00:00.000Z",
+      [CONTENT.nextReviewAt]: "2026-07-15T08:00:00.000Z",
+    }],
   ])("blocks a published record with %s", (_label, overrides) => {
     expect(() => assertReleaseAudits([approvedPublishedRecord(overrides)], NOW))
       .toThrow(ContentAuditError);

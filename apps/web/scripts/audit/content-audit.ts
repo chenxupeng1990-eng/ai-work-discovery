@@ -50,7 +50,9 @@ function isApprovedReleaseAudit(record: RawFeishuRecord, now: Date): boolean {
     && AuditNoteSchema.safeParse(fields[CONTENT.auditNote]).success
     && auditedAt !== null
     && nextReviewTimestamp !== null
+    && auditedAt <= now.getTime()
     && nextReviewTimestamp > now.getTime()
+    && nextReviewTimestamp > auditedAt
   );
 }
 
