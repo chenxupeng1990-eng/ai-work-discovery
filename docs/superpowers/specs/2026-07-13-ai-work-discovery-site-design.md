@@ -80,7 +80,7 @@ The number of homepage recommendations must be deliberately limited. The homepag
 
 ### 4.3 Listing and Detail Pages
 
-Listing pages support keyword search, category filtering, tag filtering, and featured/latest sorting.
+Listing pages support keyword search, recommendation-track filtering, and featured/latest sorting.
 
 Detail pages include:
 
@@ -344,7 +344,7 @@ The uploaded reference contains internal conflicts and rules that do not fit Chi
 - Letter spacing is 0, not negative.
 - The site retains image-led discovery even though the reference recommends very limited imagery.
 - Indigo remains a functional accent and is not used as a large decorative background.
-- The phrase "frosted glass" is interpreted as cool surface tinting, not CSS backdrop blur.
+- The initial MVP interpreted "frosted glass" as cool surface tinting. Section 17 supersedes this constraint for the approved quick-match tool only.
 
 ## 12. Accessibility and Responsive Behavior
 
@@ -381,7 +381,7 @@ The uploaded reference contains internal conflicts and rules that do not fit Chi
 
 ### 13.3 UI Tests
 
-- Search and category filtering
+- Search and recommendation-track filtering
 - Featured/latest sorting
 - Copy action and feedback
 - Feishu document card links
@@ -432,4 +432,46 @@ The first release does not include:
 6. Add scheduled and manual GitHub Actions workflows.
 7. Add production hosting configuration and secret setup documentation.
 8. Run unit, integration, UI, responsive, and security-output verification.
+
+## 17. Chinese Typography and Liquid Glass Iteration
+
+This iteration updates presentation only. It does not change the public content schema, recommendation scoring, Feishu mappings, routes, or publication workflow.
+
+### 17.1 Typography
+
+- Chinese UI text prefers `PingFang SC`, `Noto Sans CJK SC`, `Microsoft YaHei`, and compatible system sans-serif fallbacks.
+- Display headings use medium weight rather than heavy bold so Chinese glyphs retain interior space.
+- Body text remains regular weight with slightly more line height and softer graphite color.
+- Metadata and labels remain compact but avoid semibold weight unless they represent an active state.
+- Letter spacing remains `0`.
+
+### 17.2 Quick-Match Layout
+
+- The quick-match module remains one framed tool, not a page section styled as a decorative card.
+- Desktop uses four balanced preference groups with additional vertical spacing; medium viewports use two columns and mobile uses one column.
+- The heading, controls, and three recommendations are separated into clear bands with generous spacing.
+- Recommendation rows keep stable title, reason, and takeaway dimensions so filter changes do not move the controls below them.
+- Dividers organize recommendations without adding nested cards or shadows.
+
+### 17.3 Glass Treatment
+
+- The quick-match tool uses a translucent white surface, a restrained one-pixel border, and `backdrop-filter` blur plus saturation when supported.
+- No decorative gradient, orb, shadow, or simulated glass illustration is added.
+- Hover and selected states change surface opacity, border color, and position subtly; content remains readable without relying on transparency.
+- Browsers without backdrop-filter receive an opaque fog-canvas fallback.
+
+### 17.4 Motion
+
+- The glass panel receives one short settle animation on initial render.
+- Preference controls and recommendation links use brief state transitions; no looping animation is allowed.
+- Motion does not resize controls or change document flow.
+- `prefers-reduced-motion: reduce` disables transforms, animation, and nonessential transitions.
+
+### 17.5 Acceptance Criteria
+
+- Chinese headings no longer appear excessively heavy at desktop or mobile sizes.
+- At 1440px, the quick-match controls read as four balanced groups with visible breathing room.
+- The glass surface is perceptible over the page background while text contrast remains clear.
+- Track and preference changes keep the lower search controls stable.
+- Existing keyboard, clipboard, responsive, public-output, and security tests continue to pass.
 
