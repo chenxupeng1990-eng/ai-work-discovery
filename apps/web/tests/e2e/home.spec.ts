@@ -1,8 +1,8 @@
 import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { expect, test } from "@playwright/test";
-import { DISCOVERY_TRACKS } from "../../src/lib/discovery-recommendation";
-import { selectHeroItems } from "../../src/lib/home-content";
+import { CATEGORY_DEFINITIONS, itemsForCategory } from "../../src/lib/categories";
+import { selectHeroItems, selectHomepageItems } from "../../src/lib/home-content";
 import { generatedDataset } from "../fixtures/generated-dataset";
 import {
   expectCardsAreSeparate,
@@ -17,6 +17,13 @@ import {
 const screenshotDirectory = resolve("../../.superpowers/sdd/task-14-screenshots");
 const detailRoute = `/content/${generatedDataset.items[0]!.slug}`;
 const heroItems = selectHeroItems(generatedDataset.items);
+const homepageItems = selectHomepageItems(generatedDataset.items);
+const categoryRoutes = [
+  "/category/inspiration",
+  "/category/productivity",
+  "/category/team-practice",
+  "/category/frontier-signals",
+] as const;
 
 test("public routes share the QIFEI brand asset and copy", async ({ page }) => {
   const titles = [
@@ -41,10 +48,10 @@ test("homepage exposes shared navigation and one main landmark", async ({ page }
 
   const expectedNavigation = [
     ["发现", "/discover"],
-    ["灵感实验", "/discover?track=灵感实验"],
-    ["工作提效", "/discover?track=工作提效"],
-    ["团队实践", "/discover?track=团队实践"],
-    ["前沿信号", "/discover?track=前沿信号"],
+    ["灵感实验", "/category/inspiration"],
+    ["工作提效", "/category/productivity"],
+    ["团队实践", "/category/team-practice"],
+    ["前沿信号", "/category/frontier-signals"],
     ["最近更新", "/updates"],
   ] as const;
   const navigation = page.locator('nav[aria-label="主导航"]');
@@ -62,26 +69,20 @@ test("homepage exposes shared navigation and one main landmark", async ({ page }
   await expect(page.getByRole("contentinfo")).toBeVisible();
 });
 
-test("homepage track links use the supported discovery tracks and filter discovery", async ({ page }) => {
+test("homepage category links use stable routes and show dataset counts", async ({ page }) => {
   await page.goto("/");
 
   const links = page.getByRole("navigation", { name: "发现方向" }).getByRole("link");
   await expect(links).toHaveCount(4);
-  for (const link of await links.all()) {
-    const href = await link.getAttribute("href");
-    expect(href).toMatch(/^\/discover\?track=.+/);
-    const track = new URL(href!, "https://example.test").searchParams.get("track");
-    expect(DISCOVERY_TRACKS).toContain(track);
+  for (const category of CATEGORY_DEFINITIONS) {
+    const expectedCount = itemsForCategory(generatedDataset.items, category.slug).length;
+    const link = links.filter({ hasText: category.track });
+    await expect(link).toHaveAttribute("href", `/category/${category.slug}`);
+    await expect(link).toContainText(`${expectedCount} 项`);
   }
-
-  const targetTrack = "灵感实验";
-  await page.getByRole("navigation", { name: "发现方向" }).getByRole("link", { name: targetTrack }).click();
-  await expect(page.locator("[data-discovery-card]")).toHaveCount(
-    generatedDataset.items.filter((item) => item.recommendationTrack === targetTrack).length,
-  );
 });
 
-test("homepage prioritizes bounded discovery content over a rigid course", async ({ page }) => {
+test("homepage contains only the hero, category links, and at most ten featured cards", async ({ page }) => {
   await page.goto("/");
 
   const hero = page.getByRole("region", { name: "精选内容" });
@@ -89,32 +90,26 @@ test("homepage prioritizes bounded discovery content over a rigid course", async
   await expect(hero.locator(".hero-carousel__slide.is-active .hero-carousel__brand")).toHaveText(
     "QIFEI AI Work Discovery",
   );
-  await expect(page.getByRole("heading", { name: "值得一试" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "AI 风向" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "随手可用" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "最近更新" })).toBeVisible();
+  await expect(hero.getByText("QIFEI AI Work Discovery", { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "现在值得尝试" })).toBeVisible();
   await expect(page.getByText("学习进度")).toHaveCount(0);
 
-  await expect(page.locator('[data-home-section="spotlight"]')).toHaveCount(1);
-  await expect(page.locator('[data-home-section="worth-trying"] [data-content-card]')).toHaveCount(5);
-  const signalItems = page.locator('[data-home-section="ai-signals"] [data-signal-item]');
-  const expectedSignalCount = Math.min(4, generatedDataset.items.filter((item) => item.type === "AI Signal").length);
-  await expect(signalItems).toHaveCount(expectedSignalCount);
-  await expect(page.locator('[data-home-section="ready-to-use"] [data-ready-item]')).toHaveCount(3);
-  await expect(page.locator('[data-home-section="recent"] [data-recent-item]')).toHaveCount(6);
+  await expect(page.locator('[data-home-section="featured"] [data-content-card]')).toHaveCount(
+    Math.min(10, generatedDataset.items.length),
+  );
+  await expect(page.locator('[data-home-section="worth-trying"]')).toHaveCount(0);
+  await expect(page.locator('[data-home-section="ai-signals"]')).toHaveCount(0);
+  await expect(page.locator('[data-home-section="ready-to-use"]')).toHaveCount(0);
+  await expect(page.locator('[data-home-section="recent"]')).toHaveCount(0);
 
-  const contentImages = page.locator('[data-home-content-image]');
-  await expect(contentImages).toHaveCount(6);
-  for (const image of await contentImages.all()) {
+  const cardImages = page.locator('[data-home-section="featured"] [data-home-content-image]');
+  await expect(cardImages).toHaveCount(homepageItems.length);
+  for (const image of await cardImages.all()) {
     await expect(image).toHaveAttribute("src", /^\/images\/content\/[a-zA-Z0-9_-]+\/.+\.png$/);
     await expect(image).toHaveAttribute("width", /\d+/);
     await expect(image).toHaveAttribute("height", /\d+/);
+    await image.scrollIntoViewIfNeeded();
     await expect(image).toHaveJSProperty("complete", true);
-  }
-
-  const cardImages = page.locator('[data-content-card] [data-home-content-image]');
-  await expect(cardImages).toHaveCount(5);
-  for (const image of await cardImages.all()) {
     const box = await image.boundingBox();
     expect(box).not.toBeNull();
     expect(box!.width / box!.height).toBeGreaterThanOrEqual(1.58);
@@ -126,6 +121,43 @@ test("homepage prioritizes bounded discovery content over a rigid course", async
     const href = await link.getAttribute("href");
     expect(href).toMatch(/^\/content\/[a-z0-9-]+$/);
     await expect(link).not.toHaveAttribute("target");
+  }
+});
+
+test("all category routes render only their mapped items and a stable empty state", async ({ page, request }) => {
+  expect(categoryRoutes).toEqual(CATEGORY_DEFINITIONS.map((category) => `/category/${category.slug}`));
+
+  for (const [index, category] of CATEGORY_DEFINITIONS.entries()) {
+    const route = categoryRoutes[index]!;
+    const expectedItems = itemsForCategory(generatedDataset.items, category.slug);
+    expect((await request.get(route)).status(), route).toBe(200);
+
+    await page.goto(route);
+    await expect(page.getByRole("heading", { level: 1, name: category.track })).toBeVisible();
+    await expect(page.locator("[data-content-card]")).toHaveCount(expectedItems.length);
+    expect(await page.locator("[data-content-card] a").evaluateAll((links) => (
+      links.map((link) => link.getAttribute("href"))
+    ))).toEqual(expectedItems.map((item) => `/content/${item.slug}`));
+
+    const emptyState = page.locator('[data-category-empty="true"]');
+    if (expectedItems.length === 0) {
+      await expect(emptyState).toContainText("该分类暂无内容");
+    } else {
+      await expect(emptyState).toHaveCount(0);
+    }
+  }
+});
+
+test("featured grid uses three, two, and one responsive columns without clipping Chinese text", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Responsive grid checkpoints run once in the desktop project.");
+
+  for (const [width, columns] of [[1440, 3], [900, 2], [390, 1]] as const) {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.goto("/");
+    const grid = page.locator(".featured-grid");
+    expect((await grid.evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(" ").length))).toBe(columns);
+    await expectNoHorizontalOverflow(page);
+    await expectCardTextFits(page);
   }
 });
 
@@ -144,24 +176,10 @@ test("homepage carousel hydrates and supports manual navigation", async ({ page 
   await expect(hero.getByRole("heading", { name: heroItems[1]!.title })).toBeVisible();
 });
 
-test("AI signals section renders only AI Signal content", async ({ page }) => {
-  await page.goto("/");
-
-  const expectedSignalUrls = generatedDataset.items
-    .filter((item) => item.type === "AI Signal")
-    .sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt))
-    .slice(0, 4)
-    .map((item) => `/content/${item.slug}`);
-  const renderedSignalUrls = await page
-    .locator('[data-home-section="ai-signals"] [data-signal-item] a')
-    .evaluateAll((links) => links.map((link) => link.getAttribute("href")));
-  expect(renderedSignalUrls).toEqual(expectedSignalUrls);
-});
-
 test("homepage keeps the next section visible and avoids horizontal overflow", async ({ page }) => {
   await page.goto("/");
 
-  const nextSection = page.locator('[data-home-section="worth-trying"]');
+  const nextSection = page.locator('[data-home-section="categories"]');
   const viewport = page.viewportSize();
   expect(viewport).not.toBeNull();
   expect(await nextSection.evaluate((element) => element.getBoundingClientRect().top)).toBeLessThan(viewport!.height);
@@ -284,7 +302,7 @@ for (const checkpoint of [
       const heroBox = await hero.boundingBox();
       expect(heroBox).not.toBeNull();
       expect(heroBox!.width * heroBox!.height).toBeGreaterThan(100_000);
-      const nextSectionTop = await page.locator('[data-home-section="worth-trying"]').evaluate(
+      const nextSectionTop = await page.locator('[data-home-section="categories"]').evaluate(
         (element) => element.getBoundingClientRect().top,
       );
       expect(nextSectionTop).toBeLessThan(page.viewportSize()!.height);

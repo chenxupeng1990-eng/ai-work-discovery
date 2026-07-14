@@ -1,10 +1,12 @@
 ---
+import { CATEGORY_DEFINITIONS } from "../lib/categories";
+
 const navigation = [
   { label: "发现", href: "/discover" },
-  { label: "灵感实验", href: "/discover?track=灵感实验" },
-  { label: "工作提效", href: "/discover?track=工作提效" },
-  { label: "团队实践", href: "/discover?track=团队实践" },
-  { label: "前沿信号", href: "/discover?track=前沿信号" },
+  ...CATEGORY_DEFINITIONS.map((category) => ({
+    label: category.track,
+    href: `/category/${category.slug}`,
+  })),
   { label: "最近更新", href: "/updates" },
 ];
 ---

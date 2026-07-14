@@ -1,0 +1,152 @@
+---
+import ContentCard from "../../components/ContentCard.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { CATEGORY_DEFINITIONS, itemsForCategory } from "../../lib/categories";
+import { publicDataset } from "../../lib/public-dataset";
+
+type Category = typeof CATEGORY_DEFINITIONS[number];
+
+export function getStaticPaths() {
+  return CATEGORY_DEFINITIONS.map((category) => ({
+    params: { slug: category.slug },
+    props: { category },
+  }));
+}
+
+const { category } = Astro.props as { category: Category };
+const items = itemsForCategory(publicDataset.items, category.slug);
+---
+
+<BaseLayout
+  title={`${category.track} | QIFEI AI Work Discovery`}
+  description={category.description}
+>
+  <section class="category-hero" aria-labelledby="category-title">
+    <div class="container category-hero__inner">
+      <div>
+        <p class="category-hero__eyebrow">发现方向</p>
+        <h1 id="category-title">{category.track}</h1>
+        <p class="category-hero__description">{category.description}</p>
+      </div>
+      <span class="category-hero__count">{items.length} 项内容</span>
+    </div>
+  </section>
+
+  <section class="category-results section" aria-label={`${category.track}内容`} data-category-track={category.track}>
+    <div class="container">
+      {items.length > 0
+        ? <div class="category-grid">{items.map((item) => <ContentCard item={item} />)}</div>
+        : (
+          <div class="category-empty" data-category-empty="true">
+            <h2>该分类暂无内容</h2>
+            <p>新的工作实践正在整理中，可以先查看全部发现。</p>
+          </div>
+        )}
+      <nav class="category-actions" aria-label="分类页导航">
+        <a class="button-primary" href="/discover">查看全部发现</a>
+        <a class="button-secondary" href="/">返回首页</a>
+      </nav>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .category-hero {
+    padding-block: 88px 72px;
+    background: var(--mist);
+  }
+
+  .category-hero__inner {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 48px;
+  }
+
+  .category-hero__eyebrow {
+    margin-bottom: 14px;
+    color: var(--indigo);
+    font-size: 14px;
+  }
+
+  .category-hero h1 {
+    margin-bottom: 18px;
+    font-size: 48px;
+  }
+
+  .category-hero__description {
+    max-width: 680px;
+    margin-bottom: 0;
+    color: var(--steel);
+    font-size: 18px;
+  }
+
+  .category-hero__count {
+    flex: 0 0 auto;
+    color: var(--slate);
+    font-size: 14px;
+  }
+
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+    gap: 40px 24px;
+  }
+
+  .category-empty {
+    max-width: 640px;
+    padding-block: 24px 40px;
+    border-bottom: 1px solid var(--frost);
+  }
+
+  .category-empty h2 {
+    margin-bottom: 12px;
+    font-size: 28px;
+  }
+
+  .category-empty p {
+    margin-bottom: 0;
+    color: var(--steel);
+  }
+
+  .category-actions {
+    margin-top: 48px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  @media (max-width: 960px) {
+    .category-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 720px) {
+    .category-hero {
+      padding-block: 64px 56px;
+    }
+
+    .category-hero__inner {
+      display: block;
+    }
+
+    .category-hero h1 {
+      font-size: 36px;
+    }
+
+    .category-hero__description {
+      font-size: 16px;
+    }
+
+    .category-hero__count {
+      display: block;
+      margin-top: 28px;
+    }
+
+    .category-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
