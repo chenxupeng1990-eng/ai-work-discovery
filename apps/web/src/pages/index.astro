@@ -20,15 +20,11 @@ const readyToUse = readyTypeOrder
   .flatMap((type) => getRecent(items.filter((item) => item.type === type && item.copyBlocks.length > 0), 3))
   .slice(0, 3);
 const recent = getRecent(items, 6);
-const categories = [
-  { label: "灵感", category: "视频工作流" },
-  { label: "协作", category: "协作方法" },
-  { label: "效率工具", category: "开源项目" },
-  { label: "内容生产", category: "工作区配置" },
-  { label: "行业观察", category: "行业信号" },
-  { label: "案例", category: "团队案例" },
-  { label: "Skills 与 MCP", category: "Codex Skills" },
-  { label: "快速开始", category: "快速开始" },
+const discoveryTracks = [
+  { label: "灵感实验", track: "灵感实验" },
+  { label: "工作提效", track: "工作提效" },
+  { label: "团队实践", track: "团队实践" },
+  { label: "前沿信号", track: "前沿信号" },
 ];
 ---
 
@@ -40,8 +36,8 @@ const categories = [
 
   <nav class="category-strip" aria-label="发现方向">
     <div class="container category-strip__inner">
-      {categories.map(({ label, category }) => (
-        <a href={`/discover?category=${encodeURIComponent(category)}`}>{label}</a>
+      {discoveryTracks.map(({ label, track }) => (
+        <a href={`/discover?track=${encodeURIComponent(track)}`}>{label}</a>
       ))}
     </div>
   </nav>

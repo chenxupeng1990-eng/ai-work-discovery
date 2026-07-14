@@ -19,10 +19,10 @@ test("homepage exposes shared navigation and one main landmark", async ({ page }
 
   const expectedNavigation = [
     ["发现", "/discover"],
-    ["实践案例", "/discover?category=团队案例"],
-    ["协作方式", "/discover?category=协作方法"],
-    ["工具与资源", "/discover?category=开源项目"],
-    ["AI信号", "/discover?category=行业信号"],
+    ["灵感实验", "/discover?track=灵感实验"],
+    ["工作提效", "/discover?track=工作提效"],
+    ["团队实践", "/discover?track=团队实践"],
+    ["前沿信号", "/discover?track=前沿信号"],
     ["最近更新", "/updates"],
   ] as const;
   const navigation = page.locator('nav[aria-label="主导航"]');
@@ -40,18 +40,24 @@ test("homepage exposes shared navigation and one main landmark", async ({ page }
   await expect(page.getByRole("contentinfo")).toBeVisible();
 });
 
-test("homepage category links use categories present in the public dataset", async ({ page }) => {
+test("homepage track links use tracks present in the public dataset and filter discovery", async ({ page }) => {
   await page.goto("/");
 
   const links = page.getByRole("navigation", { name: "发现方向" }).getByRole("link");
-  await expect(links).toHaveCount(8);
-  const actualCategories = new Set(generatedDataset.items.map((item) => item.category));
+  await expect(links).toHaveCount(4);
+  const actualTracks = new Set<string>(generatedDataset.items.map((item) => item.recommendationTrack));
   for (const link of await links.all()) {
     const href = await link.getAttribute("href");
-    expect(href).toMatch(/^\/discover\?category=.+/);
-    const category = new URL(href!, "https://example.test").searchParams.get("category");
-    expect(actualCategories.has(category!)).toBe(true);
+    expect(href).toMatch(/^\/discover\?track=.+/);
+    const track = new URL(href!, "https://example.test").searchParams.get("track");
+    expect(actualTracks.has(track!)).toBe(true);
   }
+
+  const targetTrack = "灵感实验";
+  await page.getByRole("navigation", { name: "发现方向" }).getByRole("link", { name: targetTrack }).click();
+  await expect(page.locator("[data-discovery-card]")).toHaveCount(
+    generatedDataset.items.filter((item) => item.recommendationTrack === targetTrack).length,
+  );
 });
 
 test("homepage prioritizes bounded discovery content over a rigid course", async ({ page }) => {

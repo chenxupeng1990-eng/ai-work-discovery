@@ -6,6 +6,8 @@ const waitForExplorer = async (page: Page) => {
   await expect(page.locator("astro-island:not([ssr])")).toHaveCount(1);
 };
 
+const listingCards = (page: Page) => page.locator("[data-discovery-card]");
+
 test("header search is a valid discovery navigation", async ({ page }) => {
   await page.goto("/");
 
@@ -18,8 +20,8 @@ test("search filters Chinese content and announces the result count", async ({ p
 
   await page.getByRole("searchbox", { name: "搜索内容" }).fill("飞书");
 
-  await expect(page.getByRole("article")).toHaveCount(1);
-  await expect(page.getByRole("article")).toContainText("用飞书桥把 Codex 变成团队可调用的工作入口");
+  await expect(listingCards(page)).toHaveCount(1);
+  await expect(listingCards(page)).toContainText("用飞书桥把 Codex 变成团队可调用的工作入口");
   await expect(page.getByRole("status", { name: "搜索结果数量" })).toHaveText("找到 1 项内容");
 });
 
@@ -29,42 +31,56 @@ test("search matches copy block titles but not copy block bodies", async ({ page
 
   const search = page.getByRole("searchbox", { name: "搜索内容" });
   await search.fill("团队 AGENTS.md 模板");
-  await expect(page.getByRole("article")).toHaveCount(1);
-  await expect(page.getByRole("article")).toContainText("AGENTS.md 配置范本");
+  await expect(listingCards(page)).toHaveCount(1);
+  await expect(listingCards(page)).toContainText("AGENTS.md 配置范本");
 
   await search.fill("State assumptions before coding");
-  await expect(page.getByRole("article")).toHaveCount(0);
+  await expect(listingCards(page)).toHaveCount(0);
 });
 
-test("category query initializes, updates, and rejects unknown categories", async ({ page }) => {
-  await page.goto("/discover?category=产品信号");
+test("track query initializes, updates, and rejects unknown tracks", async ({ page }) => {
+  await page.goto("/discover?track=前沿信号");
   await waitForExplorer(page);
 
-  await expect(page.getByRole("button", { name: "产品信号", exact: true })).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByRole("article")).toHaveCount(1);
+  await expect(page.getByRole("button", { name: "前沿信号", exact: true }).last()).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    page.getByRole("group", { name: "主要目标" }).getByRole("button", { name: "前沿信号" }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(listingCards(page)).toHaveCount(
+    generatedDataset.items.filter((item) => item.recommendationTrack === "前沿信号").length,
+  );
 
-  await page.getByRole("button", { name: "团队案例", exact: true }).click();
-  await expect(page).toHaveURL(/\/discover\?category=%E5%9B%A2%E9%98%9F%E6%A1%88%E4%BE%8B$/);
+  await page.getByRole("button", { name: "团队实践", exact: true }).last().click();
+  await expect(page).toHaveURL(/\/discover\?track=%E5%9B%A2%E9%98%9F%E5%AE%9E%E8%B7%B5$/);
+  const recommendationBeforeReload = await page.locator(".starter-result").first().getByRole("heading").textContent();
+  await page.reload();
+  await waitForExplorer(page);
+  await expect(page.locator(".starter-result").first().getByRole("heading")).toHaveText(
+    recommendationBeforeReload!,
+  );
 
-  await page.goto("/discover?category=不存在");
+  await page.goto("/discover?track=不存在");
   await expect(page.getByRole("button", { name: "全部", exact: true })).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByRole("article")).toHaveCount(generatedDataset.items.length);
+  await expect(listingCards(page)).toHaveCount(generatedDataset.items.length);
+  await expect(page).toHaveURL("/discover");
 });
 
-test("category chips filter results without moving the control bar", async ({ page }) => {
+test("track chips filter results without moving the control bar", async ({ page }) => {
   await page.goto("/discover");
   await waitForExplorer(page);
 
   const controls = page.locator("[data-discovery-controls]");
   await controls.scrollIntoViewIfNeeded();
   const before = await controls.boundingBox();
-  const category = page.getByRole("button", { name: "产品信号", exact: true });
+  const track = page.getByRole("button", { name: "前沿信号", exact: true }).last();
 
-  await category.click();
+  await track.click();
 
-  await expect(category).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByRole("article")).toHaveCount(1);
-  await expect(page.getByRole("article")).toContainText("OpenAI 发布 Agent 构建工具");
+  await expect(track).toHaveAttribute("aria-pressed", "true");
+  await expect(listingCards(page)).toHaveCount(
+    generatedDataset.items.filter((item) => item.recommendationTrack === "前沿信号").length,
+  );
+  await expect(listingCards(page).filter({ hasText: "OpenAI 发布 Agent 构建工具" })).toHaveCount(1);
   const after = await controls.boundingBox();
   expect(before).not.toBeNull();
   expect(after).not.toBeNull();
@@ -79,7 +95,7 @@ test("latest sorting changes the first result according to updatedAt", async ({ 
 
   const featured = page.getByRole("button", { name: "精选", exact: true });
   const latest = page.getByRole("button", { name: "最新", exact: true });
-  const cardHeadings = page.getByRole("article").getByRole("heading");
+  const cardHeadings = listingCards(page).getByRole("heading");
   const featuredFirst = await cardHeadings.first().textContent();
   const expectedFeaturedOrder = [...generatedDataset.items]
     .sort((left, right) => right.sortWeight - left.sortWeight
@@ -116,7 +132,7 @@ test("empty search renders a complete resettable state", async ({ page }) => {
   await expect(page.getByText("试试缩短关键词，或清除筛选查看全部内容。")).toBeVisible();
   await expect(page.getByRole("status", { name: "搜索结果数量" })).toHaveText("找到 0 项内容");
   await page.getByRole("button", { name: "清除筛选" }).click();
-  await expect(page.getByRole("article")).toHaveCount(10);
+  await expect(listingCards(page)).toHaveCount(generatedDataset.items.length);
   await expect(page.getByRole("button", { name: "全部", exact: true })).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByRole("button", { name: "精选", exact: true })).toHaveAttribute("aria-pressed", "true");
 });
@@ -125,10 +141,10 @@ test("listing cards link every item to its internal detail page", async ({ page 
   await page.goto("/discover");
   await waitForExplorer(page);
 
-  const cards = page.getByRole("article");
-  await expect(cards).toHaveCount(10);
+  const cards = listingCards(page);
+  await expect(cards).toHaveCount(generatedDataset.items.length);
   for (const item of generatedDataset.items) {
-    const link = cards.filter({ hasText: item.title }).getByRole("link");
+    const link = cards.filter({ hasText: item.title }).getByRole("link", { name: item.title, exact: true });
     await expect(link).toHaveAttribute("href", `/content/${item.slug}`);
     await expect(link).not.toHaveAttribute("target");
   }
@@ -143,7 +159,69 @@ test("listing cards link every item to its internal detail page", async ({ page 
   }
 
   await expect(page.locator('[href^="#"]')).toHaveCount(0);
-  await expect(page.locator(".discovery-grid").locator('[href^="/content/"]')).toHaveCount(10);
+  await expect(page.locator(".discovery-grid").locator("[data-discovery-card]")).toHaveCount(
+    generatedDataset.items.length,
+  );
+});
+
+test("listing card copies its first reusable block", async ({ page, context }) => {
+  const item = generatedDataset.items.find((candidate) => candidate.copyBlocks.length > 0)!;
+  const firstBlock = [...item.copyBlocks].sort((left, right) => left.order - right.order)[0]!;
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/discover");
+  await waitForExplorer(page);
+
+  const card = listingCards(page).filter({ hasText: item.title });
+  const copy = card.getByRole("button", { name: `复制 ${item.title}` });
+  await copy.focus();
+  await expectFocusVisible(copy);
+  await page.keyboard.press("Enter");
+
+  await expect(card.getByRole("button", { name: `已复制 ${item.title}` })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(firstBlock.content);
+});
+
+test("listing card reports clipboard failure and supports retry", async ({ page }) => {
+  const item = generatedDataset.items.find((candidate) => candidate.copyBlocks.length > 0)!;
+  await page.goto("/discover");
+  await waitForExplorer(page);
+  await page.evaluate(() => {
+    let attempts = 0;
+    Object.defineProperty(navigator.clipboard, "writeText", {
+      configurable: true,
+      value: async () => {
+        attempts += 1;
+        if (attempts === 1) throw new Error("denied");
+      },
+    });
+  });
+
+  const card = listingCards(page).filter({ hasText: item.title });
+  await card.getByRole("button", { name: `复制 ${item.title}` }).click();
+  await expect(card.getByRole("alert")).toHaveText(`复制失败，请重试：${item.title}`);
+  const retry = card.getByRole("button", { name: `重试复制 ${item.title}` });
+  await expect(retry).toBeEnabled();
+
+  await retry.click();
+  await expect(card.getByRole("status")).toHaveText(`已复制：${item.title}`);
+});
+
+test("preference picker reranks recommendations and supports keyboard input", async ({ page }) => {
+  await page.goto("/discover");
+  await waitForExplorer(page);
+
+  const time = page.getByRole("group", { name: "多久见效" }).getByRole("button", { name: "半天" });
+  await time.focus();
+  await expectFocusVisible(time);
+  await page.keyboard.press("Space");
+  await page.getByRole("group", { name: "主要目标" }).getByRole("button", { name: "团队实践" }).click();
+  await page.getByRole("group", { name: "想拿走什么" }).getByRole("button", { name: "团队案例" }).click();
+  await page.getByRole("group", { name: "接受的门槛" }).getByRole("button", { name: "需要开发" }).click();
+
+  await expect(time).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".starter-result").first().getByRole("heading")).toHaveText(
+    "用飞书桥把 Codex 变成团队可调用的工作入口",
+  );
 });
 
 test("discovery page avoids horizontal overflow and overlapping cards", async ({ page }) => {
@@ -154,7 +232,7 @@ test("discovery page avoids horizontal overflow and overlapping cards", async ({
   expect(viewport).not.toBeNull();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport!.width);
 
-  const cards = page.getByRole("article");
+  const cards = listingCards(page);
   if (await cards.count() > 1) {
     const first = await cards.nth(0).boundingBox();
     const second = await cards.nth(1).boundingBox();
@@ -168,7 +246,7 @@ test("discovery page avoids horizontal overflow and overlapping cards", async ({
   }
 });
 
-test("discovery search, category, and sort controls operate from the keyboard", async ({ page }) => {
+test("discovery search, track, and sort controls operate from the keyboard", async ({ page }) => {
   await page.goto("/discover");
   await waitForExplorer(page);
 
@@ -176,14 +254,14 @@ test("discovery search, category, and sort controls operate from the keyboard", 
   await tabUntil(search);
   await expectFocusVisible(search);
   await search.fill("飞书");
-  await expect(page.getByRole("article")).toHaveCount(1);
+  await expect(listingCards(page)).toHaveCount(1);
 
   await search.fill("");
-  const category = page.getByRole("button", { name: "产品信号", exact: true });
-  await tabUntil(category);
-  await expectFocusVisible(category);
+  const track = page.getByRole("button", { name: "前沿信号", exact: true }).last();
+  await tabUntil(track);
+  await expectFocusVisible(track);
   await page.keyboard.press("Space");
-  await expect(category).toHaveAttribute("aria-pressed", "true");
+  await expect(track).toHaveAttribute("aria-pressed", "true");
 
   const latest = page.getByRole("button", { name: "最新", exact: true });
   await tabUntil(latest);

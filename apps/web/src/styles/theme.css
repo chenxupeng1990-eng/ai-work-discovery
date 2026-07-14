@@ -32,13 +32,13 @@
   --leading-heading-sm: 1.19;
   --leading-heading: 1.07;
   --leading-heading-lg: 1.07;
-  --tracking-caption: -0.22px;
-  --tracking-body-sm: -0.32px;
-  --tracking-body: -0.2px;
-  --tracking-subheading: -0.25px;
-  --tracking-heading-sm: -0.16px;
-  --tracking-heading: 0.22px;
-  --tracking-heading-lg: 0.5px;
+  --tracking-caption: 0;
+  --tracking-body-sm: 0;
+  --tracking-body: 0;
+  --tracking-subheading: 0;
+  --tracking-heading-sm: 0;
+  --tracking-heading: 0;
+  --tracking-heading-lg: 0;
 
   --spacing-4: 4px;
   --spacing-8: 8px;

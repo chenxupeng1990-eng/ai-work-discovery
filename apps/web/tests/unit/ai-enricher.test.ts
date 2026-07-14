@@ -60,7 +60,17 @@ describe("DraftProposalSchema", () => {
     ["unknown adoption level", { ...validProposal, adoptionLevel: "专家代劳" }],
     ["empty takeaway", { ...validProposal, takeaway: "" }],
     ["takeaway too long", { ...validProposal, takeaway: "x".repeat(181) }],
+    ["summary repeated as recommendation reason", {
+      ...validProposal,
+      recommendationReason: validProposal.summary,
+    }],
     ["category too long", { ...validProposal, category: "x".repeat(21) }],
+    ["no tags", { ...validProposal, tags: [] }],
+    ["only one tag", { ...validProposal, tags: ["Codex"] }],
+    ["more than five tags", {
+      ...validProposal,
+      tags: Array.from({ length: 6 }, (_, index) => `tag-${index}`),
+    }],
     ["too many tags", { ...validProposal, tags: Array.from({ length: 9 }, (_, index) => `tag-${index}`) }],
     ["tag too long", { ...validProposal, tags: ["x".repeat(21)] }],
     ["too many copy blocks", {
@@ -185,6 +195,14 @@ describe("enrichDraft", () => {
     expect(messages[0]?.content).toContain("草稿");
     expect(messages[0]?.content).toContain("工作发现站");
     expect(messages[0]?.content).toContain("四个轨道按价值分类");
+    expect(messages[0]?.content).toContain("summary");
+    expect(messages[0]?.content).toContain("对象、方法和适用场景");
+    expect(messages[0]?.content).toContain("recommendationReason");
+    expect(messages[0]?.content).toContain("为什么值得尝试");
+    expect(messages[0]?.content).toContain("timeToValue");
+    expect(messages[0]?.content).toContain("首次得到可用结果");
+    expect(messages[0]?.content).toContain("adoptionLevel");
+    expect(messages[0]?.content).toContain("真实依赖");
     expect(messages[0]?.content).toContain("复制");
     expect(messages[0]?.content).toContain("安装");
     expect(messages[0]?.content).toContain("完成");

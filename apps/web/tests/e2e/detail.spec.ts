@@ -104,8 +104,9 @@ test("homepage and discovery cards navigate to internal detail pages", async ({ 
 
   await page.goto("/discover");
   await expect(page.locator("astro-island:not([ssr])")).toHaveCount(1);
-  const discoveryLink = page.locator('.discovery-card a[href^="/content/"]').first();
-  const discoveryTitle = await discoveryLink.getByRole("heading").textContent();
+  const discoveryCard = page.locator("[data-discovery-card]").first();
+  const discoveryTitle = await discoveryCard.getByRole("heading").textContent();
+  const discoveryLink = discoveryCard.getByRole("link", { name: discoveryTitle!, exact: true });
   const discoveryHref = await discoveryLink.getAttribute("href");
   await page.goto(discoveryHref!);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(discoveryTitle!);

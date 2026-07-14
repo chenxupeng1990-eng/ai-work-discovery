@@ -38,10 +38,18 @@ export const DraftProposalSchema = z.object({
   takeaway: z.string().min(1).max(180),
   contentType: z.enum(CONTENT_TYPES),
   category: z.string().min(1).max(20),
-  tags: z.array(z.string().min(1).max(20)).max(8),
+  tags: z.array(z.string().min(1).max(20)).min(2).max(5),
   publicationStatus: z.literal("草稿"),
   copyBlocks: z.array(CopyBlockProposalSchema).max(6),
-}).strict();
+}).strict().superRefine((proposal, context) => {
+  if (proposal.summary.trim() === proposal.recommendationReason.trim()) {
+    context.addIssue({
+      code: "custom",
+      message: "recommendationReason must add value beyond summary",
+      path: ["recommendationReason"],
+    });
+  }
+});
 
 export type DraftProposal = z.infer<typeof DraftProposalSchema>;
 
@@ -158,7 +166,12 @@ async function performEnrichment(
               "Create one human-review draft for 工作发现站.",
               "Return strict JSON only for structured review.",
               "四个轨道按价值分类: 灵感实验, 工作提效, 团队实践, 前沿信号.",
-              "takeaway must state what the user can 复制, 安装, or 完成.",
+              "summary 用一句话说明对象、方法和适用场景，不写口号.",
+              "recommendationReason 说明为什么值得尝试、对谁有用，不重复 summary.",
+              "timeToValue 按首次得到可用结果所需时间选择 10 分钟、1 小时、半天或长期.",
+              "adoptionLevel 按真实依赖选择直接使用、需要配置或需要开发.",
+              "takeaway 必须写成可验证的具体产物或完成动作，说明用户可以复制、安装或完成什么.",
+              "tags 只保留 2 到 5 个有检索价值的主题词.",
               "禁止虚构评分、事实或来源.",
               "publicationStatus must be 草稿.",
             ].join(" "),
