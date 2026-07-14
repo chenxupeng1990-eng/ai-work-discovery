@@ -41,6 +41,7 @@ export interface PublishDatasetOptions extends WritePublicDatasetOptions {
   assetDir?: string;
   quarantineRoot?: string;
   renameFile?: (source: string, destination: string) => Promise<void>;
+  removeQuarantine?: (path: string) => Promise<void>;
 }
 
 export async function buildPublicDataset(
@@ -117,6 +118,8 @@ export async function publishDatasetAtomically(
   const assetDir = options.assetDir ?? DEFAULT_ASSET_DIRECTORY;
   const quarantineRoot = options.quarantineRoot ?? DEFAULT_QUARANTINE_ROOT;
   const renameFile = options.renameFile ?? rename;
+  const removeQuarantine = options.removeQuarantine
+    ?? ((path: string) => rm(path, { recursive: true, force: true }));
   const temporaryPath = join(generatedDir, "content.tmp.json");
   const finalPath = join(generatedDir, "content.json");
   const referencedAssets = collectReferencedAssets(dataset);
@@ -153,8 +156,6 @@ export async function publishDatasetAtomically(
       }
     }
 
-    await rm(quarantineDir, { recursive: true, force: true });
-    quarantineDir = undefined;
   } catch (error) {
     const rollbackErrors: unknown[] = [];
     for (const moved of movedAssets.reverse()) {
@@ -187,6 +188,10 @@ export async function publishDatasetAtomically(
       throw new AggregateError([error, ...rollbackErrors], "Dataset publication failed and rollback was incomplete");
     }
     throw error;
+  }
+
+  if (quarantineDir) {
+    await removeQuarantine(quarantineDir).catch(() => undefined);
   }
 }
 

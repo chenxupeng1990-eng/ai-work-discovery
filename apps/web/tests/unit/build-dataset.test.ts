@@ -770,6 +770,39 @@ describe("publishDatasetAtomically", () => {
     }
   });
 
+  it("keeps the committed dataset when quarantine cleanup partially fails", async () => {
+    const paths = await setupPublishFixture();
+    const retired = `${hash("7")}.jpg`;
+    const referenced = `${hash("8")}.webp`;
+    await writeFile(join(paths.generatedDir, "content.json"), "{\"old\":true}\n");
+    await writeFile(join(paths.assetDir, retired), "retired");
+    await writeFile(join(paths.assetDir, referenced), "referenced");
+    const dataset = PublicDatasetSchema.parse({
+      generatedAt: "2026-07-14T00:00:00.000Z",
+      items: [contentItem({ coverImage: `/images/content/${referenced}` })],
+    });
+    const renameFile = vi.fn(rename);
+    const removeQuarantine = vi.fn(async (path: string) => {
+      await rm(join(path, "content.json"), { force: true });
+      throw new Error("simulated partial cleanup failure");
+    });
+
+    try {
+      await publishDatasetAtomically(dataset, { ...paths, renameFile, removeQuarantine });
+
+      expect(PublicDatasetSchema.parse(JSON.parse(
+        await readFile(join(paths.generatedDir, "content.json"), "utf8"),
+      ))).toEqual(dataset);
+      expect(await readdir(paths.assetDir)).toEqual([referenced]);
+      expect(removeQuarantine).toHaveBeenCalledOnce();
+      expect(renameFile.mock.calls.some(([source, destination]) =>
+        String(source).includes("quarantine-") && destination === join(paths.generatedDir, "content.json"),
+      )).toBe(false);
+    } finally {
+      await rm(paths.root, { recursive: true, force: true });
+    }
+  });
+
   it("restores the old dataset and every moved asset when pruning fails", async () => {
     const paths = await setupPublishFixture();
     const first = `${hash("e")}.jpg`;
