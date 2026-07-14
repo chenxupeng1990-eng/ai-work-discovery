@@ -56,6 +56,22 @@ describe("queryContent", () => {
     expect(queryContent(items, searchOptions("私有检索词"))).toEqual([]);
   });
 
+  it.each([
+    ["灵感实验", "track", { recommendationTrack: "灵感实验" }],
+    ["10 分钟", "time", { timeToValue: "10 分钟" }],
+    ["直接使用", "adoption", { adoptionLevel: "直接使用" }],
+    ["一份可执行的团队清单", "takeaway", { takeaway: "一份可执行的团队清单" }],
+  ])("matches discovery summary field %s", (query, slug, field) => {
+    const items: typeof fixtureDataset.items = [{
+      ...baseItem,
+      id: slug,
+      slug,
+      ...(field as Partial<typeof baseItem>),
+    }];
+
+    expect(queryContent(items, searchOptions(query)).map((item) => item.slug)).toEqual([slug]);
+  });
+
   it("filters by category while 全部 keeps every item", () => {
     const items = [
       { ...baseItem, id: "one", slug: "one", category: "团队案例" },

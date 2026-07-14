@@ -13,6 +13,10 @@ const validItem = {
   category: "Cases",
   summary: "Summary",
   recommendationReason: "Reason",
+  recommendationTrack: "工作提效",
+  timeToValue: "1 小时",
+  adoptionLevel: "直接使用",
+  takeaway: "完成一次可复用的案例梳理。",
   coverImage: "/images/fixtures/case.png",
   tags: [],
   audience: [],
@@ -48,6 +52,20 @@ describe("PublicDatasetSchema", () => {
     const result = PublicDatasetSchema.safeParse({
       generatedAt: "2026-07-13T00:00:00.000Z",
       items: [{ ...validItem, rawInbox: "internal" }],
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it.each([
+    ["recommendationTrack", "未知轨道"],
+    ["timeToValue", "2 小时"],
+    ["adoptionLevel", "专家代劳"],
+    ["takeaway", ""],
+  ] as const)("rejects invalid %s", (field, value) => {
+    const result = PublicDatasetSchema.safeParse({
+      generatedAt: "2026-07-13T00:00:00.000Z",
+      items: [{ ...validItem, [field]: value }],
     });
 
     expect(result.success).toBe(false);

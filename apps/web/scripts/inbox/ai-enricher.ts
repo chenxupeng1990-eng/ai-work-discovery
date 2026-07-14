@@ -1,4 +1,9 @@
-import { z } from "zod";
+﻿import { z } from "zod";
+import {
+  ADOPTION_LEVELS,
+  RECOMMENDATION_TRACKS,
+  TIME_TO_VALUE_OPTIONS,
+} from "../../src/lib/schema";
 import type { SourceMetadata } from "./fetch-metadata";
 
 export const MAX_EDITOR_NOTE_LENGTH = 1_000;
@@ -27,6 +32,10 @@ export const DraftProposalSchema = z.object({
   title: z.string().min(1).max(80),
   summary: z.string().min(1).max(180),
   recommendationReason: z.string().min(1).max(160),
+  recommendationTrack: z.enum(RECOMMENDATION_TRACKS),
+  timeToValue: z.enum(TIME_TO_VALUE_OPTIONS),
+  adoptionLevel: z.enum(ADOPTION_LEVELS),
+  takeaway: z.string().min(1).max(180),
   contentType: z.enum(CONTENT_TYPES),
   category: z.string().min(1).max(20),
   tags: z.array(z.string().min(1).max(20)).max(8),
@@ -145,7 +154,14 @@ async function performEnrichment(
         messages: [
           {
             role: "system",
-            content: "Create one human-review draft. Return JSON only. publicationStatus must be 草稿.",
+            content: [
+              "Create one human-review draft for 工作发现站.",
+              "Return strict JSON only for structured review.",
+              "四个轨道按价值分类: 灵感实验, 工作提效, 团队实践, 前沿信号.",
+              "takeaway must state what the user can 复制, 安装, or 完成.",
+              "禁止虚构评分、事实或来源.",
+              "publicationStatus must be 草稿.",
+            ].join(" "),
           },
           {
             role: "user",

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+﻿import { describe, expect, it, vi } from "vitest";
 import type { DraftProposal } from "../../scripts/inbox/ai-enricher";
 import { BASE_FIELDS, BASE_VALUES } from "../../scripts/feishu/fields";
 import type { RawFeishuRecord } from "../../scripts/feishu/client";
@@ -7,12 +7,16 @@ import { processPendingInbox } from "../../scripts/inbox/process-inbox";
 const CONTENT = BASE_FIELDS.content;
 const COPY = BASE_FIELDS.copyBlock;
 const INBOX = BASE_FIELDS.inbox;
-const COPY_SOURCE_KEY = "来源收件箱复制块键";
+const COPY_SOURCE_KEY = BASE_FIELDS.copyBlock.sourceInboxCopyBlockKey;
 
 const proposal: DraftProposal = {
   title: "Review me",
   summary: "Bounded summary",
   recommendationReason: "Reusable workflow",
+  recommendationTrack: "工作提效",
+  timeToValue: "10 分钟",
+  adoptionLevel: "直接使用",
+  takeaway: "复制提示词并完成一次可审核的草稿生成。",
   contentType: "Tool",
   category: "Engineering",
   tags: ["Codex"],
@@ -147,6 +151,10 @@ describe("processPendingInbox", () => {
       [CONTENT.category]: proposal.category,
       [CONTENT.summary]: proposal.summary,
       [CONTENT.recommendationReason]: proposal.recommendationReason,
+      [CONTENT.recommendationTrack]: proposal.recommendationTrack,
+      [CONTENT.timeToValue]: proposal.timeToValue,
+      [CONTENT.adoptionLevel]: proposal.adoptionLevel,
+      [CONTENT.takeaway]: proposal.takeaway,
       [CONTENT.tags]: proposal.tags,
       [CONTENT.originalUrl]: "https://example.com/success",
       [CONTENT.publicationStatus]: BASE_VALUES.content.draft,
@@ -160,6 +168,10 @@ describe("processPendingInbox", () => {
       CONTENT.category,
       CONTENT.summary,
       CONTENT.recommendationReason,
+      CONTENT.recommendationTrack,
+      CONTENT.timeToValue,
+      CONTENT.adoptionLevel,
+      CONTENT.takeaway,
       CONTENT.tags,
       CONTENT.originalUrl,
       CONTENT.publicationStatus,
@@ -200,6 +212,10 @@ describe("processPendingInbox", () => {
       [INBOX.generatedTitle]: proposal.title,
       [INBOX.generatedSummary]: proposal.summary,
       [INBOX.generatedRecommendationReason]: proposal.recommendationReason,
+      [INBOX.generatedRecommendationTrack]: proposal.recommendationTrack,
+      [INBOX.generatedTimeToValue]: proposal.timeToValue,
+      [INBOX.generatedAdoptionLevel]: proposal.adoptionLevel,
+      [INBOX.generatedTakeaway]: proposal.takeaway,
       [INBOX.processedAt]: "2026-07-14T00:00:00.000Z",
     });
 
@@ -368,7 +384,7 @@ describe("processPendingInbox", () => {
     expect(updates.at(-1)).toMatchObject({
       [INBOX.processingStatus]: BASE_VALUES.inbox.failed,
     });
-    expect(String(updates.at(-1)?.[INBOX.errorMessage])).toMatch(/manual|人工|published|non-draft/i);
+    expect(String(updates.at(-1)?.[INBOX.errorMessage])).toMatch(/manual|浜哄伐|published|non-draft/i);
   });
 
   it("retries copy block writes without duplicating completed orders", async () => {

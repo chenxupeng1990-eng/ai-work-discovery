@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+﻿import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   AIEnrichmentError,
   DraftProposalSchema,
@@ -12,6 +12,10 @@ const validProposal = {
   title: "A bounded review draft",
   summary: "A concise summary for human review.",
   recommendationReason: "Useful because the workflow is reusable.",
+  recommendationTrack: "工作提效",
+  timeToValue: "1 小时",
+  adoptionLevel: "直接使用",
+  takeaway: "Install the workflow and finish one reviewed draft end to end.",
   contentType: "Tool",
   category: "Engineering",
   tags: ["Codex", "Automation"],
@@ -45,12 +49,17 @@ describe("DraftProposalSchema", () => {
 
   it.each([
     ["unknown field", { ...validProposal, admin: true }],
-    ["published status", { ...validProposal, publicationStatus: "已发布" }],
-    ["approved status", { ...validProposal, publicationStatus: "审核通过" }],
+    ["published status", { ...validProposal, publicationStatus: "\u5df2\u53d1\u5e03" }],
+    ["approved status", { ...validProposal, publicationStatus: "\u5ba1\u6838\u901a\u8fc7" }],
     ["unknown content type", { ...validProposal, contentType: "Article" }],
     ["title too long", { ...validProposal, title: "x".repeat(81) }],
     ["summary too long", { ...validProposal, summary: "x".repeat(181) }],
     ["reason too long", { ...validProposal, recommendationReason: "x".repeat(161) }],
+    ["unknown recommendation track", { ...validProposal, recommendationTrack: "未知轨道" }],
+    ["unknown time to value", { ...validProposal, timeToValue: "2 小时" }],
+    ["unknown adoption level", { ...validProposal, adoptionLevel: "专家代劳" }],
+    ["empty takeaway", { ...validProposal, takeaway: "" }],
+    ["takeaway too long", { ...validProposal, takeaway: "x".repeat(181) }],
     ["category too long", { ...validProposal, category: "x".repeat(21) }],
     ["too many tags", { ...validProposal, tags: Array.from({ length: 9 }, (_, index) => `tag-${index}`) }],
     ["tag too long", { ...validProposal, tags: ["x".repeat(21)] }],
@@ -107,7 +116,7 @@ describe("parseDraftProposal", () => {
     { choices: [{}] },
     completion(null),
     completion({}),
-    { choices: [{ message: { content: JSON.stringify({ ...validProposal, publicationStatus: "已发布" }) } }] },
+    { choices: [{ message: { content: JSON.stringify({ ...validProposal, publicationStatus: "\u5df2\u53d1\u5e03" }) } }] },
   ])("rejects malformed or unsafe completion: %#", (payload) => {
     expect(() => parseDraftProposal(payload)).toThrow(AIEnrichmentError);
   });
@@ -170,6 +179,16 @@ describe("enrichDraft", () => {
     expect(serialized).not.toContain("#fragment");
     expect(serialized).not.toContain(note);
     const messages = body.messages as Array<{ content: string }>;
+    expect(messages[0]?.content).toContain("human-review");
+    expect(messages[0]?.content).toContain("strict JSON");
+    expect(messages[0]?.content).toContain("publicationStatus");
+    expect(messages[0]?.content).toContain("草稿");
+    expect(messages[0]?.content).toContain("工作发现站");
+    expect(messages[0]?.content).toContain("四个轨道按价值分类");
+    expect(messages[0]?.content).toContain("复制");
+    expect(messages[0]?.content).toContain("安装");
+    expect(messages[0]?.content).toContain("完成");
+    expect(messages[0]?.content).toContain("禁止虚构");
     const modelInput = JSON.parse(messages[1]?.content ?? "{}") as Record<string, unknown>;
     expect(modelInput).toMatchObject({
       editorNoteTruncated: true,

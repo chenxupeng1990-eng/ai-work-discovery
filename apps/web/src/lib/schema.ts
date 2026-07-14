@@ -3,6 +3,26 @@ import { z } from "zod";
 const CONTROLLED_COVER_IMAGE_PATH = /^\/images\/(?:(?:fixtures|content)\/(?:[A-Za-z0-9][A-Za-z0-9._-]*\/)*[A-Za-z0-9][A-Za-z0-9._-]*\.(?:avif|gif|jpe?g|png|webp)|fallback-[A-Za-z0-9][A-Za-z0-9-]*\.webp)$/;
 const HttpsUrlSchema = z.url({ protocol: /^https$/ });
 
+export const RECOMMENDATION_TRACKS = [
+  "灵感实验",
+  "工作提效",
+  "团队实践",
+  "前沿信号",
+] as const;
+
+export const TIME_TO_VALUE_OPTIONS = [
+  "10 分钟",
+  "1 小时",
+  "半天",
+  "长期",
+] as const;
+
+export const ADOPTION_LEVELS = [
+  "直接使用",
+  "需要配置",
+  "需要开发",
+] as const;
+
 export const CopyBlockSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
@@ -29,6 +49,10 @@ export const ContentItemSchema = z.object({
   category: z.string().min(1),
   summary: z.string().min(1),
   recommendationReason: z.string().min(1),
+  recommendationTrack: z.enum(RECOMMENDATION_TRACKS),
+  timeToValue: z.enum(TIME_TO_VALUE_OPTIONS),
+  adoptionLevel: z.enum(ADOPTION_LEVELS),
+  takeaway: z.string().min(1),
   coverImage: z.string().regex(CONTROLLED_COVER_IMAGE_PATH),
   tags: z.array(z.string()),
   audience: z.array(z.string()),

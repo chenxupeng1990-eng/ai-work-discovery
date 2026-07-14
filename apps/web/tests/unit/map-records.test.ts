@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { ContentItemSchema } from "../../src/lib/schema";
+import { BASE_FIELDS, BASE_VALUES } from "../../scripts/feishu/fields";
 import {
   mapPublishedContent,
   normalizeAttachmentSourceUrl,
   type RawFeishuRecord,
 } from "../../scripts/feishu/map-records";
-import { BASE_VALUES } from "../../scripts/feishu/fields";
+
+const CONTENT = BASE_FIELDS.content;
+const COPY = BASE_FIELDS.copyBlock;
 
 const record = (
   record_id: string,
@@ -13,85 +16,88 @@ const record = (
 ): RawFeishuRecord => ({ record_id, fields });
 
 const publishedFields = (overrides: Record<string, unknown> = {}) => ({
-  标题: "公开案例",
-  Slug: "public-case",
-  内容类型: "Case",
-  分类: "团队案例",
-  摘要: "公开摘要",
-  推荐理由: "值得团队复用",
-  封面图片: [{ name: "cover.png", url: "https://example.com/assets/cover.png" }],
-  标签: ["Codex", "飞书"],
-  适用人群: ["研发", "运营"],
-  适用场景: "团队协作",
-  原始链接: { link: "https://example.com/case", text: "来源" },
-  飞书文档链接: "https://example.feishu.cn/wiki/public",
-  来源名称: "公开来源",
-  首页精选: true,
-  排序权重: 20,
-  发布时间: 1783900800000,
-  更新时间: "2026-07-13T12:00:00.000Z",
-  发布状态: "已发布",
-  公开级别: BASE_VALUES.content.publicLevels.public,
+  [CONTENT.title]: "公开案例",
+  [CONTENT.slug]: "public-case",
+  [CONTENT.type]: "Case",
+  [CONTENT.category]: "团队案例",
+  [CONTENT.summary]: "公开摘要",
+  [CONTENT.recommendationReason]: "值得团队复用",
+  [CONTENT.recommendationTrack]: "工作提效",
+  [CONTENT.timeToValue]: "1 小时",
+  [CONTENT.adoptionLevel]: "直接使用",
+  [CONTENT.takeaway]: "完成一套可直接复用的团队案例模板。",
+  [CONTENT.coverImage]: [{ name: "cover.png", url: "https://example.com/assets/cover.png" }],
+  [CONTENT.tags]: ["Codex", "飞书"],
+  [CONTENT.audience]: ["研发", "运营"],
+  [CONTENT.scenario]: "团队协作",
+  [CONTENT.originalUrl]: { link: "https://example.com/case", text: "来源" },
+  [CONTENT.feishuDocumentUrl]: "https://example.feishu.cn/wiki/public",
+  [CONTENT.sourceName]: "公开来源",
+  [CONTENT.featured]: true,
+  [CONTENT.sortWeight]: 20,
+  [CONTENT.publishedAt]: 1783900800000,
+  [CONTENT.updatedAt]: "2026-07-13T12:00:00.000Z",
+  [CONTENT.publicationStatus]: "已发布",
+  [CONTENT.publicLevel]: BASE_VALUES.content.publicLevels.public,
   内部备注: "不得发布",
-  来源收件箱记录ID: "inbox-internal-only",
+  [CONTENT.sourceInboxRecordId]: "inbox-internal-only",
   ...overrides,
 });
 
 describe("mapPublishedContent", () => {
-  it("发布公开和脱敏案例记录并拒绝禁止发布", () => {
+  it("publishes only public and desensitized records", () => {
     const records = [
       record("rec-public", publishedFields()),
-      record("rec-draft", publishedFields({ 标题: "草稿", 发布状态: "草稿" })),
+      record("rec-draft", publishedFields({
+        [CONTENT.title]: "草稿",
+        [CONTENT.publicationStatus]: "草稿",
+      })),
       record("rec-forbidden", publishedFields({
-        标题: "禁止",
-        公开级别: BASE_VALUES.content.publicLevels.forbidden,
+        [CONTENT.title]: "禁止",
+        [CONTENT.publicLevel]: BASE_VALUES.content.publicLevels.forbidden,
       })),
       record("rec-desensitized", publishedFields({
-        标题: "脱敏",
-        公开级别: BASE_VALUES.content.publicLevels.desensitized,
+        [CONTENT.title]: "脱敏",
+        [CONTENT.publicLevel]: BASE_VALUES.content.publicLevels.desensitized,
       })),
     ];
 
-    expect(BASE_VALUES.content.publicLevels).toEqual({
-      public: "公开",
-      desensitized: "脱敏案例",
-      forbidden: "禁止发布",
-    });
     expect(mapPublishedContent(records, []).map((item) => item.title)).toEqual(["公开案例", "脱敏"]);
   });
 
-  it("缺少必填字段时报告 record id 和中文字段名", () => {
-    const records = [record("rec-missing", publishedFields({ 标题: undefined }))];
+  it("reports missing required field names with record id", () => {
+    const records = [record("rec-missing", publishedFields({ [CONTENT.title]: undefined }))];
 
-    expect(() => mapPublishedContent(records, [])).toThrow(/rec-missing.*标题|标题.*rec-missing/);
+    expect(() => mapPublishedContent(records, []))
+      .toThrow(new RegExp(`rec-missing.*${CONTENT.title}|${CONTENT.title}.*rec-missing`));
   });
 
-  it("按 linked record id 连接 copy blocks 并按显示顺序排序", () => {
+  it("links copy blocks by linked record id and sorts by display order", () => {
     const copyRecords = [
       record("copy-late", {
-        关联内容: [{ record_id: "rec-public" }],
-        区块标题: "第二步",
-        区块类型: "Command",
-        语言: "shell",
-        内容: "npm test",
-        显示顺序: 20,
+        [COPY.relatedContent]: [{ record_id: "rec-public" }],
+        [COPY.title]: "第二步",
+        [COPY.type]: "Command",
+        [COPY.language]: "shell",
+        [COPY.content]: "npm test",
+        [COPY.order]: 20,
       }),
       record("copy-other", {
-        关联内容: ["rec-other"],
-        区块标题: "其他内容",
-        区块类型: "Prompt",
-        语言: "text",
-        内容: "不会连接",
-        显示顺序: 0,
+        [COPY.relatedContent]: ["rec-other"],
+        [COPY.title]: "其他内容",
+        [COPY.type]: "Prompt",
+        [COPY.language]: "text",
+        [COPY.content]: "不会连接",
+        [COPY.order]: 0,
       }),
       record("copy-first", {
-        关联内容: ["rec-public"],
-        区块标题: "第一步",
-        区块类型: "Configuration",
-        语言: "json",
-        内容: "{}",
-        显示顺序: 10,
-        备注: "先配置",
+        [COPY.relatedContent]: ["rec-public"],
+        [COPY.title]: "第一步",
+        [COPY.type]: "Configuration",
+        [COPY.language]: "json",
+        [COPY.content]: "{}",
+        [COPY.order]: 10,
+        [COPY.note]: "先配置",
       }),
     ];
 
@@ -103,14 +109,14 @@ describe("mapPublishedContent", () => {
     ]);
   });
 
-  it("忽略只关联草稿或未知内容的损坏 copy block", () => {
+  it("ignores copy blocks linked only to draft or unknown content", () => {
     const copyRecords = [record("copy-draft", {
-      关联内容: ["rec-draft"],
-      区块标题: "不完整草稿区块",
+      [COPY.relatedContent]: ["rec-draft"],
+      [COPY.title]: "不会公开",
     })];
     const records = [
       record("rec-public", publishedFields()),
-      record("rec-draft", publishedFields({ 发布状态: "草稿" })),
+      record("rec-draft", publishedFields({ [CONTENT.publicationStatus]: "草稿" })),
     ];
 
     expect(mapPublishedContent(records, copyRecords)).toHaveLength(1);
@@ -120,7 +126,7 @@ describe("mapPublishedContent", () => {
     [[{ url: "https://example.com/a.png" }], "https://example.com/a.png"],
     [[{ tmp_url: "https://example.com/b.webp" }], "https://example.com/b.webp"],
     [{ url: "https://example.com/c.jpg" }, "https://example.com/c.jpg"],
-  ])("结构化解析附件形态 %#", (value, expected) => {
+  ])("normalizes attachment source URL %#", (value, expected) => {
     expect(normalizeAttachmentSourceUrl(value)).toBe(expected);
   });
 
@@ -129,41 +135,54 @@ describe("mapPublishedContent", () => {
     [{ url: "javascript:alert(1)" }],
     [{ url: "http://example.com/insecure.png" }],
     [{ url: "https://user:password@example.com/private.png" }],
-  ])("拒绝不受控附件值 %#", (value) => {
+  ])("rejects unsafe attachment value %#", (value) => {
     expect(() => normalizeAttachmentSourceUrl(value)).toThrow(/附件/);
   });
 
-  it("忽略未知字段且不泄露发布和内部字段", () => {
+  it("keeps only the public field allowlist", () => {
     const [item] = mapPublishedContent([record("rec-public", publishedFields())], [
       record("copy-public", {
-        关联内容: ["rec-public"],
-        区块标题: "公开区块",
-        区块类型: "Prompt",
-        语言: "text",
-        内容: "公开内容",
-        显示顺序: 0,
-        来源收件箱复制块键: "inbox-internal-only:0",
+        [COPY.relatedContent]: ["rec-public"],
+        [COPY.title]: "公开区块",
+        [COPY.type]: "Prompt",
+        [COPY.language]: "text",
+        [COPY.content]: "公开内容",
+        [COPY.order]: 0,
+        [COPY.sourceInboxCopyBlockKey]: "inbox-internal-only:0",
       }),
     ]);
     const serialized = JSON.stringify(item);
 
     expect(Object.keys(item).sort()).toEqual([
-      "audience", "category", "copyBlocks", "coverImage", "featured", "feishuDocumentUrl",
-      "id", "originalUrl", "publishedAt", "recommendationReason", "scenario", "slug",
-      "sortWeight", "sourceName", "summary", "tags", "title", "type", "updatedAt",
+      "adoptionLevel", "audience", "category", "copyBlocks", "coverImage", "featured",
+      "feishuDocumentUrl", "id", "originalUrl", "publishedAt", "recommendationReason",
+      "recommendationTrack", "scenario", "slug", "sortWeight", "sourceName", "summary",
+      "tags", "takeaway", "timeToValue", "title", "type", "updatedAt",
     ].sort());
     expect(serialized).not.toContain("内部备注");
     expect(serialized).not.toContain("发布状态");
     expect(serialized).not.toContain("inbox-internal-only");
-    expect(serialized).not.toContain("来源收件箱记录ID");
-    expect(serialized).not.toContain("来源收件箱复制块键");
+    expect(serialized).not.toContain(CONTENT.sourceInboxRecordId);
+    expect(serialized).not.toContain(COPY.sourceInboxCopyBlockKey);
     expect(serialized).not.toContain("inbox-internal-only:0");
     expect(ContentItemSchema.parse(item)).toEqual(item);
   });
 
-  it("schema 校验失败时包含 record id 和字段上下文", () => {
-    const records = [record("rec-schema", publishedFields({ Slug: "不是合法 slug" }))];
+  it("maps the four public recommendation fields", () => {
+    const [item] = mapPublishedContent([record("rec-public", publishedFields())], []);
 
-    expect(() => mapPublishedContent(records, [])).toThrow(/rec-schema.*Slug|Slug.*rec-schema/);
+    expect(item).toMatchObject({
+      recommendationTrack: "工作提效",
+      timeToValue: "1 小时",
+      adoptionLevel: "直接使用",
+      takeaway: "完成一套可直接复用的团队案例模板。",
+    });
+  });
+
+  it("includes output field context when schema validation fails", () => {
+    const records = [record("rec-schema", publishedFields({ [CONTENT.slug]: "not a valid slug" }))];
+
+    expect(() => mapPublishedContent(records, []))
+      .toThrow(new RegExp(`rec-schema.*${CONTENT.slug}|${CONTENT.slug}.*rec-schema`));
   });
 });
