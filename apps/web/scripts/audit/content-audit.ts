@@ -4,13 +4,14 @@ import { BASE_FIELDS } from "../feishu/fields";
 
 const CONTENT = BASE_FIELDS.content;
 const AuditTimestampSchema = z.iso.datetime({ offset: true });
+const AuditNoteSchema = z.string().trim().min(1).max(500);
 
 export const ContentAuditProposalSchema = z.object({
   valueVerdict: z.enum(["高价值", "可保留", "低价值"]),
   freshnessVerdict: z.enum(["当前有效", "需复核", "已过时", "无法确认"]),
   factualVerdict: z.enum(["符合当前实际", "存在偏差", "无法确认"]),
   auditDecision: z.enum(["通过", "更新后复核", "下架", "待审核"]),
-  auditNote: z.string().max(500),
+  auditNote: AuditNoteSchema,
   auditedAt: AuditTimestampSchema,
   nextReviewAt: AuditTimestampSchema,
 }).strict();
@@ -43,6 +44,7 @@ function isApprovedReleaseAudit(record: RawFeishuRecord, now: Date): boolean {
     && fields[CONTENT.freshnessVerdict] === "当前有效"
     && fields[CONTENT.factualVerdict] === "符合当前实际"
     && fields[CONTENT.auditDecision] === "通过"
+    && AuditNoteSchema.safeParse(fields[CONTENT.auditNote]).success
     && isValidAuditTimestamp(fields[CONTENT.auditedAt])
     && isValidAuditTimestamp(nextReviewAt)
     && new Date(nextReviewAt).getTime() > now.getTime()

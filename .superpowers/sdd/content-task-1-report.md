@@ -39,7 +39,7 @@ npm test -- --run tests/unit/content-audit.test.ts tests/unit/sync-content.test.
 
 ```text
 Test Files  2 passed (2)
-Tests       27 passed (27)
+Tests       36 passed (36)
 ```
 
 ## 最终验证
@@ -51,7 +51,7 @@ npm run check
 npm run build
 ```
 
-- Focused tests：2 个文件、27 项通过。
+- Focused tests：2 个文件、36 项通过。
 - 全量 Vitest：21 个文件、602 项通过。
 - `npm run check`：72 个文件，0 errors、0 warnings、0 hints。
 - `npm run build`：检查通过，静态构建完成 19 页。
@@ -59,6 +59,7 @@ npm run build
 ## 自审
 
 - 门禁筛选条件仅为 `发布状态 === "已发布"`；草稿、下架及其他状态不会因审查字段缺失阻断同步。
+- `auditNote` 在提案 schema 和已发布门禁中都要求 trim 后非空，且长度不超过 500；七个审查字段分别缺失时均有表驱动阻断测试。
 - `ContentAuditError.message` 仅连接失败记录 ID；不会包含字段名、字段值、审查说明或 URL。同步日志只记录固定 code/stage。
 - 新字段未添加到公开映射 allowlist，并被私有字段泄漏检测动态覆盖。
 - 审查调用位于公开映射、资源下载、数据构建和原子替换之前，因此失败不会替换已有 `content.json`。

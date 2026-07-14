@@ -9,6 +9,15 @@ import {
 
 const CONTENT = BASE_FIELDS.content;
 const NOW = new Date("2026-07-14T08:00:00.000Z");
+const AUDIT_FIELDS = [
+  CONTENT.valueVerdict,
+  CONTENT.freshnessVerdict,
+  CONTENT.factualVerdict,
+  CONTENT.auditDecision,
+  CONTENT.auditNote,
+  CONTENT.auditedAt,
+  CONTENT.nextReviewAt,
+] as const;
 
 function record(record_id: string, fields: Record<string, unknown>): RawFeishuRecord {
   return { record_id, fields };
@@ -40,6 +49,9 @@ describe("ContentAuditProposalSchema", () => {
       nextReviewAt: "2026-08-14T08:00:00.000Z",
     })).toMatchObject({ auditDecision: "通过" });
   });
+  it.each(["", " \t\n", "a".repeat(501)])("rejects invalid audit notes", (auditNote) => {
+    expect(ContentAuditProposalSchema.shape.auditNote.safeParse(auditNote).success).toBe(false);
+  });
 });
 
 describe("assertReleaseAudits", () => {
@@ -47,8 +59,15 @@ describe("assertReleaseAudits", () => {
     expect(() => assertReleaseAudits([approvedPublishedRecord()], NOW)).not.toThrow();
   });
 
+  it.each(AUDIT_FIELDS)("blocks a published record missing %s", (fieldName) => {
+    const fields = approvedPublishedRecord().fields;
+    delete fields[fieldName];
+
+    expect(() => assertReleaseAudits([record("rec-published", fields)], NOW))
+      .toThrow(ContentAuditError);
+  });
+
   it.each([
-    ["missing audit field", { [CONTENT.auditDecision]: undefined }],
     ["expired freshness", { [CONTENT.freshnessVerdict]: "已过时" }],
     ["unverifiable freshness", { [CONTENT.freshnessVerdict]: "无法确认" }],
     ["unverifiable facts", { [CONTENT.factualVerdict]: "无法确认" }],
