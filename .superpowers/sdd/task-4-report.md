@@ -1,60 +1,60 @@
-# Task 4 Implementation Report
+# Task 4 Report
 
-## Scope
+## 状态
 
-Implemented the AI Work Discovery visual foundation, shared layout, navigation, footer, homepage shell, and structural Playwright coverage. The Task 4 review fix is limited to the header, homepage E2E coverage, this report, and the homepage intro needed to remove broken placeholder fragments.
+完成。首页已收敛为 Hero、分类入口和最多 10 条精选内容；四个分类页均静态生成，前沿信号空分类返回 200 并展示稳定空状态；`/discover` 未修改。
 
-## TDD Process
+## 文件
 
-1. Rewrote the inherited `apps/web/tests/e2e/home.spec.ts` as valid UTF-8 Chinese.
-2. Ran the structural E2E before production changes.
-3. Confirmed RED: the desktop test exited with code 1 because `getByRole("banner")` could not find the shared header at `home.spec.ts:6`.
-4. Added the shared visual tokens and primitives, `BaseLayout`, header, footer, and homepage shell.
-5. Ran the focused tests and corrected the mobile-visible `发现` entry while retaining a fixed-height header.
-6. Re-ran desktop/mobile tests, Astro checks, production build, visual screenshots, forbidden-style scan, and staged diff review.
-
-## Implementation Notes
-
-- `BaseLayout` owns the document shell and the site's only `main` landmark.
-- The header provides text navigation, an accessible search icon button with `aria-label` and `title`, a disabled `提交内容` command ready for a later submission flow, and an absolute-positioned mobile menu controlled by a real `button`.
-- The mobile menu button owns `aria-controls="mobile-navigation"`, starts with `aria-expanded="false"`, and uses a minimal inline script to update `aria-expanded` while toggling the navigation's `hidden` state.
-- Mobile navigation keeps the header at 64px and does not create horizontal overflow.
-- The Task 4-only `#discover` and `#ready` intro CTAs were removed, and the previous `#submit` link became a disabled button so the current page contains no broken fragment commands without adding Task 5 content.
-- Global styles define the approved colors, fixed typography, 1320px container, section/button/tag/grid primitives, and a 4px maximum radius except tags and circular icon geometry.
-- No shadows, blur, decorative gradients, blobs, or negative letter spacing were added.
-
-## Review Failure And Fix
-
-- Before the fix, `npm run test:e2e -- tests/e2e/home.spec.ts --project=mobile` exited with code 1: 1 test passed and 1 failed after 5 seconds because Chromium did not expose the `<summary aria-label="打开导航">` as the requested button role.
-- The failing assertion was `getByRole("button", { name: "打开导航" })`, confirming the review issue was semantic rather than a locator timeout problem.
-- Replacing `<details>/<summary>` with a real button and explicitly controlled hidden navigation fixed the accessibility tree while preserving the fixed header layout.
-
-## Verification
-
-- `npm run test:e2e -- tests/e2e/home.spec.ts`
-  - Exit code 0: 3 passed, 1 skipped.
-  - Desktop and mobile structural coverage passed; the desktop project skipped only the mobile-specific behavior test.
-  - The mobile test verified the button role, `aria-controls`, `aria-expanded="false"` before interaction, `aria-expanded="true"` after interaction, visible navigation, unchanged header height, and `document.documentElement.scrollWidth <= viewport.width`.
-  - Playwright emitted only the existing `NO_COLOR`/`FORCE_COLOR` environment warning.
-- `npm run check`
-  - Exit code 0.
-  - 16 files checked, 0 errors, 0 warnings, 0 hints.
-- `npm run build`
-  - Exit code 0.
-  - Astro check passed with 0 errors, 0 warnings, and 0 hints; one static page (`/index.html`) was built.
-
-## Changed Files
-
-- `apps/web/src/styles/global.css`
-- `apps/web/src/layouts/BaseLayout.astro`
+- `apps/web/src/components/CategoryLinks.astro`
+- `apps/web/src/components/FeaturedGrid.astro`
 - `apps/web/src/components/Header.astro`
-- `apps/web/src/components/Footer.astro`
+- `apps/web/src/pages/category/[slug].astro`
 - `apps/web/src/pages/index.astro`
 - `apps/web/tests/e2e/home.spec.ts`
-- `.superpowers/sdd/task-4-report.md`
+- `apps/web/tests/e2e/security.spec.ts`
 
-## Commit
+## 测试
 
-- Implementation: `2bbb662` (`feat: add discovery site visual foundation`)
-- Initial report: `971d4d9` (`docs: add task 4 implementation report`)
-- Review fix: recorded in the commit containing this report update.
+### RED
+
+命令：
+
+```text
+npx playwright test tests/e2e/home.spec.ts tests/e2e/security.spec.ts
+```
+
+结果：34 条用例，15 失败、15 通过、4 跳过。失败原因为分类路由 404、Header 仍使用 query 路由、首页缺少 `categories`/`featured` 选择器和空分类状态，符合预期。
+
+### GREEN
+
+命令：
+
+```text
+cmd.exe /d /s /c "npm run build && npx playwright test tests/e2e/home.spec.ts tests/e2e/security.spec.ts"
+```
+
+结果：退出码 0。
+
+- Astro check：70 个文件，0 错误、0 警告、0 提示。
+- 静态构建：19 页，包含 4 个 `/category/<slug>` 路由。
+- Focused E2E：34 条用例，30 通过、4 个按设备条件跳过、0 失败，耗时 34.5 秒。
+
+## 提交
+
+`101edb60d23d70befd4b8017490a4a768afa4167` (`feat: add category discovery pages`)
+
+## 自查
+
+- `CategoryLinks`、分类页和 Header 均复用 `CATEGORY_DEFINITIONS`；分类筛选复用 `itemsForCategory`，未复制分类映射。
+- 首页选择复用 `selectHomepageItems`，渲染 10/12 条并在有剩余内容时链接到 `/discover`。
+- 首页旧的 `AISignals`、`ReadyToUse`、值得一试和最近更新区块已移除；`/discover` 页面及搜索实现未改。
+- 首页精选和分类内容网格均为桌面 3 列、平板 2 列、移动 1 列；第 10 条自然换行，无固定行高。
+- 桌面和移动截图已检查，无横向溢出、嵌套卡片或中文裁切。
+- staged diff 仅包含 brief 指定的 7 个实现/测试文件；未纳入已有的 Task 3 报告修改。
+
+## 担忧
+
+- 无已知功能担忧。
+- Playwright 输出存在环境级 `NO_COLOR` 被 `FORCE_COLOR` 覆盖的 Node 警告，不影响退出码或断言结果。
+- 工作树中仍保留其他工作者已有的 `.superpowers/sdd/task-3-report.md` 修改；本任务未改动或提交该文件。
