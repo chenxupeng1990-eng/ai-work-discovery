@@ -247,7 +247,7 @@ test("homepage carousel hydrates and supports manual navigation", async ({ page 
   await expect(hero.getByRole("heading", { name: heroItems[1]!.title })).toBeVisible();
 });
 
-test("homepage carousel meets release accessibility, image, and responsive geometry requirements", async ({ page }, testInfo) => {
+test("homepage carousel verifies every slide at each release viewport", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "Release viewport checkpoints run once in the desktop project.");
 
   for (const viewport of [
@@ -266,6 +266,37 @@ test("homepage carousel meets release accessibility, image, and responsive geome
       Math.min(10, generatedDataset.items.length),
     );
 
+    const dots = hero.getByRole("group", { name: "选择精选内容" }).getByRole("button");
+    await expect(dots).toHaveCount(heroItems.length);
+    await hero.hover();
+    await dots.first().focus();
+    await expect(dots.first()).toBeFocused();
+
+    for (const [index, item] of heroItems.entries()) {
+      const dot = dots.nth(index);
+      await dot.click();
+      await expect(dot).toHaveAttribute("aria-current", "true");
+
+      const activeSlide = hero.locator(".hero-carousel__slide.is-active");
+      await expect(activeSlide).toHaveCount(1);
+      await expect(activeSlide).toHaveAttribute("aria-label", `${index + 1} / ${heroItems.length}`);
+
+      const title = activeSlide.getByRole("heading", { level: 1, name: item.title, exact: true });
+      const cta = activeSlide.locator(".hero-carousel__cta");
+      await expect(title).toBeVisible();
+      await expect(cta).toBeVisible();
+      await expect(cta).toHaveAttribute("href", `/content/${item.slug}`);
+
+      const checkpoint = `${viewport.width}x${viewport.height} slide ${index + 1}`;
+      await expectElementsNotToOverlap([
+        [`${checkpoint} logo`, activeSlide.locator(".hero-carousel__brand")],
+        [`${checkpoint} title`, title],
+        [`${checkpoint} CTA`, cta],
+        [`${checkpoint} dots`, hero.locator(".hero-carousel__dots")],
+        [`${checkpoint} arrows`, hero.locator(".hero-carousel__arrows")],
+      ]);
+    }
+
     const contentImages = page.locator("img[data-home-content-image]");
     for (const image of await contentImages.all()) {
       await image.scrollIntoViewIfNeeded();
@@ -280,16 +311,6 @@ test("homepage carousel meets release accessibility, image, and responsive geome
       expect(naturalWidth / naturalHeight).toBeGreaterThanOrEqual(1.57);
       expect(naturalWidth / naturalHeight).toBeLessThanOrEqual(1.63);
     }
-
-    const activeSlide = hero.locator(".hero-carousel__slide.is-active");
-    await expect(activeSlide).toHaveCount(1);
-    await expectElementsNotToOverlap([
-      ["logo", activeSlide.locator(".hero-carousel__brand")],
-      ["title", activeSlide.getByRole("heading", { level: 1 })],
-      ["CTA", activeSlide.locator(".hero-carousel__cta")],
-      ["dots", hero.locator(".hero-carousel__dots")],
-      ["arrows", hero.locator(".hero-carousel__arrows")],
-    ]);
   }
 });
 

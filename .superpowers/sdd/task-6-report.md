@@ -53,19 +53,23 @@ Task 6 does not create `/content/<slug>` routes. Discovery cards therefore use `
 - Added a desktop-project release test in `apps/web/tests/e2e/home.spec.ts` that sets `1440x1000`, `1024x1000`, and `390x844` viewports.
 - It uses the component's actual accessible names: Hero region `精选内容` and next control `下一项精选`.
 - It verifies the featured-card limit, each content image's `/images/content/` source, `naturalWidth >= 1536`, `naturalHeight >= 960`, and a `1.57-1.63` natural-image ratio.
-- It checks pairwise geometry for the active Hero logo, title, CTA, dots, and arrow controls at all three viewports.
-- The focused E2E passed on its first run, so no product-code defect was identified and no production file was changed.
+- At every viewport, it pauses autoplay through Hero hover/focus, traverses every Hero item through the carousel dots, waits for `aria-current`, the active slide label, title, and CTA, then checks pairwise geometry for the logo, title, CTA, dots, and arrow controls.
+- No product-code defect was identified and no production file was changed.
 
 ### Command Results
 
-- `npm run test:e2e -- tests/e2e/home.spec.ts --project=desktop --grep "homepage carousel meets release accessibility"`: 1 passed.
+- `npm run test:e2e -- tests/e2e/home.spec.ts --project=desktop --grep "homepage carousel verifies every slide"`: 1 passed.
 - `npm test -- --run`: 20 test files and 561 tests passed.
 - `npm run check`: 70 files checked; 0 errors, 0 warnings, 0 hints.
 - `npm run build`: static build completed; 19 pages built.
 - `npm run verify:public`: passed; scanned 52 `dist` files and 1 tracked public text artifact.
-- `npm run test:e2e`: 86 passed and 4 deliberate project-condition skips out of 90 tests.
-- `npx playwright test --reporter=dot`: repeated the full 90-test run with the same 86 passes and 4 deliberate skips.
-- `git diff --check`: clean before the report update.
+- `npm run test:e2e`: 85 passed and 5 deliberate project-condition skips out of 90 tests.
+- `git diff --check`: clean; only the existing Windows line-ending conversion warnings were emitted.
+
+### Push Deferral
+
+- GitHub push is intentionally deferred to the final Task 9 because the user added a content-gate and information-source ingestion task after this review began.
+- This intermediate Task 6 state is committed locally but is not pushed.
 
 ### Screenshot Review
 
