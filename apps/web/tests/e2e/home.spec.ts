@@ -1,8 +1,9 @@
+import { readFileSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { expect, test } from "@playwright/test";
-import { CATEGORY_DEFINITIONS, itemsForCategory } from "../../src/lib/categories";
-import { selectHeroItems, selectHomepageItems } from "../../src/lib/home-content";
+import { CATEGORY_DEFINITIONS } from "../../src/lib/categories";
+import { selectHeroItems } from "../../src/lib/home-content";
 import { generatedDataset } from "../fixtures/generated-dataset";
 import {
   expectCardsAreSeparate,
@@ -17,7 +18,16 @@ import {
 const screenshotDirectory = resolve("../../.superpowers/sdd/task-14-screenshots");
 const detailRoute = `/content/${generatedDataset.items[0]!.slug}`;
 const heroItems = selectHeroItems(generatedDataset.items);
-const homepageItems = selectHomepageItems(generatedDataset.items);
+const homepageItems = [...generatedDataset.items]
+  .sort((left, right) => (
+    Number(right.featured) - Number(left.featured)
+    || Date.parse(right.updatedAt) - Date.parse(left.updatedAt)
+    || right.sortWeight - left.sortWeight
+    || left.slug.localeCompare(right.slug)
+    || left.id.localeCompare(right.id)
+  ))
+  .slice(0, 10);
+const homepageSource = readFileSync(new URL("../../src/pages/index.astro", import.meta.url), "utf8");
 const categoryRoutes = [
   "/category/inspiration",
   "/category/productivity",
@@ -26,21 +36,41 @@ const categoryRoutes = [
 ] as const;
 
 test("public routes share the QIFEI brand asset and copy", async ({ page }) => {
-  const titles = [
-    ["/", "QIFEI AI 工作灵感与实践 | QIFEI AI Work Discovery"],
-    ["/discover", "发现 | QIFEI AI Work Discovery"],
-    ["/updates", "最近更新 | QIFEI AI Work Discovery"],
-    [detailRoute, `${generatedDataset.items[0]!.title} | QIFEI AI Work Discovery`],
-  ] as const;
+  const routes = [
+    { route: "/", title: "QIFEI AI 工作灵感与实践 | QIFEI AI Work Discovery", description: undefined },
+    { route: "/discover", title: "发现 | QIFEI AI Work Discovery", description: undefined },
+    { route: "/updates", title: "最近更新 | QIFEI AI Work Discovery", description: undefined },
+    {
+      route: detailRoute,
+      title: `${generatedDataset.items[0]!.title} | QIFEI AI Work Discovery`,
+      description: undefined,
+    },
+    ...CATEGORY_DEFINITIONS.map((category, index) => ({
+      route: categoryRoutes[index]!,
+      title: `${category.track} | QIFEI AI Work Discovery`,
+      description: category.description,
+    })),
+  ];
 
-  for (const [route, title] of titles) {
+  for (const { route, title, description } of routes) {
     await page.goto(route);
     await expect(page).toHaveTitle(title);
+    if (description) {
+      await expect(page.locator('meta[name="description"]')).toHaveAttribute("content", description);
+    }
     await expect(page.locator(".brand")).toHaveAccessibleName("QIFEI AI Work Discovery 首页");
     await expect(page.locator(".brand img")).toHaveAttribute("src", "/images/brand/qifei-logo-white.png");
     await expect(page.locator(".brand-full")).toHaveText("QIFEI AI Work Discovery");
     await expect(page.getByRole("contentinfo")).toContainText("QIFEI AI Work Discovery");
   }
+});
+
+test("homepage source keeps a visible fallback when no hero items are available", () => {
+  expect(homepageSource).toMatch(
+    /\{heroItems\.length > 0\s*\?\s*<HeroCarousel items=\{heroItems\} client:load \/>\s*:\s*\(\s*<section class="home-empty" data-home-empty="true">/,
+  );
+  expect(homepageSource).toContain("<h1>QIFEI AI Work Discovery</h1>");
+  expect(homepageSource).toContain("<p>暂无已发布内容</p>");
 });
 
 test("homepage exposes shared navigation and one main landmark", async ({ page }) => {
@@ -75,7 +105,9 @@ test("homepage category links use stable routes and show dataset counts", async 
   const links = page.getByRole("navigation", { name: "发现方向" }).getByRole("link");
   await expect(links).toHaveCount(4);
   for (const category of CATEGORY_DEFINITIONS) {
-    const expectedCount = itemsForCategory(generatedDataset.items, category.slug).length;
+    const expectedCount = generatedDataset.items.filter(
+      (item) => item.recommendationTrack === category.track,
+    ).length;
     const link = links.filter({ hasText: category.track });
     await expect(link).toHaveAttribute("href", `/category/${category.slug}`);
     await expect(link).toContainText(`${expectedCount} 项`);
@@ -95,7 +127,7 @@ test("homepage contains only the hero, category links, and at most ten featured 
   await expect(page.getByText("学习进度")).toHaveCount(0);
 
   await expect(page.locator('[data-home-section="featured"] [data-content-card]')).toHaveCount(
-    Math.min(10, generatedDataset.items.length),
+    homepageItems.length,
   );
   await expect(page.locator('[data-home-section="worth-trying"]')).toHaveCount(0);
   await expect(page.locator('[data-home-section="ai-signals"]')).toHaveCount(0);
@@ -116,6 +148,19 @@ test("homepage contains only the hero, category links, and at most ten featured 
     expect(box!.width / box!.height).toBeLessThanOrEqual(1.62);
   }
 
+  const featuredHrefs = await page
+    .locator('[data-home-section="featured"] [data-content-card] a[data-home-content-link]')
+    .evaluateAll((links) => links.map((link) => link.getAttribute("href")));
+  expect(featuredHrefs).toEqual(homepageItems.map((item) => `/content/${item.slug}`));
+
+  const viewMore = page.locator('[data-home-section="featured"] a[href="/discover"]');
+  if (generatedDataset.items.length > 10) {
+    await expect(viewMore).toHaveCount(1);
+    await expect(viewMore).toHaveText("查看更多");
+  } else {
+    await expect(viewMore).toHaveCount(0);
+  }
+
   const contentLinks = page.locator('[data-home-content-link]');
   for (const link of await contentLinks.all()) {
     const href = await link.getAttribute("href");
@@ -129,15 +174,23 @@ test("all category routes render only their mapped items and a stable empty stat
 
   for (const [index, category] of CATEGORY_DEFINITIONS.entries()) {
     const route = categoryRoutes[index]!;
-    const expectedItems = itemsForCategory(generatedDataset.items, category.slug);
+    const expectedItems = generatedDataset.items.filter(
+      (item) => item.recommendationTrack === category.track,
+    );
     expect((await request.get(route)).status(), route).toBe(200);
 
     await page.goto(route);
     await expect(page.getByRole("heading", { level: 1, name: category.track })).toBeVisible();
     await expect(page.locator("[data-content-card]")).toHaveCount(expectedItems.length);
-    expect(await page.locator("[data-content-card] a").evaluateAll((links) => (
+    const renderedHrefs = await page.locator("[data-content-card] a").evaluateAll((links) => (
       links.map((link) => link.getAttribute("href"))
-    ))).toEqual(expectedItems.map((item) => `/content/${item.slug}`));
+    ));
+    expect(renderedHrefs).toEqual(expectedItems.map((item) => `/content/${item.slug}`));
+    for (const href of renderedHrefs) {
+      const renderedItem = generatedDataset.items.find((item) => `/content/${item.slug}` === href);
+      expect(renderedItem, href ?? "missing href").toBeDefined();
+      expect(renderedItem!.recommendationTrack).toBe(category.track);
+    }
 
     const emptyState = page.locator('[data-category-empty="true"]');
     if (expectedItems.length === 0) {

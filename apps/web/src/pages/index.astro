@@ -15,7 +15,41 @@ const homepageItems = selectHomepageItems(items);
   title="QIFEI AI 工作灵感与实践 | QIFEI AI Work Discovery"
   description="发现可直接应用于工作的 AI 灵感、协作方式、案例与工具。"
 >
-  <HeroCarousel items={heroItems} client:load />
+  {heroItems.length > 0
+    ? <HeroCarousel items={heroItems} client:load />
+    : (
+      <section class="home-empty" data-home-empty="true">
+        <h1>QIFEI AI Work Discovery</h1>
+        <p>暂无已发布内容</p>
+      </section>
+    )}
   <CategoryLinks items={items} />
   <FeaturedGrid items={homepageItems} hasMore={items.length > homepageItems.length} />
 </BaseLayout>
+
+<style>
+  .home-empty {
+    min-height: 500px;
+    padding: 80px 24px;
+    display: grid;
+    place-content: center;
+    text-align: center;
+    background: var(--mist);
+  }
+
+  .home-empty h1 {
+    margin-bottom: 12px;
+    font-size: 48px;
+  }
+
+  .home-empty p {
+    margin-bottom: 0;
+    color: var(--steel);
+  }
+
+  @media (max-width: 720px) {
+    .home-empty h1 {
+      font-size: 36px;
+    }
+  }
+</style>
