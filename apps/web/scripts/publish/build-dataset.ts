@@ -207,6 +207,7 @@ function copyPublicItem(item: ContentItem): ContentItem {
     recommendationTrack: item.recommendationTrack,
     timeToValue: item.timeToValue,
     adoptionLevel: item.adoptionLevel,
+    networkRequirement: item.networkRequirement,
     takeaway: item.takeaway,
     coverImage: item.coverImage,
     tags: [...item.tags],

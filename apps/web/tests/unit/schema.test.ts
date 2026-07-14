@@ -16,6 +16,7 @@ const validItem = {
   recommendationTrack: "工作提效",
   timeToValue: "1 小时",
   adoptionLevel: "直接使用",
+  networkRequirement: "无需 VPN",
   takeaway: "完成一次可复用的案例梳理。",
   coverImage: "/images/fixtures/case.png",
   tags: [],
@@ -61,6 +62,7 @@ describe("PublicDatasetSchema", () => {
     ["recommendationTrack", "未知轨道"],
     ["timeToValue", "2 小时"],
     ["adoptionLevel", "专家代劳"],
+    ["networkRequirement", "公司内网"],
     ["takeaway", ""],
   ] as const)("rejects invalid %s", (field, value) => {
     const result = PublicDatasetSchema.safeParse({

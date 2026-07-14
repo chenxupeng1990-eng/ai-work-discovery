@@ -12,6 +12,7 @@
       "recommendationTrack": "团队实践",
       "timeToValue": "半天",
       "adoptionLevel": "需要开发",
+      "networkRequirement": "无需 VPN",
       "takeaway": "完成一个飞书入口到 Codex 的团队工作入口搭建。",
       "coverImage": "/images/fixtures/codex_environment_screen.png",
       "tags": [
@@ -53,6 +54,7 @@
       "recommendationTrack": "灵感实验",
       "timeToValue": "1 小时",
       "adoptionLevel": "直接使用",
+      "networkRequirement": "部分资源需要 VPN",
       "takeaway": "复制分镜审查提示词并产出一版可评审分镜。",
       "coverImage": "/images/fixtures/codex_environment_screen.png",
       "tags": [
@@ -93,6 +95,7 @@
       "recommendationTrack": "工作提效",
       "timeToValue": "10 分钟",
       "adoptionLevel": "直接使用",
+      "networkRequirement": "部分资源需要 VPN",
       "takeaway": "拿到一份可照着启用的 Codex Skills 清单。",
       "coverImage": "/images/fixtures/codex_environment_page.png",
       "tags": [
@@ -133,6 +136,7 @@
       "recommendationTrack": "工作提效",
       "timeToValue": "10 分钟",
       "adoptionLevel": "需要配置",
+      "networkRequirement": "无需 VPN",
       "takeaway": "补齐一份可直接放入仓库的 AGENTS.md 约束模板。",
       "coverImage": "/images/fixtures/codex_environment_page_after_config.png",
       "tags": [
@@ -173,6 +177,7 @@
       "recommendationTrack": "前沿信号",
       "timeToValue": "10 分钟",
       "adoptionLevel": "直接使用",
+      "networkRequirement": "无需 VPN",
       "takeaway": "完成一次关于 Agent 可审计工作流方向的趋势速读。",
       "coverImage": "/images/fixtures/codex_environment_screen.png",
       "tags": [
@@ -205,6 +210,7 @@
       "recommendationTrack": "前沿信号",
       "timeToValue": "10 分钟",
       "adoptionLevel": "直接使用",
+      "networkRequirement": "需要 VPN",
       "takeaway": "带走一份评估 Agent 平台建设方向的要点摘要。",
       "coverImage": "/images/fixtures/codex_environment_page.png",
       "tags": [
@@ -237,6 +243,7 @@
       "recommendationTrack": "前沿信号",
       "timeToValue": "10 分钟",
       "adoptionLevel": "直接使用",
+      "networkRequirement": "需要 VPN",
       "takeaway": "理解 MCP 对连接器、权限和审计治理的直接影响。",
       "coverImage": "/images/fixtures/codex_environment_page_after_config.png",
       "tags": [
@@ -269,6 +276,7 @@
       "recommendationTrack": "工作提效",
       "timeToValue": "1 小时",
       "adoptionLevel": "需要配置",
+      "networkRequirement": "部分资源需要 VPN",
       "takeaway": "完成一次 Skills 仓库克隆并建立团队维护入口。",
       "coverImage": "/images/fixtures/codex_environment_page.png",
       "tags": [
@@ -309,6 +317,7 @@
       "recommendationTrack": "团队实践",
       "timeToValue": "半天",
       "adoptionLevel": "需要配置",
+      "networkRequirement": "无需 VPN",
       "takeaway": "落地一套每周 30 分钟的 AI 发现评审流程。",
       "coverImage": "/images/fixtures/codex_environment_page_after_config.png",
       "tags": [
@@ -348,6 +357,7 @@
       "recommendationTrack": "工作提效",
       "timeToValue": "10 分钟",
       "adoptionLevel": "直接使用",
+      "networkRequirement": "无需 VPN",
       "takeaway": "跑完依赖检查并确认本机可进入 Codex 工作流。",
       "coverImage": "/images/fixtures/codex_environment_page_after_config.png",
       "tags": [

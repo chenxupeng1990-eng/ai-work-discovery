@@ -9,6 +9,7 @@ export const BASE_FIELDS = {
     recommendationTrack: "推荐轨道",
     timeToValue: "上手时间",
     adoptionLevel: "使用门槛",
+    networkRequirement: "网络要求",
     takeaway: "可带走结果",
     coverImage: "封面图片",
     tags: "标签",

@@ -52,6 +52,7 @@ function publishedRecord(overrides: Record<string, unknown> = {}): RawFeishuReco
     [CONTENT.timeToValue]: "半天",
     [CONTENT.adoptionLevel]: "需要配置",
     [CONTENT.takeaway]: "完成一份可供团队直接复用的公开案例卡片。",
+    [CONTENT.networkRequirement]: "无需 VPN",
     [CONTENT.coverImage]: [{ name: "cover.png", url: "https://cdn.example.com/cover.png" }],
     [CONTENT.tags]: ["Codex"],
     [CONTENT.audience]: ["Engineering"],

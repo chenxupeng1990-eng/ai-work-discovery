@@ -21,7 +21,7 @@ const { item } = Astro.props as { item: ContentItem };
     <div class="content-card__body">
       <div class="content-card__meta">
         <span>{item.category}</span>
-        <span>{item.sourceName}</span>
+        <span class="content-card__network">{item.networkRequirement}</span>
       </div>
       <h3>{item.title}</h3>
       <p>{item.summary}</p>
@@ -75,6 +75,13 @@ const { item } = Astro.props as { item: ContentItem };
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .content-card__network {
+    padding: 3px 7px;
+    border: 1px solid var(--frost);
+    border-radius: 999px;
+    background: var(--mist);
   }
 
   h3 {

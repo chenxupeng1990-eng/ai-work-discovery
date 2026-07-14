@@ -23,6 +23,12 @@ export const ADOPTION_LEVELS = [
   "需要开发",
 ] as const;
 
+export const NETWORK_REQUIREMENTS = [
+  "无需 VPN",
+  "部分资源需要 VPN",
+  "需要 VPN",
+] as const;
+
 export const CopyBlockSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
@@ -52,6 +58,7 @@ export const ContentItemSchema = z.object({
   recommendationTrack: z.enum(RECOMMENDATION_TRACKS),
   timeToValue: z.enum(TIME_TO_VALUE_OPTIONS),
   adoptionLevel: z.enum(ADOPTION_LEVELS),
+  networkRequirement: z.enum(NETWORK_REQUIREMENTS),
   takeaway: z.string().min(1),
   coverImage: z.string().regex(CONTROLLED_COVER_IMAGE_PATH),
   tags: z.array(z.string()),

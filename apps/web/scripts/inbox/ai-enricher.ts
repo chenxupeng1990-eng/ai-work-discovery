@@ -1,6 +1,7 @@
 ﻿import { z } from "zod";
 import {
   ADOPTION_LEVELS,
+  NETWORK_REQUIREMENTS,
   RECOMMENDATION_TRACKS,
   TIME_TO_VALUE_OPTIONS,
 } from "../../src/lib/schema";
@@ -35,6 +36,7 @@ export const DraftProposalSchema = z.object({
   recommendationTrack: z.enum(RECOMMENDATION_TRACKS),
   timeToValue: z.enum(TIME_TO_VALUE_OPTIONS),
   adoptionLevel: z.enum(ADOPTION_LEVELS),
+  networkRequirement: z.enum(NETWORK_REQUIREMENTS),
   takeaway: z.string().min(1).max(180),
   contentType: z.enum(CONTENT_TYPES),
   category: z.string().min(1).max(20),
@@ -170,6 +172,8 @@ async function performEnrichment(
               "recommendationReason 说明为什么值得尝试、对谁有用，不重复 summary.",
               "timeToValue 按首次得到可用结果所需时间选择 10 分钟、1 小时、半天或长期.",
               "adoptionLevel 按真实依赖选择直接使用、需要配置或需要开发.",
+              "networkRequirement 按公司无 VPN 环境下的实际可用性选择无需 VPN、部分资源需要 VPN 或需要 VPN.",
+              "来源页不是最终交付物；不要只复述或推荐外链，要从来源中筛出一个具体方法，拆成同事可直接执行的步骤、复制块和可验证产物.",
               "takeaway 必须写成可验证的具体产物或完成动作，说明用户可以复制、安装或完成什么.",
               "tags 只保留 2 到 5 个有检索价值的主题词.",
               "禁止虚构评分、事实或来源.",

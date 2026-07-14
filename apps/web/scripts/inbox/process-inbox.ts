@@ -183,6 +183,7 @@ function contentFields(
     [CONTENT.recommendationTrack]: proposal.recommendationTrack,
     [CONTENT.timeToValue]: proposal.timeToValue,
     [CONTENT.adoptionLevel]: proposal.adoptionLevel,
+    [CONTENT.networkRequirement]: proposal.networkRequirement,
     [CONTENT.takeaway]: proposal.takeaway,
     [CONTENT.tags]: proposal.tags,
     ...sourceFields,

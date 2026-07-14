@@ -48,6 +48,7 @@ export function queryContent(items: ContentItem[], options: QueryOptions): Conte
           item.recommendationTrack,
           item.timeToValue,
           item.adoptionLevel,
+          item.networkRequirement,
           item.takeaway,
           item.sourceName,
           ...item.tags,

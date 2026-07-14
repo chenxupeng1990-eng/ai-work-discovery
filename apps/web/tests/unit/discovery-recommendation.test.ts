@@ -21,6 +21,7 @@ function item(id: string, overrides: Partial<ContentItem> = {}): ContentItem {
     recommendationTrack: DISCOVERY_TRACKS[1]!,
     timeToValue: TIME_TO_VALUE_OPTIONS[1]!,
     adoptionLevel: ADOPTION_LEVEL_OPTIONS[1]!,
+    networkRequirement: "无需 VPN",
     takeaway: "A reusable setup template.",
     coverImage: "/images/fixtures/codex_environment_screen.png",
     tags: [],

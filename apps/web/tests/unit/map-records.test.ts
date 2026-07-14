@@ -25,6 +25,7 @@ const publishedFields = (overrides: Record<string, unknown> = {}) => ({
   [CONTENT.recommendationTrack]: "工作提效",
   [CONTENT.timeToValue]: "1 小时",
   [CONTENT.adoptionLevel]: "直接使用",
+  [CONTENT.networkRequirement]: "部分资源需要 VPN",
   [CONTENT.takeaway]: "完成一套可直接复用的团队案例模板。",
   [CONTENT.coverImage]: [{ name: "cover.png", url: "https://example.com/assets/cover.png" }],
   [CONTENT.tags]: ["Codex", "飞书"],
@@ -155,7 +156,7 @@ describe("mapPublishedContent", () => {
 
     expect(Object.keys(item).sort()).toEqual([
       "adoptionLevel", "audience", "category", "copyBlocks", "coverImage", "featured",
-      "feishuDocumentUrl", "id", "originalUrl", "publishedAt", "recommendationReason",
+      "feishuDocumentUrl", "id", "networkRequirement", "originalUrl", "publishedAt", "recommendationReason",
       "recommendationTrack", "scenario", "slug", "sortWeight", "sourceName", "summary",
       "tags", "takeaway", "timeToValue", "title", "type", "updatedAt",
     ].sort());
@@ -168,13 +169,14 @@ describe("mapPublishedContent", () => {
     expect(ContentItemSchema.parse(item)).toEqual(item);
   });
 
-  it("maps the four public recommendation fields", () => {
+  it("maps the public recommendation and network fields", () => {
     const [item] = mapPublishedContent([record("rec-public", publishedFields())], []);
 
     expect(item).toMatchObject({
       recommendationTrack: "工作提效",
       timeToValue: "1 小时",
       adoptionLevel: "直接使用",
+      networkRequirement: "部分资源需要 VPN",
       takeaway: "完成一套可直接复用的团队案例模板。",
     });
   });

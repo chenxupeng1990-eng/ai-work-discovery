@@ -15,6 +15,7 @@ const validProposal = {
   recommendationTrack: "工作提效",
   timeToValue: "1 小时",
   adoptionLevel: "直接使用",
+  networkRequirement: "部分资源需要 VPN",
   takeaway: "Install the workflow and finish one reviewed draft end to end.",
   contentType: "Tool",
   category: "Engineering",
@@ -58,6 +59,7 @@ describe("DraftProposalSchema", () => {
     ["unknown recommendation track", { ...validProposal, recommendationTrack: "未知轨道" }],
     ["unknown time to value", { ...validProposal, timeToValue: "2 小时" }],
     ["unknown adoption level", { ...validProposal, adoptionLevel: "专家代劳" }],
+    ["unknown network requirement", { ...validProposal, networkRequirement: "公司内网" }],
     ["empty takeaway", { ...validProposal, takeaway: "" }],
     ["takeaway too long", { ...validProposal, takeaway: "x".repeat(181) }],
     ["summary repeated as recommendation reason", {
@@ -203,6 +205,9 @@ describe("enrichDraft", () => {
     expect(messages[0]?.content).toContain("首次得到可用结果");
     expect(messages[0]?.content).toContain("adoptionLevel");
     expect(messages[0]?.content).toContain("真实依赖");
+    expect(messages[0]?.content).toContain("networkRequirement");
+    expect(messages[0]?.content).toContain("来源页不是最终交付物");
+    expect(messages[0]?.content).toContain("可直接执行");
     expect(messages[0]?.content).toContain("复制");
     expect(messages[0]?.content).toContain("安装");
     expect(messages[0]?.content).toContain("完成");

@@ -252,7 +252,7 @@ export function DiscoveryExplorer({ items }: { items: ContentItem[] }) {
               <div className="discovery-card__body">
                 <div className="discovery-card__meta">
                   <span>{item.recommendationTrack}</span>
-                  <span>{item.timeToValue} · {item.adoptionLevel}</span>
+                  <span>{item.timeToValue} · {item.adoptionLevel} · {item.networkRequirement}</span>
                 </div>
                 <h3><a href={`/content/${item.slug}`}>{item.title}</a></h3>
                 <p className="discovery-card__reason">{item.recommendationReason}</p>
