@@ -50,6 +50,35 @@ export const BASE_FIELDS = {
   },
 } as const;
 
+export const PRIVATE_BASE_FIELD_NAMES = {
+  content: {
+    publicationStatus: BASE_FIELDS.content.publicationStatus,
+    publicLevel: BASE_FIELDS.content.publicLevel,
+    generatedFromInbox: BASE_FIELDS.content.generatedFromInbox,
+    sourceInboxRecordId: BASE_FIELDS.content.sourceInboxRecordId,
+  },
+  copy: {
+    relatedContent: BASE_FIELDS.copyBlock.relatedContent,
+    sourceInboxCopyBlockKey: BASE_FIELDS.copyBlock.sourceInboxCopyBlockKey,
+  },
+  inbox: {
+    rawContent: BASE_FIELDS.inbox.rawContent,
+    editorNote: BASE_FIELDS.inbox.editorNote,
+    processingStatus: BASE_FIELDS.inbox.processingStatus,
+    detectedSourceType: BASE_FIELDS.inbox.detectedSourceType,
+    suggestedContentType: BASE_FIELDS.inbox.suggestedContentType,
+    suggestedCategory: BASE_FIELDS.inbox.suggestedCategory,
+    generatedTitle: BASE_FIELDS.inbox.generatedTitle,
+    generatedSummary: BASE_FIELDS.inbox.generatedSummary,
+    generatedRecommendationReason: BASE_FIELDS.inbox.generatedRecommendationReason,
+    sourceUrl: BASE_FIELDS.inbox.sourceUrl,
+    relatedDraftContent: BASE_FIELDS.inbox.relatedDraftContent,
+    errorMessage: BASE_FIELDS.inbox.errorMessage,
+    submittedAt: BASE_FIELDS.inbox.submittedAt,
+    processedAt: BASE_FIELDS.inbox.processedAt,
+  },
+} as const;
+
 export const BASE_VALUES = {
   content: {
     draft: "草稿",

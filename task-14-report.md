@@ -2,19 +2,18 @@
 
 ## Scope
 
-Completed final public-release acceptance for AI Work Discovery from starting HEAD `c15eba4`, followed by the Task 14 review fixes from HEAD `28e5414`. Scope remained limited to E2E/security coverage, release scanning, and narrow accessibility/test-server fixes. No product feature, CSS change, or visual redesign was added.
+Completed final public-release acceptance for AI Work Discovery from starting HEAD `c15eba4`, followed by the Task 14 review fixes from HEAD `28e5414` and the final scanner fixes from HEAD `076f4bf`. Scope remained limited to E2E/security coverage, release scanning, and narrow accessibility/test-server fixes. No product feature, CSS change, or visual redesign was added.
 
 ## Release Gate
 
 Run from `apps/web` in this order:
 
-1. `npm test` - PASS, 16 files and 362 tests.
+1. `npm test` - PASS, 16 files and 479 tests.
 2. `npm run typecheck` - PASS.
 3. `npm run check` - PASS, 0 errors, 0 warnings, 0 hints.
 4. `npm run build` - PASS, 13 static pages generated.
-5. `npm run verify:public` - PASS, 32 `dist` files scanned.
+5. `npm run verify:public` - PASS, dynamically reported 32 `dist` files and 1 Git tracked public text artifact scanned.
 6. `npm run test:e2e` - PASS, 56 tests passed and 2 project-specific tests skipped.
-7. Git tracked-artifact scan - PASS, 90 tracked files checked.
 
 The two skips are intentional: the mobile-menu test is skipped in the desktop project, and the explicit 390x844 checkpoint is skipped in the desktop project. Both execute in the mobile project.
 
@@ -22,11 +21,11 @@ The two skips are intentional: the mobile-menu test is skipped in the desktop pr
 
 - Requested every public route: `/`, `/discover`, `/updates`, and all 10 detail routes; all returned HTTP 200.
 - Checked every route response with the same shared, labeled matcher used by `verify:public`.
-- Field rules cover direct and serialized JSON/object keys plus explicit HTML labels for original content, publication status, public level, processing status, related draft content, source Inbox record ID, and source Inbox copy-block key, including their internal serialized aliases.
-- Status rules cover structured JSON values, status/state attributes, and standalone status labels for `草稿`, `禁止发布`, `待处理`, `处理中`, `待审核`, and `失败` without rejecting natural text such as `Draft`, `drafting`, or `失败复盘`.
+- Field rules are generated from the shared 20-field private Base mapping: four content fields, two copy-block fields, and all fourteen Inbox fields. They cover JSON keys, JS object keys, serialized keys, and exact HTML labels without denying public title, summary, or copy content fields.
+- Status rules cover `草稿`, `禁止发布`, `待处理`, `处理中`, `待审核`, and `失败` only when the key is `发布状态`, `publicationStatus`, `处理状态`, `processingStatus`, `公开级别`, or `publicLevel`, or when the corresponding data attribute is present. Natural text, generic status markup, `Draft`, `drafting`, `{"title":"失败"}`, and `{"summary":"草稿"}` remain allowed.
 - Secret identifiers are matched case-insensitively as whole tokens, preventing partial-word false positives.
-- `npm run verify:public` recursively scans common built text extensions including CSS, CSV, HTML/XHTML, JS/CJS/MJS, JSON, Markdown, SVG, text, web manifests, XML, and YAML, plus forbidden artifact paths.
-- Added 42 scanner unit cases covering every internal field/status/secret leak shape and legitimate public-text regressions.
+- `npm run verify:public` uses the same matcher for `dist` and Git tracked text artifacts under `apps/web/src/generated` and `apps/web/public`; source definitions are outside the tracked scan scope. Counts are derived at runtime from the files actually scanned.
+- Added 159 scanner unit cases covering every private field key in four leak shapes, all allowed status contexts, secret tokens, legitimate public-text regressions, and the Git tracked scan scope.
 - Confirmed no credential-shaped values with `git grep`.
 - Confirmed no tracked `.env`, source map, Playwright report, test result, temporary, runtime lock, or screenshot artifacts. The existing dependency manifest `apps/web/package-lock.json` remains tracked and was not modified.
 - Confirmed `dist`, Playwright output, and `.superpowers/sdd/task-14-screenshots` are ignored.
@@ -60,6 +59,7 @@ The full screenshot-related layout regression reran for desktop, mobile, and the
 ## Defects Fixed
 
 - Replaced duplicated substring deny lists with one labeled, structured public-release matcher shared by unit tests, all 13 route checks, and the dist scanner.
+- Completed the matcher from the shared private Base field mapping, restricted workflow states to status contexts, and extended `verify:public` to Git tracked public data artifacts.
 - Replaced direct-focus keyboard coverage with the shared `tabUntil` helper and forward-only Tab traversal from the page start or current known focus.
 - Replaced the Playwright web server from daemonizing `astro dev` to foreground `astro preview`, so E2E startup is observable and reliable.
 - Made the unavailable submit button keyboard-focusable with `aria-disabled="true"` while preserving its no-action behavior.

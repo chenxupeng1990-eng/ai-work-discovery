@@ -1,3 +1,5 @@
+import { PRIVATE_BASE_FIELD_NAMES } from "./feishu/fields";
+
 export interface ForbiddenPublicPattern {
   label: string;
   pattern: RegExp;
@@ -10,43 +12,40 @@ export interface ForbiddenPublicMatch {
 
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-function fieldPattern(label: string, aliases: readonly string[]): ForbiddenPublicPattern {
-  const names = aliases.map(escapeRegExp).join("|");
-  const quotedOrObjectKey = `(?:["'](?:${names})["']|(?<![\\p{L}\\p{N}_$])(?:${names})(?![\\p{L}\\p{N}_$]))\\s*:`;
-  const htmlAttribute = `(?:aria-label|data-label|title)\\s*=\\s*["']\\s*(?:${names})\\s*["']`;
-  const htmlLabel = `<(?:label|dt|th|legend|span|div|p|strong)\\b[^>]*>\\s*(?:${names})\\s*</(?:label|dt|th|legend|span|div|p|strong)>`;
-  return { label: `field: ${label}`, pattern: new RegExp(`${quotedOrObjectKey}|${htmlAttribute}|${htmlLabel}`, "iu") };
+function fieldPattern(key: string, label: string): ForbiddenPublicPattern {
+  const names = [key, label].map(escapeRegExp).join("|");
+  const objectKey = `(?:["'](?:${names})["']|(?<![\\p{L}\\p{N}_$])(?:${names})(?![\\p{L}\\p{N}_$]))\\s*:`;
+  const htmlAttribute = `(?:aria-label|data-label)\\s*=\\s*["']\\s*(?:${names})\\s*["']`;
+  const htmlLabel = `<(?:label|dt|th|legend|span|strong)\\b[^>]*>\\s*(?:${names})\\s*</(?:label|dt|th|legend|span|strong)>`;
+  return { label: `field: ${label}`, pattern: new RegExp(`${objectKey}|${htmlAttribute}|${htmlLabel}`, "iu") };
 }
+
+const STATUS_FIELD_NAMES = ["发布状态", "publicationStatus", "处理状态", "processingStatus", "公开级别", "publicLevel"] as const;
+const STATUS_DATA_ATTRIBUTES = ["data-publication-status", "data-processing-status", "data-public-level"] as const;
 
 function statusPattern(status: string): ForbiddenPublicPattern {
   const value = escapeRegExp(status);
-  const structuredValue = `(?:["'][^"']+["']|(?<![\\p{L}\\p{N}_$])[\\p{L}_$][\\p{L}\\p{N}_$]*)(?:\\s*)?:(?:\\s*)?["']${value}["']`;
-  const htmlAttribute = `(?:data-status|data-state|status|state|aria-label)\\s*=\\s*["']\\s*${value}\\s*["']`;
-  const standaloneLabel = `<(?:span|strong|em|div|p|li|dd)\\b[^>]*>\\s*${value}\\s*</(?:span|strong|em|div|p|li|dd)>`;
-  return { label: `status: ${status}`, pattern: new RegExp(`${structuredValue}|${htmlAttribute}|${standaloneLabel}`, "u") };
+  const keys = STATUS_FIELD_NAMES.map(escapeRegExp).join("|");
+  const attributes = STATUS_DATA_ATTRIBUTES.map(escapeRegExp).join("|");
+  const structuredValue = `(?:["'](?:${keys})["']|(?<![\\p{L}\\p{N}_$])(?:${keys})(?![\\p{L}\\p{N}_$]))\\s*:\\s*["']${value}["']`;
+  const htmlAttribute = `(?:${attributes})\\s*=\\s*["']\\s*${value}\\s*["']`;
+  return { label: `status: ${status}`, pattern: new RegExp(`${structuredValue}|${htmlAttribute}`, "iu") };
 }
 
 function secretPattern(identifier: string): ForbiddenPublicPattern {
   return {
     label: `secret: ${identifier}`,
-    pattern: new RegExp(`(?<![A-Z0-9_])${escapeRegExp(identifier)}(?![A-Z0-9_])`, "i"),
+    pattern: new RegExp(`(?<![\\p{L}\\p{N}_])${escapeRegExp(identifier)}(?![\\p{L}\\p{N}_])`, "iu"),
   };
 }
 
+const privateFieldPatterns = Object.values(PRIVATE_BASE_FIELD_NAMES).flatMap((group) =>
+  Object.entries(group).map(([key, label]) => fieldPattern(key, label)),
+);
+
 export const FORBIDDEN_PUBLIC_PATTERNS: readonly ForbiddenPublicPattern[] = [
-  fieldPattern("原始内容", ["原始内容", "Raw Content", "rawContent"]),
-  fieldPattern("发布状态", ["发布状态", "publicationStatus", "isDraft"]),
-  fieldPattern("公开级别", ["公开级别", "publicLevel"]),
-  fieldPattern("处理状态", ["处理状态", "processingStatus"]),
-  fieldPattern("关联草稿内容", ["关联草稿内容", "relatedDraftContent"]),
-  fieldPattern("来源收件箱记录ID", ["来源收件箱记录ID", "sourceInboxRecordId"]),
-  fieldPattern("来源收件箱复制块键", ["来源收件箱复制块键", "sourceInboxCopyBlockKey"]),
-  statusPattern("草稿"),
-  statusPattern("禁止发布"),
-  statusPattern("待处理"),
-  statusPattern("处理中"),
-  statusPattern("待审核"),
-  statusPattern("失败"),
+  ...privateFieldPatterns,
+  ...["草稿", "禁止发布", "待处理", "处理中", "待审核", "失败"].map(statusPattern),
   ...[
     "FEISHU_APP_ID",
     "FEISHU_APP_SECRET",
