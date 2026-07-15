@@ -1,14 +1,13 @@
 ---
-import FeaturedGrid from "../components/FeaturedGrid.astro";
+import { DiscoveryExplorer } from "../components/DiscoveryExplorer";
 import { HeroCarousel } from "../components/HeroCarousel";
 import { QuickMatch } from "../components/QuickMatch";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { selectHeroItems, selectHomepageItems } from "../lib/home-content";
+import { selectHeroItems } from "../lib/home-content";
 import { publicDataset } from "../lib/public-dataset";
 
 const items = publicDataset.items;
 const heroItems = selectHeroItems(items);
-const homepageItems = selectHomepageItems(items);
 ---
 
 <BaseLayout
@@ -24,7 +23,11 @@ const homepageItems = selectHomepageItems(items);
       </section>
     )}
   <QuickMatch items={items} client:load />
-  <FeaturedGrid items={homepageItems} hasMore={items.length > homepageItems.length} />
+  <section class="home-discovery" data-home-section="discovery">
+    <div class="container">
+      <DiscoveryExplorer items={items} limit={18} showMoreLink client:load />
+    </div>
+  </section>
 </BaseLayout>
 
 <style>
@@ -47,9 +50,18 @@ const homepageItems = selectHomepageItems(items);
     color: var(--steel);
   }
 
+  .home-discovery {
+    padding-block: var(--spacing-32) var(--spacing-100);
+    background: var(--color-pure-white);
+  }
+
   @media (max-width: 720px) {
     .home-empty h1 {
       font-size: 36px;
+    }
+
+    .home-discovery {
+      padding-block: var(--spacing-24) var(--spacing-80);
     }
   }
 </style>

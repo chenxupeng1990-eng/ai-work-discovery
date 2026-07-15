@@ -2,16 +2,16 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 将快速匹配恢复到首页，并把当前主要目标连接到对应分类二级页，同时保持首页内容数量有界。
+**Goal:** 将快速匹配恢复到首页，并在其后保留喂饭式内容发现体验与动态分类二级页入口，同时保持首页内容数量有界。
 
-**Architecture:** 从现有 `DiscoveryExplorer` 提取独立 `QuickMatch` 组件；首页负责组合轮播、快速匹配和最新精选，发现页只保留全量检索。分类 slug 与数量继续由现有分类模块计算。
+**Architecture:** 首页组合轮播、独立 `QuickMatch` 和受限版 `DiscoveryExplorer`；发现页继续使用不受限的 `DiscoveryExplorer`。分类 slug 与数量继续由现有分类模块计算。
 
 **Tech Stack:** Astro、React、TypeScript、Vitest、Playwright。
 
 ## Global Constraints
 
 - 不修改公开数据契约、推荐算法、飞书表结构或同步流程。
-- 首页最新精选最多 10 条，快速匹配最多 3 条。
+- 首页发现内容最多 18 条，快速匹配最多 3 条。
 - 所有分类链接使用 `lib/categories.ts` 的稳定英文 slug。
 - 保持现有中文字体、玻璃视觉 tokens、键盘操作和响应式约束。
 
@@ -78,3 +78,22 @@
 - [x] 运行 `npm run check`、`npm run build`、`npm run verify:public`。
 - [x] 运行 `npm run test:e2e`。
 - [x] 检查桌面与 390x844 首页、发现页、分类页截图，无溢出、遮挡或异常空白。
+
+### Task 5: 恢复首页喂饭式内容流和动态查看更多
+
+**Files:**
+- Create: `apps/web/src/components/DiscoveryExplorer.css`
+- Modify: `apps/web/src/components/DiscoveryExplorer.tsx`
+- Modify: `apps/web/src/pages/index.astro`
+- Modify: `apps/web/src/pages/discover.astro`
+- Modify: `apps/web/tests/e2e/home.spec.ts`
+- Delete: `apps/web/src/components/FeaturedGrid.astro`
+
+**Interfaces:**
+- Produces: `DiscoveryExplorer({ items, limit?, showMoreLink? })`。
+- 首页传入 `limit={18}` 与 `showMoreLink`；发现页保持完整列表。
+
+- [x] 写首页第三屏、18 条上限和动态分类入口的失败测试。
+- [x] 抽取发现组件共享样式，首页恢复完整内容卡片体验。
+- [x] 根据当前分类生成 `/discover` 或 `/category/<slug>` 入口。
+- [x] 完成全量自动化与视觉验收。

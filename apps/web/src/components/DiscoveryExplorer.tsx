@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
+import { slugForTrack } from "../lib/categories";
 import { queryContent, type QueryOptions } from "../lib/content-query";
 import {
   DISCOVERY_TRACKS,
   type DiscoveryTrack,
 } from "../lib/discovery-recommendation";
 import type { ContentItem } from "../lib/schema";
+import "./DiscoveryExplorer.css";
 
 const initialOptions: QueryOptions = {
   query: "",
@@ -14,7 +16,17 @@ const initialOptions: QueryOptions = {
 
 type TrackFilter = "全部" | DiscoveryTrack;
 
-export function DiscoveryExplorer({ items }: { items: ContentItem[] }) {
+type DiscoveryExplorerProps = {
+  items: ContentItem[];
+  limit?: number;
+  showMoreLink?: boolean;
+};
+
+export function DiscoveryExplorer({
+  items,
+  limit,
+  showMoreLink = false,
+}: DiscoveryExplorerProps) {
   const [options, setOptions] = useState<QueryOptions>(initialOptions);
   const [track, setTrack] = useState<TrackFilter>("全部");
   const [copyStatus, setCopyStatus] = useState<Record<string, "success" | "error">>({});
@@ -25,6 +37,11 @@ export function DiscoveryExplorer({ items }: { items: ContentItem[] }) {
       ? queried
       : queried.filter((item) => item.recommendationTrack === track);
   }, [items, options, track]);
+  const visibleResults = limit === undefined
+    ? results
+    : results.slice(0, Math.max(0, limit));
+  const moreHref = track === "全部" ? "/discover" : `/category/${slugForTrack(track)}`;
+  const moreLabel = track === "全部" ? "查看全部内容" : `查看「${track}」全部内容`;
 
   useEffect(() => {
     const syncTrackFromUrl = () => {
@@ -119,14 +136,21 @@ export function DiscoveryExplorer({ items }: { items: ContentItem[] }) {
 
       <div className="discovery-results-heading">
         <h2 id="discovery-results-title">{track === "全部" ? "全部发现" : track}</h2>
-        <div role="status" aria-label="搜索结果数量" aria-live="polite">
-          找到 {results.length} 项内容
+        <div className="discovery-results-heading__actions">
+          <div role="status" aria-label="搜索结果数量" aria-live="polite">
+            找到 {results.length} 项内容
+          </div>
+          {showMoreLink && (
+            <a className="discovery-more" href={moreHref}>
+              {moreLabel}<span aria-hidden="true"> →</span>
+            </a>
+          )}
         </div>
       </div>
 
       {results.length > 0 ? (
         <div className="discovery-grid">
-          {results.map((item) => {
+          {visibleResults.map((item) => {
             const status = copyStatus[item.id];
             return (
             <article className="discovery-card" data-discovery-card key={item.id}>
@@ -137,6 +161,7 @@ export function DiscoveryExplorer({ items }: { items: ContentItem[] }) {
                   width="640"
                   height="400"
                   loading="lazy"
+                  data-home-content-image={showMoreLink ? "true" : undefined}
                 />
               </a>
               <div className="discovery-card__body">

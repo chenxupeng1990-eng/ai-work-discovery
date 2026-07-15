@@ -101,8 +101,9 @@ test("copy block reports clipboard failure without claiming success and can retr
 
 test("homepage and discovery cards navigate to internal detail pages", async ({ page }) => {
   await page.goto("/");
-  const homeLink = page.locator('[data-content-card] a[href^="/content/"]').first();
-  const homeTitle = await homeLink.getByRole("heading").textContent();
+  const homeCard = page.locator('[data-home-section="discovery"] [data-discovery-card]').first();
+  const homeTitle = await homeCard.getByRole("heading").textContent();
+  const homeLink = homeCard.getByRole("link", { name: homeTitle!, exact: true });
   const homeHref = await homeLink.getAttribute("href");
   await page.goto(homeHref!);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(homeTitle!);

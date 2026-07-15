@@ -3,6 +3,7 @@ import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { expect, test, type Locator } from "@playwright/test";
 import { CATEGORY_DEFINITIONS } from "../../src/lib/categories";
+import { queryContent } from "../../src/lib/content-query";
 import { recommendContent } from "../../src/lib/discovery-recommendation";
 import { selectHeroItems } from "../../src/lib/home-content";
 import { generatedDataset } from "../fixtures/generated-dataset";
@@ -19,15 +20,7 @@ import {
 const screenshotDirectory = resolve("../../.superpowers/sdd/task-14-screenshots");
 const detailRoute = `/content/${generatedDataset.items[0]!.slug}`;
 const heroItems = selectHeroItems(generatedDataset.items);
-const homepageItems = [...generatedDataset.items]
-  .sort((left, right) => (
-    Number(right.featured) - Number(left.featured)
-    || Date.parse(right.updatedAt) - Date.parse(left.updatedAt)
-    || right.sortWeight - left.sortWeight
-    || left.slug.localeCompare(right.slug)
-    || left.id.localeCompare(right.id)
-  ))
-  .slice(0, 10);
+const homepageDiscoveryLimit = 18;
 const homepageSource = readFileSync(new URL("../../src/pages/index.astro", import.meta.url), "utf8");
 const categoryRoutes = [
   "/category/inspiration",
@@ -141,10 +134,13 @@ test("homepage quick match updates recommendations and links the selected goal t
 
   const picker = page.getByRole("region", { name: "先挑 3 项适合现在尝试的内容" });
   for (const category of CATEGORY_DEFINITIONS) {
-    await picker.getByRole("group", { name: "主要目标" }).getByRole("button", {
+    const goalButton = picker.getByRole("group", { name: "主要目标" }).getByRole("button", {
       name: category.track,
       exact: true,
-    }).click();
+    });
+    await goalButton.click();
+    await expect(goalButton).toHaveAttribute("aria-pressed", "true");
+    await expect(picker.getByRole("status")).toContainText(category.track);
 
     const expected = recommendContent(generatedDataset.items, {
       timeToValue: "10 分钟",
@@ -166,29 +162,72 @@ test("homepage quick match updates recommendations and links the selected goal t
   await expect(page.getByRole("navigation", { name: "发现方向" })).toHaveCount(0);
 });
 
-test("homepage contains the hero, quick match, and at most ten featured cards", async ({ page }) => {
+test("homepage third screen keeps feed cards and a dynamic full-category entry", async ({ page }) => {
+  await page.goto("/");
+
+  const explorer = page.locator('[data-home-section="discovery"]');
+  await expect(explorer.getByRole("searchbox", { name: "搜索内容" })).toBeVisible();
+  const allResults = queryContent(generatedDataset.items, {
+    query: "",
+    category: "全部",
+    sort: "featured",
+  });
+  await expect(explorer.locator("[data-discovery-card]")).toHaveCount(
+    Math.min(homepageDiscoveryLimit, allResults.length),
+  );
+  await expect(explorer.getByRole("status", { name: "搜索结果数量" })).toHaveText(
+    `找到 ${allResults.length} 项内容`,
+  );
+  await expect(explorer.getByRole("link", { name: "查看全部内容" })).toHaveAttribute("href", "/discover");
+  await expect(explorer.locator(".discovery-card__takeaway").first()).toContainText("你能带走");
+  await expect(explorer.getByRole("link", { name: "拿来试试" }).first()).toBeVisible();
+
+  const category = CATEGORY_DEFINITIONS.find((item) => item.track === "前沿信号")!;
+  await explorer.getByRole("button", { name: category.track, exact: true }).click();
+  const categoryCount = generatedDataset.items.filter(
+    (item) => item.recommendationTrack === category.track,
+  ).length;
+  await expect(explorer.getByRole("link", {
+    name: `查看「${category.track}」全部内容`,
+  })).toHaveAttribute("href", `/category/${category.slug}`);
+  await expect(explorer.locator("[data-discovery-card]")).toHaveCount(
+    Math.min(homepageDiscoveryLimit, categoryCount),
+  );
+});
+
+test("homepage keeps the approved hero, quick match, and feeding-style discovery order", async ({ page }) => {
   await page.goto("/");
 
   const hero = page.getByRole("region", { name: "精选内容" });
+  const quickMatch = page.getByRole("region", { name: "先挑 3 项适合现在尝试的内容" });
+  const discovery = page.locator('[data-home-section="discovery"]');
   await expect(hero.getByRole("heading", { level: 1, name: heroItems[0]!.title })).toBeVisible();
   await expect(hero.locator(".hero-carousel__slide.is-active .hero-carousel__brand")).toHaveText(
     "QIFEI AI Work Discovery",
   );
   await expect(hero.getByText("QIFEI AI Work Discovery", { exact: true }).first()).toBeVisible();
-  await expect(page.getByRole("region", { name: "先挑 3 项适合现在尝试的内容" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "现在值得尝试" })).toBeVisible();
+  await expect(quickMatch).toBeVisible();
+  await expect(discovery).toBeVisible();
   await expect(page.getByText("学习进度")).toHaveCount(0);
 
-  await expect(page.locator('[data-home-section="featured"] [data-content-card]')).toHaveCount(
-    homepageItems.length,
-  );
-  await expect(page.locator('[data-home-section="worth-trying"]')).toHaveCount(0);
-  await expect(page.locator('[data-home-section="ai-signals"]')).toHaveCount(0);
-  await expect(page.locator('[data-home-section="ready-to-use"]')).toHaveCount(0);
-  await expect(page.locator('[data-home-section="recent"]')).toHaveCount(0);
+  const [heroBox, quickMatchBox, discoveryBox] = await Promise.all([
+    hero.boundingBox(),
+    quickMatch.boundingBox(),
+    discovery.boundingBox(),
+  ]);
+  expect(heroBox).not.toBeNull();
+  expect(quickMatchBox).not.toBeNull();
+  expect(discoveryBox).not.toBeNull();
+  expect(heroBox!.y).toBeLessThan(quickMatchBox!.y);
+  expect(quickMatchBox!.y).toBeLessThan(discoveryBox!.y);
 
-  const cardImages = page.locator('[data-home-section="featured"] [data-home-content-image]');
-  await expect(cardImages).toHaveCount(homepageItems.length);
+  const expectedItems = queryContent(generatedDataset.items, {
+    query: "",
+    category: "全部",
+    sort: "featured",
+  }).slice(0, homepageDiscoveryLimit);
+  const cardImages = discovery.locator("[data-home-content-image]");
+  await expect(cardImages).toHaveCount(expectedItems.length);
   for (const image of await cardImages.all()) {
     await expect(image).toHaveAttribute("src", /^\/images\/content\/[a-zA-Z0-9_-]+\/.+\.png$/);
     await expect(image).toHaveAttribute("width", /\d+/);
@@ -201,25 +240,10 @@ test("homepage contains the hero, quick match, and at most ten featured cards", 
     expect(box!.width / box!.height).toBeLessThanOrEqual(1.62);
   }
 
-  const featuredHrefs = await page
-    .locator('[data-home-section="featured"] [data-content-card] a[data-home-content-link]')
+  const contentHrefs = await discovery
+    .locator("[data-discovery-card] h3 a")
     .evaluateAll((links) => links.map((link) => link.getAttribute("href")));
-  expect(featuredHrefs).toEqual(homepageItems.map((item) => `/content/${item.slug}`));
-
-  const viewMore = page.locator('[data-home-section="featured"] a[href="/discover"]');
-  if (generatedDataset.items.length > 10) {
-    await expect(viewMore).toHaveCount(1);
-    await expect(viewMore).toHaveText("查看更多");
-  } else {
-    await expect(viewMore).toHaveCount(0);
-  }
-
-  const contentLinks = page.locator('[data-home-content-link]');
-  for (const link of await contentLinks.all()) {
-    const href = await link.getAttribute("href");
-    expect(href).toMatch(/^\/content\/[a-z0-9-]+$/);
-    await expect(link).not.toHaveAttribute("target");
-  }
+  expect(contentHrefs).toEqual(expectedItems.map((item) => `/content/${item.slug}`));
 });
 
 test("all category routes render only their mapped items and a stable empty state", async ({ page, request }) => {
@@ -268,13 +292,13 @@ test("all category routes render only their mapped items and a stable empty stat
   }
 });
 
-test("featured grid uses three, two, and one responsive columns without clipping Chinese text", async ({ page }, testInfo) => {
+test("homepage discovery grid uses three, two, and one responsive columns without clipping Chinese text", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "Responsive grid checkpoints run once in the desktop project.");
 
   for (const [width, columns] of [[1440, 3], [900, 2], [390, 1]] as const) {
     await page.setViewportSize({ width, height: 1000 });
     await page.goto("/");
-    const grid = page.locator(".featured-grid");
+    const grid = page.locator('[data-home-section="discovery"] .discovery-grid');
     expect((await grid.evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(" ").length))).toBe(columns);
     await expectNoHorizontalOverflow(page);
     await expectCardTextFits(page);
@@ -311,8 +335,8 @@ test("homepage carousel verifies every slide at each release viewport", async ({
     const next = hero.getByRole("button", { name: "下一项精选" });
     await expect(hero).toBeVisible();
     await expect(next).toBeVisible();
-    await expect(page.locator('[data-home-section="featured"] [data-content-card]')).toHaveCount(
-      Math.min(10, generatedDataset.items.length),
+    await expect(page.locator('[data-home-section="discovery"] [data-discovery-card]')).toHaveCount(
+      Math.min(homepageDiscoveryLimit, generatedDataset.items.length),
     );
 
     const dots = hero.getByRole("group", { name: "选择精选内容" }).getByRole("button");

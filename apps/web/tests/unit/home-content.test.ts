@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ContentItem } from "../../src/lib/schema";
-import { selectHeroItems, selectHomepageItems } from "../../src/lib/home-content";
+import { selectHeroItems } from "../../src/lib/home-content";
 
 const item = (id: string, overrides: Partial<ContentItem> = {}): ContentItem => ({
   id,
@@ -42,16 +42,15 @@ describe("homepage content selection", () => {
     expect(input.map(({ id }) => id)).toEqual(originalOrder);
   });
 
-  it("applies the requested limit and returns no items for zero", () => {
+  it("applies the requested hero limit and returns no items for zero", () => {
     const input = [item("b"), item("a")];
-    expect(selectHomepageItems(input, 2)).toHaveLength(2);
+    expect(selectHeroItems(input, 2)).toHaveLength(2);
     expect(selectHeroItems(input, 0)).toEqual([]);
   });
 
-  it("never exceeds the public hero and homepage caps", () => {
+  it("never exceeds the public hero cap", () => {
     const input = Array.from({ length: 12 }, (_, index) => item(`item-${index}`));
     expect(selectHeroItems(input, 5)).toHaveLength(4);
-    expect(selectHomepageItems(input, 11)).toHaveLength(10);
   });
 
   it("uses sort weight, slug, and id as deterministic tie-breakers", () => {
@@ -63,7 +62,7 @@ describe("homepage content selection", () => {
       item("high-weight", { slug: "b", updatedAt: sameDate, sortWeight: 2 }),
     ];
 
-    expect(selectHomepageItems(input).map(({ id }) => id)).toEqual([
+    expect(selectHeroItems(input).map(({ id }) => id)).toEqual([
       "high-weight", "a-id", "z-id", "low-weight",
     ]);
   });

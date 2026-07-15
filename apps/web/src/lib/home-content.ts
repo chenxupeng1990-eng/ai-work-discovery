@@ -13,4 +13,3 @@ const select = (items: readonly ContentItem[], limit: number) => (
 );
 
 export const selectHeroItems = (items: readonly ContentItem[], limit = 4) => select(items, Math.min(limit, 4));
-export const selectHomepageItems = (items: readonly ContentItem[], limit = 10) => select(items, Math.min(limit, 10));
