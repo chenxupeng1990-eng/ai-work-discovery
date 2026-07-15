@@ -544,6 +544,37 @@ test("homepage keeps quick match visible after the hero and avoids horizontal ov
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport!.width);
 });
 
+test("header presents the Codex methods shortcut as a secondary button", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Desktop header styling runs once.");
+
+  for (const [width, selector, minimumHeight] of [
+    [1280, ".methods-navigation-link", 30],
+    [1050, ".mobile-discover", 34],
+  ] as const) {
+    await page.setViewportSize({ width, height: 920 });
+    await page.goto("/");
+
+    const shortcut = page.locator(selector);
+    await expect(shortcut).toBeVisible();
+    const styles = await shortcut.evaluate((element) => {
+      const computed = getComputedStyle(element);
+      return {
+        backgroundColor: computed.backgroundColor,
+        borderStyle: computed.borderStyle,
+        color: computed.color,
+        height: element.getBoundingClientRect().height,
+      };
+    });
+    expect(styles.height).toBeGreaterThanOrEqual(minimumHeight);
+    expect(styles.borderStyle).toBe("solid");
+    expect(styles.backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
+    expect(styles.color).toBe("rgb(0, 102, 204)");
+    await shortcut.focus();
+    await expectFocusVisible(shortcut);
+    await expectNoHorizontalOverflow(page);
+  }
+});
+
 test("mobile navigation opens without resizing the header or overflowing", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile", "Mobile navigation behavior only applies to the mobile project.");
 

@@ -18,7 +18,11 @@ const navigation = [
     </a>
 
     <nav class="desktop-navigation" aria-label="主导航">
-      {navigation.map((item) => <a href={item.href}>{item.label}</a>)}
+      {navigation.map((item) => (
+        <a class:list={{ "methods-navigation-link": item.href === "/discover" }} href={item.href}>
+          {item.label}
+        </a>
+      ))}
     </nav>
 
     <div class="header-actions">
@@ -96,6 +100,24 @@ const navigation = [
   .desktop-navigation a:hover,
   .mobile-navigation a:hover {
     color: var(--color-link-blue);
+  }
+
+  .desktop-navigation .methods-navigation-link {
+    min-height: 30px;
+    padding-inline: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid color-mix(in srgb, var(--color-link-blue) 28%, transparent);
+    border-radius: var(--radius-button);
+    color: var(--color-link-blue);
+    background: color-mix(in srgb, var(--color-link-blue) 9%, var(--canvas));
+    font-weight: var(--font-weight-medium);
+  }
+
+  .desktop-navigation .methods-navigation-link:hover {
+    border-color: var(--color-link-blue);
+    background: color-mix(in srgb, var(--color-link-blue) 15%, var(--canvas));
   }
 
   .header-actions {
@@ -226,10 +248,29 @@ const navigation = [
     }
 
     .mobile-discover {
+      min-height: 34px;
+      padding-inline: 12px;
       display: inline-flex;
       align-items: center;
-      color: var(--steel);
+      justify-content: center;
+      border: 1px solid color-mix(in srgb, var(--color-link-blue) 28%, transparent);
+      border-radius: var(--radius-button);
+      color: var(--color-link-blue);
+      background: color-mix(in srgb, var(--color-link-blue) 9%, var(--canvas));
       font-size: 14px;
+      font-weight: var(--font-weight-medium);
+      white-space: nowrap;
+      transition: background-color 160ms ease, border-color 160ms ease;
+    }
+
+    .mobile-discover:hover {
+      border-color: var(--color-link-blue);
+      background: color-mix(in srgb, var(--color-link-blue) 15%, var(--canvas));
+    }
+
+    .mobile-discover:focus-visible {
+      outline: 2px solid var(--color-link-blue);
+      outline-offset: 2px;
     }
 
     .mobile-menu {
