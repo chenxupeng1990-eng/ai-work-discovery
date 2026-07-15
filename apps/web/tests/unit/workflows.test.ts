@@ -59,7 +59,7 @@ describe("GitHub Actions workflows", () => {
     if (!workflow) return;
 
     const value = workflow.value;
-    expect(value.on.schedule).toEqual([{ cron: "17 */6 * * *" }]);
+    expect(value.on.schedule).toEqual([{ cron: "17 2 * * 3" }]);
     expect(value.on).toHaveProperty("workflow_dispatch");
     expect(value.permissions).toEqual({ contents: "write" });
     expect(value.concurrency["cancel-in-progress"]).toBe(false);
