@@ -9,6 +9,16 @@ const HttpsUrlSchema = z.url({ protocol: /^https$/ }).refine((value) => {
   }
 });
 
+const OptionalSecretSchema = z.preprocess(
+  (value) => typeof value === "string" && value.trim() === "" ? undefined : value,
+  z.string().min(1).optional(),
+);
+
+const OptionalHttpsUrlSchema = z.preprocess(
+  (value) => typeof value === "string" && value.trim() === "" ? undefined : value,
+  HttpsUrlSchema.optional(),
+);
+
 export const SyncConfigSchema = z.object({
   FEISHU_APP_ID: z.string().min(1),
   FEISHU_APP_SECRET: z.string().min(1),
@@ -16,9 +26,9 @@ export const SyncConfigSchema = z.object({
   FEISHU_CONTENT_TABLE_ID: z.string().min(1),
   FEISHU_COPY_BLOCKS_TABLE_ID: z.string().min(1),
   FEISHU_INBOX_TABLE_ID: z.string().min(1),
-  AI_BASE_URL: HttpsUrlSchema,
-  AI_API_KEY: z.string().min(1),
-  AI_MODEL: z.string().min(1),
+  AI_BASE_URL: OptionalHttpsUrlSchema,
+  AI_API_KEY: OptionalSecretSchema,
+  AI_MODEL: OptionalSecretSchema,
 }).strict();
 
 export type SyncConfig = z.infer<typeof SyncConfigSchema>;

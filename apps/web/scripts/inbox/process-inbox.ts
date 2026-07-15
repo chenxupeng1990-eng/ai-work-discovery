@@ -84,15 +84,16 @@ export async function processPendingInbox(
 
       const rawContent = requireString(record, INBOX.rawContent);
       const editorNote = optionalString(record.fields[INBOX.editorNote]);
+      const ai = requireAiConfig(config);
       const detected = (dependencies.detect ?? detectSource)(rawContent);
       const metadata = await metadataForDetectedSource(
         detected,
         dependencies.fetchMetadata ?? ((url) => fetchPublicMetadata(url)),
       );
       const proposal = await (dependencies.enrich ?? ((input) => enrichDraft(input, {
-        baseUrl: config.AI_BASE_URL,
-        apiKey: config.AI_API_KEY,
-        model: config.AI_MODEL,
+        baseUrl: ai.baseUrl,
+        apiKey: ai.apiKey,
+        model: ai.model,
       })))({ metadata, editorNote });
 
       const draft = matchedDraft
@@ -156,12 +157,34 @@ export async function processPendingInbox(
         [INBOX.errorMessage]: safeErrorMessage(error, [
           config.FEISHU_APP_SECRET,
           config.AI_API_KEY,
-        ]),
+        ].filter((value): value is string => Boolean(value))),
       }).catch(() => undefined);
     }
   }
 
   return summary;
+}
+
+function requireAiConfig(config: SyncConfig): {
+  baseUrl: string;
+  apiKey: string;
+  model: string;
+} {
+  const missing = [
+    ["AI_BASE_URL", config.AI_BASE_URL],
+    ["AI_API_KEY", config.AI_API_KEY],
+    ["AI_MODEL", config.AI_MODEL],
+  ].filter(([, value]) => !value).map(([key]) => key);
+
+  if (missing.length > 0) {
+    throw new Error(`AI configuration missing: ${missing.join(", ")}`);
+  }
+
+  return {
+    baseUrl: config.AI_BASE_URL!,
+    apiKey: config.AI_API_KEY!,
+    model: config.AI_MODEL!,
+  };
 }
 
 function contentFields(

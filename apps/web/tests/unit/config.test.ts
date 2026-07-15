@@ -40,4 +40,17 @@ describe("loadSyncConfig", () => {
   ])("拒绝不安全的 AI_BASE_URL: %s", (AI_BASE_URL) => {
     expect(() => loadSyncConfig({ ...validEnv, AI_BASE_URL })).toThrow(/AI_BASE_URL/);
   });
+
+  it("允许未配置 AI 时同步已审核内容", () => {
+    const config = loadSyncConfig({
+      ...validEnv,
+      AI_BASE_URL: "",
+      AI_API_KEY: "",
+      AI_MODEL: "",
+    });
+
+    expect(config.AI_BASE_URL).toBeUndefined();
+    expect(config.AI_API_KEY).toBeUndefined();
+    expect(config.AI_MODEL).toBeUndefined();
+  });
 });
