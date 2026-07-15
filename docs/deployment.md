@@ -17,7 +17,7 @@
 
 `CI` 在所有 pull request 和 `main` push 上运行，不读取任何 repository secret，因此 fork pull request 不会暴露同步凭据。权限固定为 `contents: read`。
 
-`Sync public content` 按 `17 2 * * 3` 每周三 10:17（Asia/Shanghai）运行，也支持手动触发。它使用 `contents: write`，同一默认分支只允许一个同步运行，且不会取消正在运行的同步。任务只提交：
+`Sync public content` 按 `0 10 * * *` 每天 18:00（Asia/Shanghai）运行，也支持手动触发。它使用 `contents: write`，同一默认分支只允许一个同步运行，且不会取消正在运行的同步。任务只提交：
 
 - `apps/web/src/generated/content.json`
 - `apps/web/public/images/content`

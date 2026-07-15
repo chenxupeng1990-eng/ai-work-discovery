@@ -2,8 +2,8 @@ name: Sync public content
 
 on:
   schedule:
-    # Every Wednesday at 10:17 Asia/Shanghai (GitHub cron uses UTC).
-    - cron: "17 2 * * 3"
+    # Every day at 18:00 Asia/Shanghai (GitHub cron uses UTC).
+    - cron: "0 10 * * *"
   workflow_dispatch:
 
 permissions:
