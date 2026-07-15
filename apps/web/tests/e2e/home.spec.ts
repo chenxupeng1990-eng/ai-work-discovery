@@ -276,6 +276,41 @@ test("content cards use consistent actions and persist useful votes", async ({ p
   await expect(page.locator("[data-content-card] [data-like-button]")).toHaveCount(categoryCardCount);
 });
 
+test("desktop discovery cards align their text rows and omit terminal full stops", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Three-column card alignment only applies to desktop.");
+  await page.setViewportSize({ width: 1050, height: 920 });
+  await page.goto("/?track=工作提效");
+
+  const cards = page.locator('[data-home-section="discovery"] [data-discovery-card]');
+  expect(await cards.count()).toBeGreaterThanOrEqual(3);
+
+  const rowMetrics = await cards.evaluateAll((elements) => elements.slice(0, 3).map((card) => {
+    const top = (selector: string) => card.querySelector(selector)!.getBoundingClientRect().top;
+    return {
+      reason: top(".discovery-card__reason"),
+      takeaway: top(".discovery-card__takeaway"),
+      tags: top(".discovery-card__tags"),
+      actions: top(".discovery-card__actions"),
+    };
+  }));
+
+  for (const key of ["reason", "takeaway", "tags", "actions"] as const) {
+    const values = rowMetrics.map((metrics) => metrics[key]);
+    expect(Math.max(...values) - Math.min(...values), `${key} rows should align`).toBeLessThanOrEqual(1);
+  }
+
+  const cardText = await cards.locator(
+    ".discovery-card__reason, .discovery-card__takeaway p",
+  ).allTextContents();
+  expect(cardText.length).toBeGreaterThan(0);
+  for (const text of cardText) expect(text.trim()).not.toMatch(/[。.]+$/u);
+
+  await page.goto("/category/productivity");
+  const categorySummaries = await page.locator("[data-content-card] .content-card__body > p").allTextContents();
+  expect(categorySummaries.length).toBeGreaterThan(0);
+  for (const text of categorySummaries) expect(text.trim()).not.toMatch(/[。.]+$/u);
+});
+
 test("homepage keeps the approved hero, quick match, and feeding-style discovery order", async ({ page }) => {
   await page.goto("/");
 

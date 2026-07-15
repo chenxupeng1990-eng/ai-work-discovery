@@ -5,6 +5,7 @@ import {
   RECOMMENDATION_TRACKS,
   TIME_TO_VALUE_OPTIONS,
 } from "../../src/lib/schema";
+import { withoutTerminalFullStops } from "../../src/lib/card-text";
 import type { SourceMetadata } from "./fetch-metadata";
 
 export const MAX_EDITOR_NOTE_LENGTH = 1_000;
@@ -21,6 +22,12 @@ const CONTENT_TYPES = [
   "Getting Started",
 ] as const;
 
+const cardCopy = (maxLength: number) => z.string()
+  .min(1)
+  .max(maxLength)
+  .transform(withoutTerminalFullStops)
+  .pipe(z.string().min(1));
+
 const CopyBlockProposalSchema = z.object({
   title: z.string().min(1).max(80),
   type: z.enum(["Prompt", "Command", "Path", "Configuration", "Code"]),
@@ -31,13 +38,13 @@ const CopyBlockProposalSchema = z.object({
 
 export const DraftProposalSchema = z.object({
   title: z.string().min(1).max(80),
-  summary: z.string().min(1).max(180),
-  recommendationReason: z.string().min(1).max(160),
+  summary: cardCopy(180),
+  recommendationReason: cardCopy(160),
   recommendationTrack: z.enum(RECOMMENDATION_TRACKS),
   timeToValue: z.enum(TIME_TO_VALUE_OPTIONS),
   adoptionLevel: z.enum(ADOPTION_LEVELS),
   networkRequirement: z.enum(NETWORK_REQUIREMENTS),
-  takeaway: z.string().min(1).max(180),
+  takeaway: cardCopy(180),
   contentType: z.enum(CONTENT_TYPES),
   category: z.string().min(1).max(20),
   tags: z.array(z.string().min(1).max(20)).min(2).max(5),
@@ -175,6 +182,7 @@ async function performEnrichment(
               "networkRequirement 按公司无 VPN 环境下的实际可用性选择无需 VPN、部分资源需要 VPN 或需要 VPN.",
               "来源页不是最终交付物；不要只复述或推荐外链，要从来源中筛出一个具体方法，拆成同事可直接执行的步骤、复制块和可验证产物.",
               "takeaway 必须写成可验证的具体产物或完成动作，说明用户可以复制、安装或完成什么.",
+              "summary、recommendationReason 和 takeaway 用于卡片展示，结尾不使用句号（。或 .）.",
               "tags 只保留 2 到 5 个有检索价值的主题词.",
               "禁止虚构评分、事实或来源.",
               "publicationStatus must be 草稿.",

@@ -1,5 +1,6 @@
 ---
 import type { ContentItem } from "../lib/schema";
+import { withoutTerminalFullStops } from "../lib/card-text";
 
 const { item } = Astro.props as { item: ContentItem };
 ---
@@ -24,7 +25,7 @@ const { item } = Astro.props as { item: ContentItem };
         <span class="content-card__network">{item.networkRequirement}</span>
       </div>
       <h3>{item.title}</h3>
-      <p>{item.summary}</p>
+      <p>{withoutTerminalFullStops(item.summary)}</p>
     </div>
   </a>
   <button

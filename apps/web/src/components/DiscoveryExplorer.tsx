@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { slugForTrack } from "../lib/categories";
+import { withoutTerminalFullStops } from "../lib/card-text";
 import { queryContent, type QueryOptions } from "../lib/content-query";
 import {
   DISCOVERY_TRACKS,
@@ -185,10 +186,10 @@ export function DiscoveryExplorer({
                   <span>{item.timeToValue} · {item.adoptionLevel} · {item.networkRequirement}</span>
                 </div>
                 <h3><a href={`/content/${item.slug}`}>{item.title}</a></h3>
-                <p className="discovery-card__reason">{item.recommendationReason}</p>
+                <p className="discovery-card__reason">{withoutTerminalFullStops(item.recommendationReason)}</p>
                 <div className="discovery-card__takeaway">
                   <span>你能带走</span>
-                  <p>{item.takeaway}</p>
+                  <p>{withoutTerminalFullStops(item.takeaway)}</p>
                 </div>
                 <div className="discovery-card__tags">
                   {item.tags.slice(0, 3).map((tag) => <span key={tag}>{tag}</span>)}

@@ -10,13 +10,13 @@ import {
 
 const validProposal = {
   title: "A bounded review draft",
-  summary: "A concise summary for human review.",
-  recommendationReason: "Useful because the workflow is reusable.",
+  summary: "A concise summary for human review",
+  recommendationReason: "Useful because the workflow is reusable",
   recommendationTrack: "工作提效",
   timeToValue: "1 小时",
   adoptionLevel: "直接使用",
   networkRequirement: "部分资源需要 VPN",
-  takeaway: "Install the workflow and finish one reviewed draft end to end.",
+  takeaway: "Install the workflow and finish one reviewed draft end to end",
   contentType: "Tool",
   category: "Engineering",
   tags: ["Codex", "Automation"],
@@ -110,6 +110,19 @@ describe("parseDraftProposal", () => {
     `\`\`\`json\n${JSON.stringify(validProposal)}\n\`\`\``,
   ])("accepts pure JSON or one controlled json fence", (content) => {
     expect(parseDraftProposal(completion(content))).toEqual(validProposal);
+  });
+
+  it("removes terminal full stops from card copy before creating a draft", () => {
+    const proposal = parseDraftProposal(completion(JSON.stringify({
+      ...validProposal,
+      summary: "一句卡片摘要。",
+      recommendationReason: "一个推荐理由...",
+      takeaway: "一个可带走结果。。",
+    })));
+
+    expect(proposal.summary).toBe("一句卡片摘要");
+    expect(proposal.recommendationReason).toBe("一个推荐理由");
+    expect(proposal.takeaway).toBe("一个可带走结果");
   });
 
   it.each([
@@ -211,6 +224,7 @@ describe("enrichDraft", () => {
     expect(messages[0]?.content).toContain("复制");
     expect(messages[0]?.content).toContain("安装");
     expect(messages[0]?.content).toContain("完成");
+    expect(messages[0]?.content).toContain("结尾不使用句号");
     expect(messages[0]?.content).toContain("禁止虚构");
     const modelInput = JSON.parse(messages[1]?.content ?? "{}") as Record<string, unknown>;
     expect(modelInput).toMatchObject({
