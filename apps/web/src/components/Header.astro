@@ -2,7 +2,7 @@
 import { CATEGORY_DEFINITIONS } from "../lib/categories";
 
 const navigation = [
-  { label: "发现", href: "/discover" },
+  { label: "Codex 方法", href: "/discover" },
   ...CATEGORY_DEFINITIONS.map((category) => ({
     label: category.track,
     href: `/category/${category.slug}`,
@@ -22,8 +22,8 @@ const navigation = [
     </nav>
 
     <div class="header-actions">
-      <a class="mobile-discover" href="/discover">发现</a>
-      <a class="icon-button" href="/discover" aria-label="搜索" title="搜索">
+      <a class="mobile-discover" href="/discover">Codex 方法</a>
+      <a class="icon-button" href="/discover?focus=search" aria-label="搜索 Codex 方法" title="搜索 Codex 方法">
         <span class="search-icon" aria-hidden="true"></span>
       </a>
       <button class="submit-link button-primary" type="button" aria-disabled="true" title="提交入口即将开放">
@@ -244,6 +244,10 @@ const navigation = [
 
     .header-inner {
       gap: 8px;
+    }
+
+    .mobile-discover {
+      display: none;
     }
 
     .brand-full {

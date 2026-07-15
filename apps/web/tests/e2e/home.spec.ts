@@ -68,7 +68,7 @@ async function expectHeroCoverMeetsReleaseRequirements(image: Locator) {
 test("public routes share the QIFEI brand copy without a header logo", async ({ page }) => {
   const routes = [
     { route: "/", title: "QIFEI AI 工作灵感与实践 | QIFEI AI Work Discovery", description: undefined },
-    { route: "/discover", title: "发现 | QIFEI AI Work Discovery", description: undefined },
+    { route: "/discover", title: "Codex 方法合集 | QIFEI AI Work Discovery", description: undefined },
     { route: "/updates", title: "最近更新 | QIFEI AI Work Discovery", description: undefined },
     {
       route: detailRoute,
@@ -108,7 +108,7 @@ test("homepage exposes shared navigation and one main landmark", async ({ page }
   await page.goto("/");
 
   const expectedNavigation = [
-    ["发现", "/discover"],
+    ["Codex 方法", "/discover"],
     ["灵感实验", "/category/inspiration"],
     ["工作提效", "/category/productivity"],
     ["团队实践", "/category/team-practice"],
@@ -123,8 +123,11 @@ test("homepage exposes shared navigation and one main landmark", async ({ page }
   for (const [label, href] of expectedNavigation) {
     await expect(navigation.locator("a", { hasText: label })).toHaveAttribute("href", href);
   }
-  await expect(page.getByRole("link", { name: "搜索" })).toHaveAttribute("href", "/discover");
-  await expect(page.locator('a[href="/updates"]')).toHaveCount(2);
+  await expect(page.getByRole("link", { name: "搜索 Codex 方法" })).toHaveAttribute(
+    "href",
+    "/discover?focus=search",
+  );
+  await expect(page.locator('a[href="/updates"]')).toHaveCount(3);
   await expect(page.getByRole("button", { name: "提交内容" })).toHaveAttribute("aria-disabled", "true");
   await expect(page.locator('a[href="#discover"], a[href="#ready"], a[href="#submit"]')).toHaveCount(0);
   await expect(page.getByRole("contentinfo")).toBeVisible();
@@ -250,7 +253,7 @@ test("homepage third screen keeps feed cards and a dynamic full-category entry",
   await expect(explorer.getByRole("status", { name: "搜索结果数量" })).toHaveText(
     `找到 ${allResults.length} 项内容`,
   );
-  await expect(explorer.getByRole("link", { name: "查看全部内容" })).toHaveAttribute("href", "/discover");
+  await expect(explorer.getByRole("link", { name: "查看最近更新" })).toHaveAttribute("href", "/updates");
   await expect(explorer.locator(".discovery-card__takeaway").first()).toContainText("你能带走");
   await expect(explorer.getByRole("link", { name: "仔细看看" }).first()).toBeVisible();
 
@@ -610,20 +613,20 @@ test("header brand stays left aligned and inside the sticky header", async ({ pa
 test("header controls support Tab, Enter, focus visibility, and mobile menu dismissal", async ({ page }, testInfo) => {
   await page.goto("/");
 
-  const search = page.getByRole("link", { name: "搜索" });
+  const search = page.getByRole("link", { name: "搜索 Codex 方法" });
   await tabUntil(search);
   await expectFocusVisible(search);
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/discover\/?$/);
 
-  await page.goto("/");
-  const updates = testInfo.project.name === "desktop"
-    ? page.getByRole("navigation", { name: "主导航" }).getByRole("link", { name: "最近更新" })
-    : page.getByRole("link", { name: "发现", exact: true }).first();
-  await tabUntil(updates);
-  await expectFocusVisible(updates);
-  await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(testInfo.project.name === "desktop" ? /\/updates\/?$/ : /\/discover\/?$/);
+  if (testInfo.project.name === "desktop") {
+    await page.goto("/");
+    const updates = page.getByRole("navigation", { name: "主导航" }).getByRole("link", { name: "最近更新" });
+    await tabUntil(updates);
+    await expectFocusVisible(updates);
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/\/updates\/?$/);
+  }
 
   await page.goto("/");
   const submit = page.getByRole("button", { name: "提交内容" });
@@ -641,6 +644,9 @@ test("header controls support Tab, Enter, focus visibility, and mobile menu dism
     await expect(menu).toHaveAttribute("aria-expanded", "true");
     await expect(menu).toHaveAccessibleName("关闭导航");
     await expect(page.getByRole("navigation", { name: "移动端主导航" })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "移动端主导航" }).getByRole("link", {
+      name: "Codex 方法",
+    })).toHaveAttribute("href", "/discover");
     await page.keyboard.press("Escape");
     await expect(menu).toHaveAttribute("aria-expanded", "false");
     await expect(menu).toHaveAccessibleName("打开导航");

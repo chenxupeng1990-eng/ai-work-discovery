@@ -99,7 +99,7 @@ test("copy block reports clipboard failure without claiming success and can retr
   await expect(button).toHaveAccessibleName(`已复制 ${copyBlock.title}`);
 });
 
-test("homepage and discovery cards navigate to internal detail pages", async ({ page }) => {
+test("homepage cards navigate to details while Codex methods stay independent", async ({ page }) => {
   await page.goto("/");
   const homeCard = page.locator('[data-home-section="discovery"] [data-discovery-card]').first();
   const homeTitle = await homeCard.getByRole("heading").textContent();
@@ -110,12 +110,8 @@ test("homepage and discovery cards navigate to internal detail pages", async ({ 
 
   await page.goto("/discover");
   await expect(page.locator("astro-island:not([ssr])")).toHaveCount(1);
-  const discoveryCard = page.locator("[data-discovery-card]").first();
-  const discoveryTitle = await discoveryCard.getByRole("heading").textContent();
-  const discoveryLink = discoveryCard.getByRole("link", { name: discoveryTitle!, exact: true });
-  const discoveryHref = await discoveryLink.getAttribute("href");
-  await page.goto(discoveryHref!);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(discoveryTitle!);
+  await expect(page.locator("[data-method-card]")).toHaveCount(12);
+  await expect(page.locator('[data-method-card] a[href^="/content/"]')).toHaveCount(0);
 });
 
 test("detail page excludes itself from related content and never overflows horizontally", async ({ page }) => {

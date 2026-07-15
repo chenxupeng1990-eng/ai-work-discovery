@@ -41,8 +41,8 @@ export function DiscoveryExplorer({
   const visibleResults = limit === undefined
     ? results
     : results.slice(0, Math.max(0, limit));
-  const moreHref = track === "全部" ? "/discover" : `/category/${slugForTrack(track)}`;
-  const moreLabel = track === "全部" ? "查看全部内容" : `查看「${track}」全部内容`;
+  const moreHref = track === "全部" ? "/updates" : `/category/${slugForTrack(track)}`;
+  const moreLabel = track === "全部" ? "查看最近更新" : `查看「${track}」全部内容`;
 
   useEffect(() => {
     const syncTrackFromUrl = () => {

@@ -1,308 +1,242 @@
 ---
-import { DiscoveryExplorer } from "../components/DiscoveryExplorer";
+import { CodexMethodsExplorer } from "../components/CodexMethodsExplorer";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { publicDataset } from "../lib/public-dataset";
+import { codexMethods } from "../data/codex-methods";
 
-const { items } = publicDataset;
-const featuredItem = items.find((item) => item.featured) ?? items[0];
+const lastVerified = [...codexMethods]
+  .map(({ verifiedAt }) => verifiedAt)
+  .sort((left, right) => right.localeCompare(left))[0];
 ---
 
 <BaseLayout
-  title="发现 | QIFEI AI Work Discovery"
-  description="发现 AI 工作灵感、协作方式、案例和工具。"
+  title="Codex 方法合集 | QIFEI AI Work Discovery"
+  description="经过验证、可以直接复制执行的 Codex 工作方法合集"
 >
-  <section class="discover-hero" aria-labelledby="discover-title">
-    <div class="discover-hero__inner container">
-      <div class="discover-hero__copy">
-        <p class="discover-hero__eyebrow">工作发现</p>
-        <h1 id="discover-title"><span>找到下一项值得尝试的</span><br /><span>AI 工作方法</span></h1>
-        <p class="discover-hero__summary">
-          探索真实可复用的实践，快速应用到你的团队与工作流。
+  <section class="methods-hero" aria-labelledby="methods-title">
+    <div class="methods-hero__inner container">
+      <div>
+        <p class="methods-hero__eyebrow">CODEX METHODS</p>
+        <h1 id="methods-title">Codex 方法合集</h1>
+        <p class="methods-hero__summary">
+          找到一个工作问题，复制方法，让 Codex 先完成可验证的草稿
         </p>
-        <div class="discover-hero__actions">
-          <a class="button-primary" href={`/content/${featuredItem.slug}`}>浏览本周精选</a>
-          <a class="discover-hero__link" href="/discover#discovery-results-title">查看全部</a>
-        </div>
       </div>
-
-      <div class="spotlight" aria-label="本周精选内容">
-        <a class="spotlight__visual" href={`/content/${featuredItem.slug}`}>
-          <img
-            src={featuredItem.coverImage}
-            alt={`${featuredItem.title}内容预览`}
-            width="960"
-            height="600"
-            fetchpriority="high"
-          />
-        </a>
-        <div class="spotlight__copy">
-          <p>本周精选</p>
-          <h2>{featuredItem.title.replace(/^用飞书桥/, "")}</h2>
-          <a href={`/content/${featuredItem.slug}`}>阅读内容</a>
+      <dl class="methods-hero__stats" aria-label="方法库状态">
+        <div>
+          <dt>当前收录</dt>
+          <dd>{codexMethods.length} 个方法</dd>
         </div>
-      </div>
+        <div>
+          <dt>验证日期</dt>
+          <dd>{lastVerified}</dd>
+        </div>
+        <div>
+          <dt>更新节奏</dt>
+          <dd>每周人工复核</dd>
+        </div>
+      </dl>
     </div>
   </section>
 
-  <div class="discover-content">
-    <div class="container">
-      <DiscoveryExplorer client:load items={items} />
-    </div>
+  <div class="methods-content container">
+    <CodexMethodsExplorer methods={codexMethods} client:load />
   </div>
+
+  <section class="methods-policy">
+    <div class="container methods-policy__grid">
+      <article>
+        <span>安全边界</span>
+        <h2>关键动作必须停下来确认</h2>
+        <p>删除、发送、付款、发布、权限修改和结束进程前，Codex 必须展示影响并等待确认</p>
+      </article>
+      <article>
+        <span>收录标准</span>
+        <h2>解决明确问题，而不是堆链接</h2>
+        <p>每个方法都要有可复制提示词、能力依据、风险说明和最近验证日期</p>
+      </article>
+      <article>
+        <span>每周更新</span>
+        <h2>过时方法直接停止展示</h2>
+        <p>每周检查来源、Codex 当前能力和提示词边界，验证失败的方法转为停用状态</p>
+      </article>
+    </div>
+  </section>
 </BaseLayout>
 
 <style>
-  .discover-hero {
-    min-height: 620px;
-    overflow: hidden;
-    background-color: var(--color-fog-canvas);
-    background-image: url("/images/hero-glass-rings.webp");
-    background-position: center;
-    background-size: cover;
+  .methods-hero {
+    border-bottom: 1px solid var(--color-divider);
+    background: var(--color-fog-canvas);
   }
 
-  .discover-hero__inner {
-    min-height: 620px;
+  .methods-hero__inner {
+    min-height: 320px;
+    padding-block: var(--spacing-76);
     display: grid;
-    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-    align-items: center;
-    gap: var(--spacing-40);
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: var(--spacing-56);
   }
 
-  .discover-hero__copy {
-    position: relative;
-    z-index: 2;
-    align-self: center;
-    padding-block: var(--spacing-80);
-  }
-
-  .discover-hero__eyebrow {
-    margin-bottom: var(--spacing-24);
-    color: var(--color-graphite);
-    font-size: var(--text-body-sm);
+  .methods-hero__eyebrow {
+    margin-bottom: var(--spacing-12);
+    color: var(--color-link-blue);
+    font-size: var(--text-caption);
     font-weight: var(--font-weight-semibold);
-    letter-spacing: var(--tracking-body-sm);
   }
 
-  .discover-hero h1 {
-    max-width: 620px;
-    margin-bottom: var(--spacing-24);
-    color: var(--color-apple-ink);
-    font-size: clamp(52px, 4vw, 64px);
-    font-weight: var(--font-weight-semibold);
-    line-height: var(--leading-heading);
-    letter-spacing: var(--tracking-heading-lg);
+  .methods-hero h1 {
+    margin-bottom: var(--spacing-16);
+    font-size: clamp(46px, 6vw, 72px);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.05;
   }
 
-  .discover-hero__summary {
-    max-width: 500px;
-    margin-bottom: var(--spacing-32);
+  .methods-hero__summary {
+    max-width: 680px;
+    margin-bottom: 0;
     color: var(--color-graphite);
     font-size: var(--text-body);
     line-height: var(--leading-body);
-    letter-spacing: var(--tracking-body);
   }
 
-  .discover-hero__actions {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-28);
+  .methods-hero__stats {
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(130px, 1fr));
+    border-top: 1px solid var(--color-divider);
+    border-bottom: 1px solid var(--color-divider);
   }
 
-  .discover-hero__actions .button-primary {
-    min-height: 48px;
-    padding-inline: var(--spacing-24);
-    font-size: var(--text-body-sm);
+  .methods-hero__stats > div {
+    padding: var(--spacing-16);
+    border-right: 1px solid var(--color-divider);
   }
 
-  .discover-hero__link,
-  .spotlight__copy a {
-    color: var(--color-link-blue);
-    font-size: var(--text-body-sm);
+  .methods-hero__stats > div:last-child {
+    border-right: 0;
   }
 
-  .discover-hero__link:hover,
-  .spotlight__copy a:hover {
-    text-decoration: underline;
-    text-underline-offset: 4px;
-  }
-
-  .spotlight {
-    position: relative;
-    min-width: 0;
-    min-height: 520px;
-    display: flex;
-    align-items: center;
-  }
-
-  .spotlight__visual {
-    width: min(70%, 760px);
-    min-width: 0;
-    display: block;
-    transform: translateX(2%);
-    transition: transform 350ms ease;
-  }
-
-  .spotlight__visual:hover {
-    transform: translateX(2%) scale(1.012);
-  }
-
-  .spotlight__visual img {
-    width: 100%;
-    height: auto;
-    max-width: 100%;
-    aspect-ratio: 16 / 10;
-    display: block;
-    border-radius: var(--radius-image);
-    object-fit: cover;
-    object-position: top;
-  }
-
-  .spotlight__copy {
-    position: absolute;
-    right: 0;
-    bottom: var(--spacing-48);
-    width: min(240px, 24%);
-  }
-
-  .spotlight__copy p {
-    margin-bottom: var(--spacing-12);
+  .methods-hero__stats dt {
+    margin-bottom: var(--spacing-8);
     color: var(--color-graphite);
     font-size: var(--text-caption);
+  }
+
+  .methods-hero__stats dd {
+    margin: 0;
+    font-size: 15px;
+    font-weight: var(--font-weight-medium);
+    white-space: nowrap;
+  }
+
+  .methods-policy {
+    padding-block: var(--spacing-80);
+    border-top: 1px solid var(--color-divider);
+    background: var(--color-fog-canvas);
+  }
+
+  .methods-policy__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .methods-policy article {
+    min-width: 0;
+    padding-inline: var(--spacing-28);
+    border-right: 1px solid var(--color-divider);
+  }
+
+  .methods-policy article:first-child {
+    padding-left: 0;
+  }
+
+  .methods-policy article:last-child {
+    padding-right: 0;
+    border-right: 0;
+  }
+
+  .methods-policy span {
+    color: var(--color-link-blue);
+    font-size: var(--text-caption);
     font-weight: var(--font-weight-semibold);
-    letter-spacing: var(--tracking-caption);
   }
 
-  .spotlight__copy h2 {
-    margin-bottom: var(--spacing-16);
-    color: var(--color-apple-ink);
-    font-size: var(--text-subheading);
-    line-height: var(--leading-subheading);
-    letter-spacing: var(--tracking-subheading);
+  .methods-policy h2 {
+    margin: var(--spacing-12) 0;
+    font-size: 22px;
+    font-weight: var(--font-weight-medium);
   }
 
-  .discover-content {
-    padding-block: var(--spacing-32) var(--spacing-100);
-    background: var(--color-pure-white);
-  }
-
-  @media (max-width: 1180px) {
-    .discover-hero__inner {
-      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
-    }
-
-    .spotlight__copy {
-      right: var(--spacing-8);
-    }
-
+  .methods-policy p {
+    margin-bottom: 0;
+    color: var(--color-graphite);
+    font-size: 15px;
+    line-height: 1.55;
   }
 
   @media (max-width: 960px) {
-    .discover-hero,
-    .discover-hero__inner {
-      min-height: auto;
-    }
-
-    .discover-hero__inner {
-      padding-block: var(--spacing-76);
+    .methods-hero__inner {
       grid-template-columns: 1fr;
+      align-items: start;
       gap: var(--spacing-40);
     }
 
-    .discover-hero__copy {
-      padding-block: 0;
+    .methods-hero__stats {
+      width: 100%;
     }
-
-    .spotlight {
-      min-height: 430px;
-    }
-
-    .spotlight__visual {
-      width: min(78%, 680px);
-    }
-
   }
 
   @media (max-width: 720px) {
-    .discover-hero {
-      background-position: 62% center;
+    .methods-hero__inner {
+      min-height: 0;
+      padding-block: var(--spacing-48);
+      gap: var(--spacing-28);
     }
 
-    .discover-hero__inner {
-      padding-block: var(--spacing-32);
-      gap: var(--spacing-24);
+    .methods-hero h1 {
+      font-size: 42px;
     }
 
-    .discover-hero__eyebrow {
-      margin-bottom: var(--spacing-12);
-      font-size: 15px;
+    .methods-hero__summary {
+      font-size: 17px;
     }
 
-    .discover-hero h1 {
-      margin-bottom: var(--spacing-16);
-      font-size: 35px;
-      letter-spacing: 0;
+    .methods-hero__stats {
+      grid-template-columns: 1fr;
     }
 
-    .discover-hero__summary {
-      margin-bottom: var(--spacing-24);
-      font-size: var(--text-body-sm);
-    }
-
-    .discover-hero__actions {
+    .methods-hero__stats > div {
+      display: flex;
       align-items: center;
-      flex-direction: row;
-      gap: var(--spacing-20);
-    }
-
-    .spotlight {
-      min-height: auto;
-      display: grid;
+      justify-content: space-between;
       gap: var(--spacing-16);
+      border-right: 0;
+      border-bottom: 1px solid var(--color-divider);
     }
 
-    .spotlight__visual {
-      width: 100%;
-      transform: none;
+    .methods-hero__stats > div:last-child {
+      border-bottom: 0;
     }
 
-    .spotlight__visual:hover {
-      transform: scale(1.006);
+    .methods-hero__stats dt {
+      margin-bottom: 0;
     }
 
-    .spotlight__copy {
-      position: static;
-      width: 100%;
+    .methods-policy__grid {
+      grid-template-columns: 1fr;
     }
 
-    .spotlight__copy h2 {
-      max-width: 320px;
-      margin-bottom: var(--spacing-12);
-      font-size: 24px;
+    .methods-policy article,
+    .methods-policy article:first-child,
+    .methods-policy article:last-child {
+      padding: var(--spacing-24) 0;
+      border-right: 0;
+      border-bottom: 1px solid var(--color-divider);
     }
 
-    .discover-content {
-      padding-block: var(--spacing-24) var(--spacing-80);
-    }
-
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .spotlight__visual {
-      transition: none;
-    }
-
-  }
-
-  @media (min-width: 1181px) {
-    .discover-hero h1 span {
-      white-space: nowrap;
-    }
-  }
-
-  @media (min-width: 380px) and (max-width: 720px) {
-    .discover-hero h1 span {
-      white-space: nowrap;
+    .methods-policy article:last-child {
+      border-bottom: 0;
     }
   }
 </style>

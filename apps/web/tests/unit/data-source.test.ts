@@ -6,7 +6,6 @@ import { PublicDatasetSchema } from "../../src/lib/schema";
 
 const pagePaths = [
   "src/pages/index.astro",
-  "src/pages/discover.astro",
   "src/pages/updates.astro",
   "src/pages/content/[slug].astro",
 ];
@@ -17,6 +16,12 @@ describe("production content data source", () => {
 
     expect(sources.join("\n")).not.toMatch(/(?:data\/fixtures|public\/data)/);
     for (const source of sources) expect(source).toMatch(/lib\/public-dataset/);
+  });
+
+  it("keeps the Codex methods page on its independent validated static source", () => {
+    const source = readFileSync(resolve("src/pages/discover.astro"), "utf8");
+    expect(source).toMatch(/data\/codex-methods/);
+    expect(source).not.toMatch(/(?:lib\/public-dataset|data\/fixtures|public\/data)/);
   });
 
   it("loads and validates the generated dataset through one production module", async () => {
