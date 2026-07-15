@@ -32,11 +32,18 @@ export async function expectControlsInBounds(page: Page) {
   for (const control of await controls.all()) {
     await control.scrollIntoViewIfNeeded();
     const box = await control.boundingBox();
+    const description = await control.evaluate((element) => ({
+      ariaLabel: element.getAttribute("aria-label"),
+      className: element.getAttribute("class"),
+      href: element.getAttribute("href"),
+      tagName: element.tagName,
+      text: element.textContent?.trim().slice(0, 80),
+    }));
     expect(box).not.toBeNull();
-    expect(box!.x).toBeGreaterThanOrEqual(-0.5);
-    expect(box!.y).toBeGreaterThanOrEqual(-0.5);
-    expect(box!.x + box!.width).toBeLessThanOrEqual(viewport.width + 0.5);
-    expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height + 0.5);
+    expect(box!.x, JSON.stringify(description)).toBeGreaterThanOrEqual(-0.5);
+    expect(box!.y, JSON.stringify(description)).toBeGreaterThanOrEqual(-0.5);
+    expect(box!.x + box!.width, JSON.stringify(description)).toBeLessThanOrEqual(viewport.width + 0.5);
+    expect(box!.y + box!.height, JSON.stringify(description)).toBeLessThanOrEqual(viewport.height + 0.5);
   }
 }
 

@@ -2,6 +2,7 @@
 import { DiscoveryExplorer } from "../components/DiscoveryExplorer";
 import { HeroCarousel } from "../components/HeroCarousel";
 import { QuickMatch } from "../components/QuickMatch";
+import RecommendedSites from "../components/RecommendedSites.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { selectHeroItems } from "../lib/home-content";
 import { publicDataset } from "../lib/public-dataset";
@@ -23,6 +24,7 @@ const heroItems = selectHeroItems(items);
       </section>
     )}
   <QuickMatch items={items} client:load />
+  <RecommendedSites />
   <section class="home-discovery" data-home-section="discovery">
     <div class="container">
       <DiscoveryExplorer items={items} limit={18} showMoreLink client:load />

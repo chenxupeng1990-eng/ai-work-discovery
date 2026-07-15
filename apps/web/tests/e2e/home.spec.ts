@@ -65,7 +65,7 @@ async function expectHeroCoverMeetsReleaseRequirements(image: Locator) {
   expect(naturalWidth / naturalHeight).toBeLessThanOrEqual(1.63);
 }
 
-test("public routes share the QIFEI brand asset and copy", async ({ page }) => {
+test("public routes share the QIFEI brand copy without a header logo", async ({ page }) => {
   const routes = [
     { route: "/", title: "QIFEI AI 工作灵感与实践 | QIFEI AI Work Discovery", description: undefined },
     { route: "/discover", title: "发现 | QIFEI AI Work Discovery", description: undefined },
@@ -89,8 +89,9 @@ test("public routes share the QIFEI brand asset and copy", async ({ page }) => {
       await expect(page.locator('meta[name="description"]')).toHaveAttribute("content", description);
     }
     await expect(page.locator(".brand")).toHaveAccessibleName("QIFEI AI Work Discovery 首页");
-    await expect(page.locator(".brand img")).toHaveAttribute("src", "/images/brand/qifei-logo-white.png");
+    await expect(page.locator(".brand img")).toHaveCount(0);
     await expect(page.locator(".brand-full")).toHaveText("QIFEI AI Work Discovery");
+    await expect(page.locator(".brand-full")).toBeVisible();
     await expect(page.getByRole("contentinfo")).toContainText("QIFEI AI Work Discovery");
   }
 });
@@ -160,6 +161,51 @@ test("homepage quick match updates recommendations and links the selected goal t
     })).toHaveAttribute("href", `/category/${category.slug}`);
   }
   await expect(page.getByRole("navigation", { name: "发现方向" })).toHaveCount(0);
+});
+
+test("homepage recommends three verified AI sources between quick match and discovery", async ({ page }) => {
+  await page.goto("/");
+
+  const quickMatch = page.getByRole("region", { name: "先挑 3 项适合现在尝试的内容" });
+  const recommendations = page.getByRole("region", { name: "优质网站推荐阅读" });
+  const discovery = page.locator('[data-home-section="discovery"]');
+  const sources = [
+    {
+      name: "WayToAGI",
+      href: "https://waytoagi.feishu.cn/wiki/BtcmwsCDMiZJPbkbIYhcJO9xnLb",
+      image: "/images/recommended-sites/waytoagi.png",
+    },
+    {
+      name: "Vibe Coding 雷达",
+      href: "https://radar.lyihub.com/",
+      image: "/images/recommended-sites/vibe-coding-radar.png",
+    },
+    {
+      name: "AI HOT",
+      href: "https://aihot.virxact.com/?category=ai-models&page=1",
+      image: "/images/recommended-sites/ai-hot.png",
+    },
+  ] as const;
+
+  await expect(recommendations).toBeVisible();
+  await expect(recommendations.locator("[data-recommended-site]")).toHaveCount(sources.length);
+  for (const source of sources) {
+    const link = recommendations.getByRole("link", { name: new RegExp(source.name) });
+    await expect(link).toHaveAttribute("href", source.href);
+    await expect(link).toHaveAttribute("target", "_blank");
+    await expect(link).toHaveAttribute("rel", "noreferrer");
+    await expect(link.locator("img")).toHaveAttribute("src", source.image);
+  }
+
+  const quickMatchBox = await quickMatch.boundingBox();
+  const recommendationsBox = await recommendations.boundingBox();
+  const discoveryBox = await discovery.boundingBox();
+  expect(quickMatchBox).not.toBeNull();
+  expect(recommendationsBox).not.toBeNull();
+  expect(discoveryBox).not.toBeNull();
+  expect(recommendationsBox!.y).toBeGreaterThanOrEqual(quickMatchBox!.y + quickMatchBox!.height);
+  expect(discoveryBox!.y).toBeGreaterThanOrEqual(recommendationsBox!.y + recommendationsBox!.height);
+  await expectNoHorizontalOverflow(page);
 });
 
 test("homepage third screen keeps feed cards and a dynamic full-category entry", async ({ page }) => {
@@ -471,7 +517,7 @@ test("320px header keeps its controls inside the viewport", async ({ page }, tes
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
 
   for (const control of [
-    page.locator(".brand img"),
+    page.locator(".brand-full"),
     page.getByRole("link", { name: "搜索" }),
     page.locator("[data-mobile-menu-button]"),
   ]) {
@@ -482,18 +528,21 @@ test("320px header keeps its controls inside the viewport", async ({ page }, tes
   }
 });
 
-test("header logo stays inside the sticky header at tablet and mobile widths", async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== "desktop", "Responsive logo geometry runs once in the desktop project.");
+test("header brand stays left aligned and inside the sticky header", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Responsive brand geometry runs once in the desktop project.");
 
   for (const width of [828, 390]) {
     await page.setViewportSize({ width, height: 920 });
     await page.goto("/");
     const headerBox = await page.getByRole("banner").boundingBox();
-    const logoBox = await page.locator(".brand-mark img").boundingBox();
+    const innerBox = await page.locator(".header-inner").boundingBox();
+    const brandBox = await page.locator(".brand-full").boundingBox();
     expect(headerBox).not.toBeNull();
-    expect(logoBox).not.toBeNull();
-    expect(logoBox!.y).toBeGreaterThanOrEqual(headerBox!.y);
-    expect(logoBox!.y + logoBox!.height).toBeLessThanOrEqual(headerBox!.y + headerBox!.height);
+    expect(innerBox).not.toBeNull();
+    expect(brandBox).not.toBeNull();
+    expect(brandBox!.x).toBeCloseTo(innerBox!.x, 0);
+    expect(brandBox!.y).toBeGreaterThanOrEqual(headerBox!.y);
+    expect(brandBox!.y + brandBox!.height).toBeLessThanOrEqual(headerBox!.y + headerBox!.height);
   }
 });
 

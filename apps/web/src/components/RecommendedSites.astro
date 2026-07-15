@@ -1,0 +1,214 @@
+---
+const sites = [
+  {
+    name: "WayToAGI",
+    label: "AI 学习与实践社区",
+    description: "系统整理 AI 工具、工作方法和可复用案例，适合按主题持续深挖。",
+    href: "https://waytoagi.feishu.cn/wiki/BtcmwsCDMiZJPbkbIYhcJO9xnLb",
+    image: "/images/recommended-sites/waytoagi.png",
+  },
+  {
+    name: "Vibe Coding 雷达",
+    label: "项目与 Skill 筛选",
+    description: "把项目按上手难度、完成周期和实用价值整理好，快速判断先试什么。",
+    href: "https://radar.lyihub.com/",
+    image: "/images/recommended-sites/vibe-coding-radar.png",
+  },
+  {
+    name: "AI HOT",
+    label: "每日 AI 行业动态",
+    description: "聚合模型、产品和行业信号，适合用较短时间掌握当天值得关注的变化。",
+    href: "https://aihot.virxact.com/?category=ai-models&page=1",
+    image: "/images/recommended-sites/ai-hot.png",
+  },
+] as const;
+---
+
+<section class="recommended-sites" aria-labelledby="recommended-sites-title">
+  <div class="container">
+    <header class="recommended-sites__header">
+      <div>
+        <p class="recommended-sites__eyebrow">优质网站</p>
+        <h2 id="recommended-sites-title">优质网站推荐阅读</h2>
+      </div>
+      <p>不是让你从头学起，而是提供三个经过筛选、值得持续关注的信息入口。</p>
+    </header>
+
+    <div class="recommended-sites__grid">
+      {sites.map((site) => (
+        <a
+          class="recommended-site"
+          href={site.href}
+          target="_blank"
+          rel="noreferrer"
+          data-recommended-site
+          aria-label={`${site.name}：${site.label}`}
+        >
+          <span class="recommended-site__visual">
+            <img src={site.image} alt={`${site.name} 网站预览`} width="1440" height="900" loading="lazy" />
+          </span>
+          <span class="recommended-site__content">
+            <span class="recommended-site__meta">{site.label}</span>
+            <strong>{site.name}</strong>
+            <span class="recommended-site__description">{site.description}</span>
+            <span class="recommended-site__action">访问官网 <span aria-hidden="true">↗</span></span>
+          </span>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .recommended-sites {
+    padding-block: var(--spacing-76);
+    border-top: 1px solid var(--color-divider);
+    background: var(--color-pure-white);
+  }
+
+  .recommended-sites__header {
+    margin-bottom: var(--spacing-32);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 480px);
+    align-items: end;
+    gap: var(--spacing-40);
+  }
+
+  .recommended-sites__eyebrow {
+    margin-bottom: var(--spacing-8);
+    color: var(--color-link-blue);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .recommended-sites h2 {
+    margin-bottom: 0;
+    font-size: var(--text-heading-sm);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .recommended-sites__header > p {
+    margin-bottom: 0;
+    color: var(--color-graphite);
+    font-size: var(--text-body-sm);
+    line-height: var(--leading-body-sm);
+  }
+
+  .recommended-sites__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--spacing-24);
+  }
+
+  .recommended-site {
+    min-width: 0;
+    scroll-margin-block: 2px;
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-panel);
+    background: var(--color-pure-white);
+    transition:
+      border-color var(--motion-base) var(--motion-apple),
+      transform var(--motion-base) var(--motion-apple);
+  }
+
+  .recommended-site:hover {
+    border-color: var(--color-graphite);
+    transform: translateY(-4px);
+  }
+
+  .recommended-site__visual {
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    display: block;
+    border-bottom: 1px solid var(--color-divider);
+    background: var(--color-fog-canvas);
+  }
+
+  .recommended-site__visual img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    object-position: top left;
+    transition: transform var(--motion-enter) var(--motion-apple);
+  }
+
+  .recommended-site:hover .recommended-site__visual img {
+    transform: scale(1.025);
+  }
+
+  .recommended-site__content {
+    padding: var(--spacing-24);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .recommended-site__meta {
+    margin-bottom: var(--spacing-8);
+    color: var(--color-link-blue);
+    font-size: var(--text-caption);
+  }
+
+  .recommended-site strong {
+    margin-bottom: var(--spacing-12);
+    font-family: var(--font-sf-pro-display);
+    font-size: 24px;
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.2;
+  }
+
+  .recommended-site__description {
+    color: var(--color-graphite);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .recommended-site__action {
+    margin-top: auto;
+    padding-top: var(--spacing-24);
+    color: var(--color-link-blue);
+    font-size: 14px;
+  }
+
+  @media (max-width: 960px) {
+    .recommended-sites__grid {
+      gap: var(--spacing-16);
+    }
+
+    .recommended-site__content {
+      padding: var(--spacing-20);
+    }
+  }
+
+  @media (max-width: 720px) {
+    .recommended-sites {
+      padding-block: var(--spacing-56);
+    }
+
+    .recommended-sites__header {
+      margin-bottom: var(--spacing-24);
+      grid-template-columns: 1fr;
+      gap: var(--spacing-16);
+    }
+
+    .recommended-sites h2 {
+      font-size: 28px;
+    }
+
+    .recommended-sites__grid {
+      grid-template-columns: 1fr;
+      gap: var(--spacing-20);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .recommended-site,
+    .recommended-site__visual img {
+      transition: none;
+    }
+  }
+</style>
