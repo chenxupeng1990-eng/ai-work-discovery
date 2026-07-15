@@ -16,6 +16,17 @@ export function rewriteForMiaoda(source: string, prefix: string): string {
     .replace(/href=(['"])\/(?:\1)/g, `href=$1${normalizedPrefix}/$1`);
 }
 
+export function rewriteMiaodaModuleImports(source: string, prefix: string): string {
+  const normalizedPrefix = prefix.replace(/\/$/, "");
+
+  return source.replace(
+    /(["'])\.\/([^"']+\.js)\1/g,
+    (_match, quote: string, modulePath: string) => (
+      `${quote}${normalizedPrefix}/_astro/${modulePath}${quote}`
+    ),
+  );
+}
+
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
