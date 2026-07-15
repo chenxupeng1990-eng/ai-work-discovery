@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FocusEvent, KeyboardEvent } from "react";
 import type { ContentItem } from "../lib/schema";
+import { sitePath } from "../lib/site-path";
 
 interface HeroCarouselProps {
   items: ContentItem[];
@@ -121,7 +122,7 @@ export function HeroCarousel({ items }: HeroCarouselProps) {
             >
               <img
                 className="hero-carousel__cover"
-                src={item.coverImage}
+                src={sitePath(item.coverImage)}
                 alt=""
                 width="1536"
                 height="960"
@@ -132,7 +133,7 @@ export function HeroCarousel({ items }: HeroCarouselProps) {
               <div className="hero-carousel__overlay" aria-hidden="true" />
               <div className="hero-carousel__content container">
                 <div className="hero-carousel__brand">
-                  <img src="/images/brand/qifei-logo-white.png" alt="" width="40" height="40" />
+                  <img src={sitePath("/images/brand/qifei-logo-white.png")} alt="" width="40" height="40" />
                   <span>QIFEI AI Work Discovery</span>
                 </div>
                 <p className="hero-carousel__meta">
@@ -142,7 +143,7 @@ export function HeroCarousel({ items }: HeroCarouselProps) {
                 </p>
                 <h1>{item.title}</h1>
                 <p className="hero-carousel__reason">{item.recommendationReason}</p>
-                <a className="hero-carousel__cta" href={`/content/${item.slug}`} data-home-content-link>
+                <a className="hero-carousel__cta" href={sitePath(`/content/${item.slug}`)} data-home-content-link>
                   查看内容
                 </a>
               </div>

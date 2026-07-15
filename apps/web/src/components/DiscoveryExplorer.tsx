@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { slugForTrack } from "../lib/categories";
 import { withoutTerminalFullStops } from "../lib/card-text";
+import { copyText } from "../lib/copy-text";
+import { sitePath } from "../lib/site-path";
 import { queryContent, type QueryOptions } from "../lib/content-query";
 import {
   DISCOVERY_TRACKS,
@@ -41,7 +43,7 @@ export function DiscoveryExplorer({
   const visibleResults = limit === undefined
     ? results
     : results.slice(0, Math.max(0, limit));
-  const moreHref = track === "全部" ? "/updates" : `/category/${slugForTrack(track)}`;
+  const moreHref = sitePath(track === "全部" ? "/updates" : `/category/${slugForTrack(track)}`);
   const moreLabel = track === "全部" ? "查看最近更新" : `查看「${track}」全部内容`;
 
   useEffect(() => {
@@ -80,7 +82,7 @@ export function DiscoveryExplorer({
     const block = [...item.copyBlocks].sort((left, right) => left.order - right.order)[0];
     if (!block) return;
     try {
-      await navigator.clipboard.writeText(block.content);
+      await copyText(block.content);
       setCopyStatus((current) => ({ ...current, [item.id]: "success" }));
     } catch {
       setCopyStatus((current) => ({ ...current, [item.id]: "error" }));
@@ -156,9 +158,9 @@ export function DiscoveryExplorer({
             return (
             <article className="discovery-card" data-discovery-card key={item.id}>
               <div className="discovery-card__visual">
-                <a href={`/content/${item.slug}`}>
+                <a href={sitePath(`/content/${item.slug}`)}>
                   <img
-                    src={item.coverImage}
+                    src={sitePath(item.coverImage)}
                     alt={`${item.title}内容截图`}
                     width="640"
                     height="400"
@@ -185,7 +187,7 @@ export function DiscoveryExplorer({
                   <span>{item.recommendationTrack}</span>
                   <span>{item.timeToValue} · {item.adoptionLevel} · {item.networkRequirement}</span>
                 </div>
-                <h3><a href={`/content/${item.slug}`}>{item.title}</a></h3>
+                <h3><a href={sitePath(`/content/${item.slug}`)}>{item.title}</a></h3>
                 <p className="discovery-card__reason">{withoutTerminalFullStops(item.recommendationReason)}</p>
                 <div className="discovery-card__takeaway">
                   <span>你能带走</span>
@@ -195,7 +197,7 @@ export function DiscoveryExplorer({
                   {item.tags.slice(0, 3).map((tag) => <span key={tag}>{tag}</span>)}
                 </div>
                 <div className="discovery-card__actions">
-                  <a className="button-primary" href={`/content/${item.slug}`}>仔细看看</a>
+                  <a className="button-primary" href={sitePath(`/content/${item.slug}`)}>仔细看看</a>
                   {item.copyBlocks.length > 0 && (
                     <>
                       <button

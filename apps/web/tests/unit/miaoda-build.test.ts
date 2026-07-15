@@ -36,4 +36,12 @@ describe("rewriteForMiaoda", () => {
       '&quot;coverImage&quot;:[0,&quot;/app/app_example/images/cover.webp&quot;],\\"image\\":\\"/app/app_example/images/card.webp\\"',
     );
   });
+
+  it("prefixes dynamic routes inside client-side template literals", () => {
+    const source = "const detail = `/content/${slug}`; const category = `/category/${track}`;";
+
+    expect(rewriteForMiaoda(source, basePath)).toBe(
+      "const detail = `/app/app_example/content/${slug}`; const category = `/app/app_example/category/${track}`;",
+    );
+  });
 });

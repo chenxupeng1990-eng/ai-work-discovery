@@ -9,6 +9,7 @@ import {
   type DiscoveryPreferences,
 } from "../lib/discovery-recommendation";
 import { withoutTerminalFullStops } from "../lib/card-text";
+import { sitePath } from "../lib/site-path";
 import type { ContentItem } from "../lib/schema";
 import "./QuickMatch.css";
 
@@ -28,7 +29,7 @@ export function QuickMatch({ items }: { items: ContentItem[] }) {
   const categoryCount = items.filter(
     (item) => item.recommendationTrack === preferences.goal,
   ).length;
-  const categoryHref = `/category/${slugForTrack(preferences.goal)}`;
+  const categoryHref = sitePath(`/category/${slugForTrack(preferences.goal)}`);
 
   return (
     <section
@@ -90,13 +91,13 @@ export function QuickMatch({ items }: { items: ContentItem[] }) {
                   <span>0{index + 1}</span>
                   <em>{item.recommendationTrack}</em>
                 </div>
-                <h3><a href={`/content/${item.slug}`}>{item.title}</a></h3>
+                <h3><a href={sitePath(`/content/${item.slug}`)}>{item.title}</a></h3>
                 <p>{withoutTerminalFullStops(item.recommendationReason)}</p>
                 <div className="starter-result__takeaway">
                   <span>可以带走</span>
                   <strong>{withoutTerminalFullStops(item.takeaway)}</strong>
                 </div>
-                <a className="starter-result__link" href={`/content/${item.slug}`}>查看实践</a>
+                <a className="starter-result__link" href={sitePath(`/content/${item.slug}`)}>查看实践</a>
               </article>
             ))}
           </div>

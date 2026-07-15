@@ -8,7 +8,7 @@ export function rewriteForMiaoda(source: string, prefix: string): string {
     .replace(/\\(["'])\/images\//g, `\\$1${normalizedPrefix}/images/`)
     .replace(
       new RegExp(
-        `([\"'(=:])/(?!${escapeRegExp(normalizedPrefix.slice(1))}/)(${rootsPattern})(?=[/\"')?#])`,
+        `([\"'\`(=:])/(?!${escapeRegExp(normalizedPrefix.slice(1))}/)(${rootsPattern})(?=[/\"'\`)?#])`,
         "g",
       ),
       `$1${normalizedPrefix}/$2`,

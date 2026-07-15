@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { copyText } from "../lib/copy-text";
 import type { CopyBlock } from "../lib/schema";
 
 type CopyState = "idle" | "copied" | "error";
@@ -17,7 +18,7 @@ export function CopyBlockView({ block }: { block: CopyBlock }) {
     window.clearTimeout(resetTimer.current);
 
     try {
-      await navigator.clipboard.writeText(block.content);
+      await copyText(block.content);
       setState("copied");
       resetTimer.current = window.setTimeout(() => setState("idle"), 1600);
     } catch {

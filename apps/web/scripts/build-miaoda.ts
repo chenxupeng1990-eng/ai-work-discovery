@@ -41,7 +41,7 @@ async function rewriteDirectory(directory: string, prefix: string): Promise<void
       continue;
     }
 
-    if (![".css", ".html", ".js", ".json"].includes(extname(entry.name))) {
+    if (![".html", ".json"].includes(extname(entry.name))) {
       continue;
     }
 
