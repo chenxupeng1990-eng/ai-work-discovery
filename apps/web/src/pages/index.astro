@@ -1,7 +1,7 @@
 ---
-import CategoryLinks from "../components/CategoryLinks.astro";
 import FeaturedGrid from "../components/FeaturedGrid.astro";
 import { HeroCarousel } from "../components/HeroCarousel";
+import { QuickMatch } from "../components/QuickMatch";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { selectHeroItems, selectHomepageItems } from "../lib/home-content";
 import { publicDataset } from "../lib/public-dataset";
@@ -23,7 +23,7 @@ const homepageItems = selectHomepageItems(items);
         <p>暂无已发布内容</p>
       </section>
     )}
-  <CategoryLinks items={items} />
+  <QuickMatch items={items} client:load />
   <FeaturedGrid items={homepageItems} hasMore={items.length > homepageItems.length} />
 </BaseLayout>
 

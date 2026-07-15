@@ -3,6 +3,7 @@ import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { expect, test, type Locator } from "@playwright/test";
 import { CATEGORY_DEFINITIONS } from "../../src/lib/categories";
+import { recommendContent } from "../../src/lib/discovery-recommendation";
 import { selectHeroItems } from "../../src/lib/home-content";
 import { generatedDataset } from "../fixtures/generated-dataset";
 import {
@@ -135,22 +136,37 @@ test("homepage exposes shared navigation and one main landmark", async ({ page }
   await expect(page.getByRole("contentinfo")).toBeVisible();
 });
 
-test("homepage category links use stable routes and show dataset counts", async ({ page }) => {
+test("homepage quick match updates recommendations and links the selected goal to its category", async ({ page }) => {
   await page.goto("/");
 
-  const links = page.getByRole("navigation", { name: "发现方向" }).getByRole("link");
-  await expect(links).toHaveCount(4);
+  const picker = page.getByRole("region", { name: "先挑 3 项适合现在尝试的内容" });
   for (const category of CATEGORY_DEFINITIONS) {
-    const expectedCount = generatedDataset.items.filter(
+    await picker.getByRole("group", { name: "主要目标" }).getByRole("button", {
+      name: category.track,
+      exact: true,
+    }).click();
+
+    const expected = recommendContent(generatedDataset.items, {
+      timeToValue: "10 分钟",
+      goal: category.track,
+      format: "可复制内容",
+      adoptionLevel: "直接使用",
+    }, 3);
+    await expect(picker.locator(".starter-result").getByRole("heading")).toHaveText(
+      expected.map((item) => item.title),
+    );
+
+    const count = generatedDataset.items.filter(
       (item) => item.recommendationTrack === category.track,
     ).length;
-    const link = links.filter({ hasText: category.track });
-    await expect(link).toHaveAttribute("href", `/category/${category.slug}`);
-    await expect(link).toContainText(`${expectedCount} 项`);
+    await expect(picker.getByRole("link", {
+      name: `查看「${category.track}」全部 ${count} 条`,
+    })).toHaveAttribute("href", `/category/${category.slug}`);
   }
+  await expect(page.getByRole("navigation", { name: "发现方向" })).toHaveCount(0);
 });
 
-test("homepage contains only the hero, category links, and at most ten featured cards", async ({ page }) => {
+test("homepage contains the hero, quick match, and at most ten featured cards", async ({ page }) => {
   await page.goto("/");
 
   const hero = page.getByRole("region", { name: "精选内容" });
@@ -159,6 +175,7 @@ test("homepage contains only the hero, category links, and at most ten featured 
     "QIFEI AI Work Discovery",
   );
   await expect(hero.getByText("QIFEI AI Work Discovery", { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("region", { name: "先挑 3 项适合现在尝试的内容" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "现在值得尝试" })).toBeVisible();
   await expect(page.getByText("学习进度")).toHaveCount(0);
 
@@ -217,7 +234,21 @@ test("all category routes render only their mapped items and a stable empty stat
 
     await page.goto(route);
     await expect(page.getByRole("heading", { level: 1, name: category.track })).toBeVisible();
+    const categoryNavigation = page.getByRole("navigation", { name: "切换发现方向" });
+    const categoryLinks = categoryNavigation.getByRole("link");
+    await expect(categoryLinks).toHaveCount(CATEGORY_DEFINITIONS.length);
+    for (const target of CATEGORY_DEFINITIONS) {
+      const link = categoryNavigation.getByRole("link", { name: target.track, exact: true });
+      await expect(link).toHaveAttribute("href", `/category/${target.slug}`);
+      if (target.slug === category.slug) await expect(link).toHaveAttribute("aria-current", "page");
+      else await expect(link).not.toHaveAttribute("aria-current");
+    }
     await expect(page.locator("[data-content-card]")).toHaveCount(expectedItems.length);
+    if (expectedItems.length === 1 && page.viewportSize()!.width > 960) {
+      const cardWidth = (await page.locator("[data-content-card]").boundingBox())!.width;
+      const containerWidth = (await page.locator(".category-results .container").boundingBox())!.width;
+      expect(cardWidth).toBeLessThan(containerWidth / 2);
+    }
     const renderedHrefs = await page.locator("[data-content-card] a").evaluateAll((links) => (
       links.map((link) => link.getAttribute("href"))
     ));
@@ -334,10 +365,10 @@ test("homepage carousel verifies every slide at each release viewport", async ({
   }
 });
 
-test("homepage keeps the next section visible and avoids horizontal overflow", async ({ page }) => {
+test("homepage keeps quick match visible after the hero and avoids horizontal overflow", async ({ page }) => {
   await page.goto("/");
 
-  const nextSection = page.locator('[data-home-section="categories"]');
+  const nextSection = page.locator('[data-home-section="quick-match"]');
   const viewport = page.viewportSize();
   expect(viewport).not.toBeNull();
   expect(await nextSection.evaluate((element) => element.getBoundingClientRect().top)).toBeLessThan(viewport!.height);
@@ -460,7 +491,7 @@ for (const checkpoint of [
       const heroBox = await hero.boundingBox();
       expect(heroBox).not.toBeNull();
       expect(heroBox!.width * heroBox!.height).toBeGreaterThan(100_000);
-      const nextSectionTop = await page.locator('[data-home-section="categories"]').evaluate(
+      const nextSectionTop = await page.locator('[data-home-section="quick-match"]').evaluate(
         (element) => element.getBoundingClientRect().top,
       );
       expect(nextSectionTop).toBeLessThan(page.viewportSize()!.height);

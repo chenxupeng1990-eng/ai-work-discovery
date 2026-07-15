@@ -14,6 +14,15 @@ const populatedTrack = DISCOVERY_TRACKS.find((track) => (
   generatedDataset.items.some((item) => item.recommendationTrack === track)
 ))!;
 
+test("quick match is reserved for the homepage", async ({ page }) => {
+  await page.goto("/discover");
+  await waitForExplorer(page);
+
+  await expect(page.locator(".starter-picker")).toHaveCount(0);
+  await expect(page.locator(".track-intro")).toHaveCount(0);
+  await expect(page.getByRole("searchbox", { name: "搜索内容" })).toBeVisible();
+});
+
 test("header search is a valid discovery navigation", async ({ page }) => {
   await page.goto("/");
 
@@ -60,20 +69,17 @@ test("track query initializes, updates, and rejects unknown tracks", async ({ pa
   await waitForExplorer(page);
 
   await expect(page.getByRole("button", { name: "前沿信号", exact: true }).last()).toHaveAttribute("aria-pressed", "true");
-  await expect(
-    page.getByRole("group", { name: "主要目标" }).getByRole("button", { name: "前沿信号" }),
-  ).toHaveAttribute("aria-pressed", "true");
   await expect(listingCards(page)).toHaveCount(
     generatedDataset.items.filter((item) => item.recommendationTrack === "前沿信号").length,
   );
 
   await page.getByRole("button", { name: "团队实践", exact: true }).last().click();
   await expect(page).toHaveURL(/\/discover\?track=%E5%9B%A2%E9%98%9F%E5%AE%9E%E8%B7%B5$/);
-  const recommendationBeforeReload = await page.locator(".starter-result").first().getByRole("heading").textContent();
   await page.reload();
   await waitForExplorer(page);
-  await expect(page.locator(".starter-result").first().getByRole("heading")).toHaveText(
-    recommendationBeforeReload!,
+  await expect(page.getByRole("button", { name: "团队实践", exact: true }).last()).toHaveAttribute(
+    "aria-pressed",
+    "true",
   );
 
   await page.goto("/discover?track=不存在");
@@ -226,16 +232,16 @@ test("listing card reports clipboard failure and supports retry", async ({ page 
 });
 
 test("preference picker reranks recommendations and supports keyboard input", async ({ page }) => {
-  await page.goto("/discover");
-  await waitForExplorer(page);
+  await page.goto("/");
 
-  const time = page.getByRole("group", { name: "多久见效" }).getByRole("button", { name: "半天" });
+  const picker = page.getByRole("region", { name: "先挑 3 项适合现在尝试的内容" });
+  const time = picker.getByRole("group", { name: "多久见效" }).getByRole("button", { name: "半天" });
   await time.focus();
   await expectFocusVisible(time);
   await page.keyboard.press("Space");
-  await page.getByRole("group", { name: "主要目标" }).getByRole("button", { name: "团队实践" }).click();
-  await page.getByRole("group", { name: "想拿走什么" }).getByRole("button", { name: "团队案例" }).click();
-  await page.getByRole("group", { name: "接受的门槛" }).getByRole("button", { name: "需要开发" }).click();
+  await picker.getByRole("group", { name: "主要目标" }).getByRole("button", { name: "团队实践" }).click();
+  await picker.getByRole("group", { name: "想拿走什么" }).getByRole("button", { name: "团队案例" }).click();
+  await picker.getByRole("group", { name: "接受的门槛" }).getByRole("button", { name: "需要开发" }).click();
 
   const expected = recommendContent(generatedDataset.items, {
     timeToValue: "半天",
@@ -244,14 +250,13 @@ test("preference picker reranks recommendations and supports keyboard input", as
     adoptionLevel: "需要开发",
   }, 3);
   await expect(time).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator(".starter-result").getByRole("heading")).toHaveText(
+  await expect(picker.locator(".starter-result").getByRole("heading")).toHaveText(
     expected.map((item) => item.title),
   );
 });
 
 test("quick-match panel uses the Chinese glass visual contract", async ({ page }) => {
-  await page.goto("/discover");
-  await waitForExplorer(page);
+  await page.goto("/");
 
   const styles = await page.locator(".starter-picker").evaluate((panel) => {
     const panelStyle = getComputedStyle(panel);
@@ -290,8 +295,7 @@ test("quick-match panel uses the Chinese glass visual contract", async ({ page }
 
 test("quick-match recommendations do not clip text at the middle breakpoint", async ({ page }) => {
   await page.setViewportSize({ width: 1024, height: 1000 });
-  await page.goto("/discover");
-  await waitForExplorer(page);
+  await page.goto("/");
 
   const clippedText = await page.locator(
     ".starter-result > p, .starter-result__takeaway",
@@ -304,8 +308,7 @@ test("quick-match recommendations do not clip text at the middle breakpoint", as
 
 test("mobile recommendation links stay inside their clamped headings", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/discover");
-  await waitForExplorer(page);
+  await page.goto("/");
 
   const escapedLinks = await page.locator(".starter-result h3").evaluateAll((headings) => headings.filter((heading) => {
     const headingBox = heading.getBoundingClientRect();

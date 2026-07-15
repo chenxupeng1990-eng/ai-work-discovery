@@ -32,6 +32,21 @@ const items = itemsForCategory(publicDataset.items, category.slug);
     </div>
   </section>
 
+  <div class="category-switcher">
+    <div class="container">
+      <nav class="category-switcher__links" aria-label="切换发现方向">
+        {CATEGORY_DEFINITIONS.map((target) => (
+          <a
+            href={`/category/${target.slug}`}
+            aria-current={target.slug === category.slug ? "page" : undefined}
+          >
+            {target.track}
+          </a>
+        ))}
+      </nav>
+    </div>
+  </div>
+
   <section class="category-results section" aria-label={`${category.track}内容`} data-category-track={category.track}>
     <div class="container">
       {items.length > 0
@@ -85,6 +100,47 @@ const items = itemsForCategory(publicDataset.items, category.slug);
     flex: 0 0 auto;
     color: var(--slate);
     font-size: 14px;
+  }
+
+  .category-switcher {
+    border-bottom: 1px solid var(--color-divider);
+    background: var(--color-pure-white);
+  }
+
+  .category-switcher__links {
+    min-width: 0;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-block: 18px;
+    scrollbar-width: none;
+  }
+
+  .category-switcher__links::-webkit-scrollbar {
+    display: none;
+  }
+
+  .category-switcher__links a {
+    min-height: 38px;
+    padding-inline: 16px;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-tag);
+    color: var(--color-charcoal);
+    background: var(--color-pure-white);
+    font-size: var(--text-caption);
+  }
+
+  .category-switcher__links a:hover {
+    border-color: var(--color-apple-ink);
+  }
+
+  .category-switcher__links a[aria-current="page"] {
+    border-color: var(--color-apple-ink);
+    color: var(--color-pure-white);
+    background: var(--color-apple-ink);
   }
 
   .category-grid {
