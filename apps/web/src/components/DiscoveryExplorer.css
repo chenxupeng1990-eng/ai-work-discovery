@@ -173,9 +173,14 @@
 }
 
 .discovery-card__visual {
+  position: relative;
   display: block;
   overflow: hidden;
   background: var(--color-fog-canvas);
+}
+
+.discovery-card__visual > a {
+  display: block;
 }
 
 .discovery-card__visual img {

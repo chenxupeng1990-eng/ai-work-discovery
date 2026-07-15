@@ -180,7 +180,7 @@ test("homepage third screen keeps feed cards and a dynamic full-category entry",
   );
   await expect(explorer.getByRole("link", { name: "查看全部内容" })).toHaveAttribute("href", "/discover");
   await expect(explorer.locator(".discovery-card__takeaway").first()).toContainText("你能带走");
-  await expect(explorer.getByRole("link", { name: "拿来试试" }).first()).toBeVisible();
+  await expect(explorer.getByRole("link", { name: "仔细看看" }).first()).toBeVisible();
 
   const category = CATEGORY_DEFINITIONS.find((item) => item.track === "前沿信号")!;
   await explorer.getByRole("button", { name: category.track, exact: true }).click();
@@ -193,6 +193,41 @@ test("homepage third screen keeps feed cards and a dynamic full-category entry",
   await expect(explorer.locator("[data-discovery-card]")).toHaveCount(
     Math.min(homepageDiscoveryLimit, categoryCount),
   );
+});
+
+test("content cards use consistent actions and persist useful votes", async ({ page }) => {
+  await page.goto("/");
+
+  const cards = page.locator('[data-home-section="discovery"] [data-discovery-card]');
+  const cardCount = await cards.count();
+  expect(cardCount).toBeGreaterThan(0);
+  await expect(page.getByRole("link", { name: "仔细看看" })).toHaveCount(cardCount);
+  await expect(page.getByRole("button", { name: "直接复制给codex" })).toHaveCount(cardCount);
+
+  const likeButtons = page.locator('[data-home-section="discovery"] [data-like-button]');
+  await expect(likeButtons).toHaveCount(cardCount);
+  const firstLike = likeButtons.first();
+  await expect(firstLike).toHaveAttribute("title", "有用就点个赞");
+  await expect(firstLike).toHaveAttribute("aria-pressed", "false");
+  await firstLike.focus();
+  await expect(firstLike.locator(".like-button__tooltip")).toHaveCSS("opacity", "1");
+  await firstLike.click();
+  await expect(firstLike).toHaveAttribute("aria-pressed", "true");
+
+  await page.reload();
+  await expect(page.locator('[data-home-section="discovery"] [data-like-button]').first()).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+
+  const category = CATEGORY_DEFINITIONS.find((item) => (
+    generatedDataset.items.some((content) => content.recommendationTrack === item.track)
+  ))!;
+  await page.goto(`/category/${category.slug}`);
+  const categoryCards = page.locator("[data-content-card]");
+  const categoryCardCount = await categoryCards.count();
+  expect(categoryCardCount).toBeGreaterThan(0);
+  await expect(page.locator("[data-content-card] [data-like-button]")).toHaveCount(categoryCardCount);
 });
 
 test("homepage keeps the approved hero, quick match, and feeding-style discovery order", async ({ page }) => {
@@ -444,6 +479,21 @@ test("320px header keeps its controls inside the viewport", async ({ page }, tes
     expect(box).not.toBeNull();
     expect(box!.x).toBeGreaterThanOrEqual(0);
     expect(box!.x + box!.width).toBeLessThanOrEqual(viewport.width);
+  }
+});
+
+test("header logo stays inside the sticky header at tablet and mobile widths", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Responsive logo geometry runs once in the desktop project.");
+
+  for (const width of [828, 390]) {
+    await page.setViewportSize({ width, height: 920 });
+    await page.goto("/");
+    const headerBox = await page.getByRole("banner").boundingBox();
+    const logoBox = await page.locator(".brand-mark img").boundingBox();
+    expect(headerBox).not.toBeNull();
+    expect(logoBox).not.toBeNull();
+    expect(logoBox!.y).toBeGreaterThanOrEqual(headerBox!.y);
+    expect(logoBox!.y + logoBox!.height).toBeLessThanOrEqual(headerBox!.y + headerBox!.height);
   }
 });
 

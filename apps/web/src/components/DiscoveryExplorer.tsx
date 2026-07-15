@@ -154,16 +154,31 @@ export function DiscoveryExplorer({
             const status = copyStatus[item.id];
             return (
             <article className="discovery-card" data-discovery-card key={item.id}>
-              <a className="discovery-card__visual" href={`/content/${item.slug}`}>
-                <img
-                  src={item.coverImage}
-                  alt={`${item.title}内容截图`}
-                  width="640"
-                  height="400"
-                  loading="lazy"
-                  data-home-content-image={showMoreLink ? "true" : undefined}
-                />
-              </a>
+              <div className="discovery-card__visual">
+                <a href={`/content/${item.slug}`}>
+                  <img
+                    src={item.coverImage}
+                    alt={`${item.title}内容截图`}
+                    width="640"
+                    height="400"
+                    loading="lazy"
+                    data-home-content-image={showMoreLink ? "true" : undefined}
+                  />
+                </a>
+                <button
+                  type="button"
+                  className="like-button"
+                  data-like-button
+                  data-content-id={item.id}
+                  data-content-title={item.title}
+                  aria-label={`点赞 ${item.title}`}
+                  aria-pressed="false"
+                  title="有用就点个赞"
+                >
+                  <span className="like-button__icon" aria-hidden="true">👍︎</span>
+                  <span className="like-button__tooltip" role="tooltip">有用就点个赞</span>
+                </button>
+              </div>
               <div className="discovery-card__body">
                 <div className="discovery-card__meta">
                   <span>{item.recommendationTrack}</span>
@@ -179,19 +194,19 @@ export function DiscoveryExplorer({
                   {item.tags.slice(0, 3).map((tag) => <span key={tag}>{tag}</span>)}
                 </div>
                 <div className="discovery-card__actions">
-                  <a className="button-primary" href={`/content/${item.slug}`}>拿来试试</a>
+                  <a className="button-primary" href={`/content/${item.slug}`}>仔细看看</a>
                   {item.copyBlocks.length > 0 && (
                     <>
                       <button
                         type="button"
                         aria-label={status === "success"
-                          ? `已复制 ${item.title}`
+                          ? "已复制给codex"
                           : status === "error"
-                            ? `重试复制 ${item.title}`
-                            : `复制 ${item.title}`}
+                            ? "重新复制"
+                            : "直接复制给codex"}
                         onClick={() => void copyFirstBlock(item)}
                       >
-                        {status === "success" ? "已复制" : status === "error" ? "重试复制" : "复制首个内容块"}
+                        {status === "success" ? "已复制给codex" : status === "error" ? "重新复制" : "直接复制给codex"}
                       </button>
                       {status && (
                         <span

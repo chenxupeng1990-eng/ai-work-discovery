@@ -196,12 +196,12 @@ test("listing card copies its first reusable block", async ({ page, context }) =
   await waitForExplorer(page);
 
   const card = listingCards(page).filter({ hasText: item.title });
-  const copy = card.getByRole("button", { name: `复制 ${item.title}` });
+  const copy = card.getByRole("button", { name: "直接复制给codex" });
   await copy.focus();
   await expectFocusVisible(copy);
   await page.keyboard.press("Enter");
 
-  await expect(card.getByRole("button", { name: `已复制 ${item.title}` })).toBeVisible();
+  await expect(card.getByRole("button", { name: "已复制给codex" })).toBeVisible();
   await expect.poll(async () => normalizeNewlines(await page.evaluate(() => navigator.clipboard.readText())))
     .toBe(normalizeNewlines(firstBlock.content));
 });
@@ -222,9 +222,9 @@ test("listing card reports clipboard failure and supports retry", async ({ page 
   });
 
   const card = listingCards(page).filter({ hasText: item.title });
-  await card.getByRole("button", { name: `复制 ${item.title}` }).click();
+  await card.getByRole("button", { name: "直接复制给codex" }).click();
   await expect(card.getByRole("alert")).toHaveText(`复制失败，请重试：${item.title}`);
-  const retry = card.getByRole("button", { name: `重试复制 ${item.title}` });
+  const retry = card.getByRole("button", { name: "重新复制" });
   await expect(retry).toBeEnabled();
 
   await retry.click();

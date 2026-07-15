@@ -27,10 +27,24 @@ const { item } = Astro.props as { item: ContentItem };
       <p>{item.summary}</p>
     </div>
   </a>
+  <button
+    type="button"
+    class="like-button"
+    data-like-button
+    data-content-id={item.id}
+    data-content-title={item.title}
+    aria-label={`点赞 ${item.title}`}
+    aria-pressed="false"
+    title="有用就点个赞"
+  >
+    <span class="like-button__icon" aria-hidden="true">👍︎</span>
+    <span class="like-button__tooltip" role="tooltip">有用就点个赞</span>
+  </button>
 </article>
 
 <style>
   .content-card {
+    position: relative;
     min-width: 0;
   }
 

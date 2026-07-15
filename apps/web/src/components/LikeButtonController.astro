@@ -1,0 +1,125 @@
+<style is:global>
+  .like-button {
+    position: absolute;
+    top: var(--spacing-12);
+    right: var(--spacing-12);
+    z-index: 2;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: inline-grid;
+    place-items: center;
+    border: 1px solid color-mix(in srgb, var(--color-pure-white) 70%, transparent);
+    border-radius: 50%;
+    color: var(--color-apple-ink);
+    background: color-mix(in srgb, var(--color-pure-white) 82%, transparent);
+    backdrop-filter: saturate(160%) blur(14px);
+    cursor: pointer;
+  }
+
+  .like-button:hover,
+  .like-button:focus-visible,
+  .like-button[aria-pressed="true"] {
+    color: var(--color-link-blue);
+    background: var(--color-pure-white);
+  }
+
+  .like-button__icon {
+    font-size: 17px;
+    line-height: 1;
+  }
+
+  .like-button__tooltip {
+    position: absolute;
+    top: calc(100% + var(--spacing-8));
+    right: 0;
+    width: max-content;
+    max-width: 140px;
+    padding: var(--spacing-8) var(--spacing-12);
+    border-radius: var(--radius-card);
+    color: var(--color-pure-white);
+    background: var(--color-apple-ink);
+    font-size: var(--text-caption);
+    line-height: 1.3;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-4px);
+    transition: opacity 160ms ease, transform 160ms ease;
+  }
+
+  .like-button:hover .like-button__tooltip,
+  .like-button:focus-visible .like-button__tooltip {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .like-button__tooltip {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  const storageKey = "qifei-ai-liked-content";
+
+  const readLikes = () => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(storageKey) ?? "[]");
+      return new Set(Array.isArray(stored) ? stored.filter((item) => typeof item === "string") : []);
+    } catch {
+      return new Set<string>();
+    }
+  };
+
+  const writeLikes = (likes: Set<string>) => {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify([...likes]));
+    } catch {
+      // The interaction remains usable for the current page when storage is unavailable.
+    }
+  };
+
+  const updateButton = (button: HTMLButtonElement, likes: Set<string>) => {
+    const id = button.dataset.contentId;
+    if (!id) return;
+    const liked = likes.has(id);
+    const title = button.dataset.contentTitle ?? "这条内容";
+    button.setAttribute("aria-pressed", String(liked));
+    button.setAttribute("aria-label", liked ? `取消点赞 ${title}` : `点赞 ${title}`);
+  };
+
+  const syncButtons = (root: ParentNode = document) => {
+    const likes = readLikes();
+    root.querySelectorAll<HTMLButtonElement>("[data-like-button]").forEach((button) => {
+      updateButton(button, likes);
+    });
+  };
+
+  syncButtons();
+
+  document.addEventListener("click", (event) => {
+    if (!(event.target instanceof Element)) return;
+    const button = event.target.closest<HTMLButtonElement>("[data-like-button]");
+    if (!button) return;
+    const id = button.dataset.contentId;
+    if (!id) return;
+
+    const likes = readLikes();
+    if (likes.has(id)) likes.delete(id);
+    else likes.add(id);
+    writeLikes(likes);
+    document.querySelectorAll<HTMLButtonElement>("[data-like-button]").forEach((candidate) => {
+      if (candidate.dataset.contentId === id) updateButton(candidate, likes);
+    });
+  });
+
+  const observer = new MutationObserver((records) => {
+    for (const record of records) {
+      for (const node of record.addedNodes) {
+        if (node instanceof Element) syncButtons(node);
+      }
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+</script>
