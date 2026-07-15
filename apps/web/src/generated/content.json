@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-14T15:11:58.526Z",
+  "generatedAt": "2026-07-15T02:33:12.585Z",
   "items": [
     {
       "id": "recvpkOJPUSQj9",
@@ -91,6 +91,51 @@
       ]
     },
     {
+      "id": "recvpkQwnq2SSL",
+      "slug": "codex-goal-outcome-boundaries-proof",
+      "title": "Codex 目标模式：用结果、边界和验收条件驱动长任务",
+      "type": "Skill",
+      "category": "协作方法",
+      "summary": "把普通操作指令改成可审计目标：说明最终结果、可触碰范围、禁止事项、完成证据、停止条件和预算，让 Codex 持续执行到验证完成。",
+      "recommendationReason": "减少反复催促 Agent 的成本，尤其适合长任务；关键不是写得长，而是把完成条件和安全停止点写清楚。",
+      "recommendationTrack": "工作提效",
+      "timeToValue": "10 分钟",
+      "adoptionLevel": "直接使用",
+      "networkRequirement": "需要 VPN",
+      "takeaway": "复制一份包含 Outcome、Scope、Constraints、Done when、Stop if 和预算的目标模式模板。",
+      "coverImage": "/images/content/recvpkQwnq2SSL/recvpkQwnq2SSL.png",
+      "tags": [
+        "Codex",
+        "Agent",
+        "自动化",
+        "团队协作"
+      ],
+      "audience": [
+        "运营团队",
+        "研发团队",
+        "管理者",
+        "AI 初学者"
+      ],
+      "scenario": "需要跨多轮完成开发、资料整理、迁移、审计或上线准备，并且可以明确完成证据的任务。",
+      "originalUrl": "https://waytoagi.feishu.cn/docx/WTRzd4vewo4XuRxSDlGcJCFtnog",
+      "sourceName": "WayToAGI / ziwenxu",
+      "featured": true,
+      "sortWeight": 0,
+      "publishedAt": "2026-07-14T09:52:00.000Z",
+      "updatedAt": "2026-07-14T09:22:07.000Z",
+      "copyBlocks": [
+        {
+          "id": "recvpkSvv3xZnv",
+          "title": "可审计的目标模式模板",
+          "type": "Prompt",
+          "language": "text",
+          "content": "开启目标模式，让【最终结果】成为事实。\nScope:【允许处理的文件、系统或时间范围】\n\nConstraints:\n- 不改变【必须保持不变的内容】\n- 所有外部写入、发送、删除操作先确认\n- 本轮预算不超过【预算】\n\nDone when:\n1. 【可验证条件一】\n2. 【测试、命令、文件或结果证据】\n3. 输出已完成项、遗留风险和验证证据\n\nStop if:\n- 需要新增付费依赖或人工凭证\n- 需要删除文件、改数据库结构或公开发布\n- 遇到与目标无关的失败",
+          "order": 1,
+          "note": "先在Plan模式把成功条件写清楚，再明确要求Codex开启目标模式；具体入口以当前客户端能力为准。"
+        }
+      ]
+    },
+    {
       "id": "recvpkQUuE2XwZ",
       "slug": "design-md-visual-context-for-codex",
       "title": "给 Codex 一份设计规则文件：把品牌视觉变成可执行上下文",
@@ -132,51 +177,6 @@
           "content": "先不要写代码。请根据我的业务目标、受众和参考资料生成 DESIGN.md，至少包含：页面表达、主参考与不参考项、颜色、中文字体、间距、圆角、按钮、卡片、图片、动效、移动端规则和禁止出现的 AI 模板味。把可机器读取的 tokens 与设计理由分开写。完成后先停，等我确认；未经确认不要实现页面。",
           "order": 1,
           "note": "参考网站只借设计语言，不复制品牌、文案、图片和完整结构。"
-        }
-      ]
-    },
-    {
-      "id": "recvpkQwnq2SSL",
-      "slug": "codex-goal-outcome-boundaries-proof",
-      "title": "Codex 目标模式：用结果、边界和验收条件驱动长任务",
-      "type": "Skill",
-      "category": "协作方法",
-      "summary": "把普通操作指令改成可审计目标：说明最终结果、可触碰范围、禁止事项、完成证据、停止条件和预算，让 Codex 持续执行到验证完成。",
-      "recommendationReason": "减少反复催促 Agent 的成本，尤其适合长任务；关键不是写得长，而是把完成条件和安全停止点写清楚。",
-      "recommendationTrack": "工作提效",
-      "timeToValue": "10 分钟",
-      "adoptionLevel": "直接使用",
-      "networkRequirement": "需要 VPN",
-      "takeaway": "复制一份包含 Outcome、Scope、Constraints、Done when、Stop if 和预算的目标模式模板。",
-      "coverImage": "/images/content/recvpkQwnq2SSL/recvpkQwnq2SSL.png",
-      "tags": [
-        "Codex",
-        "Agent",
-        "自动化",
-        "团队协作"
-      ],
-      "audience": [
-        "运营团队",
-        "研发团队",
-        "管理者",
-        "AI 初学者"
-      ],
-      "scenario": "需要跨多轮完成开发、资料整理、迁移、审计或上线准备，并且可以明确完成证据的任务。",
-      "originalUrl": "https://waytoagi.feishu.cn/docx/WTRzd4vewo4XuRxSDlGcJCFtnog",
-      "sourceName": "WayToAGI / ziwenxu",
-      "featured": true,
-      "sortWeight": 0,
-      "publishedAt": "2026-07-14T09:52:00.000Z",
-      "updatedAt": "2026-07-14T09:22:07.000Z",
-      "copyBlocks": [
-        {
-          "id": "recvpkSvv3xZnv",
-          "title": "可审计的目标模式模板",
-          "type": "Prompt",
-          "language": "text",
-          "content": "开启目标模式，让【最终结果】成为事实。\nScope:【允许处理的文件、系统或时间范围】\n\nConstraints:\n- 不改变【必须保持不变的内容】\n- 所有外部写入、发送、删除操作先确认\n- 本轮预算不超过【预算】\n\nDone when:\n1. 【可验证条件一】\n2. 【测试、命令、文件或结果证据】\n3. 输出已完成项、遗留风险和验证证据\n\nStop if:\n- 需要新增付费依赖或人工凭证\n- 需要删除文件、改数据库结构或公开发布\n- 遇到与目标无关的失败",
-          "order": 1,
-          "note": "先在 Plan 模式把成功条件写清楚，再明确要求 Codex 开启目标模式；具体入口以当前客户端能力为准。"
         }
       ]
     },
@@ -225,50 +225,6 @@
       ]
     },
     {
-      "id": "recvpl0DKg7J5i",
-      "slug": "lark-cli-meeting-decisions-tasks",
-      "title": "用飞书 CLI 把近 3 天会议纪要整理成决定与待办",
-      "type": "Case",
-      "category": "协作方法",
-      "summary": "先检索指定时间范围内的会议，再读取纪要，按会议输出关键决定、待办、负责人、截止时间和未决问题；缺失信息必须标为待确认。",
-      "recommendationReason": "它不是泛化总结，而是把会议信息转成可检查的行动清单；适合周一复盘、项目推进和跨团队协作。",
-      "recommendationTrack": "团队实践",
-      "timeToValue": "10 分钟",
-      "adoptionLevel": "需要配置",
-      "networkRequirement": "无需 VPN",
-      "takeaway": "获得一张会议行动表，并在人工确认后把明确待办写入飞书任务。",
-      "coverImage": "/images/content/recvpl0DKg7J5i/recvpl0DKg7J5i.png",
-      "tags": [
-        "飞书",
-        "自动化",
-        "团队协作",
-        "Agent"
-      ],
-      "audience": [
-        "运营团队",
-        "市场团队",
-        "管理者"
-      ],
-      "scenario": "会议较多、行动项容易遗漏，需要按时间范围汇总会议、决定、负责人和截止时间。",
-      "originalUrl": "https://waytoagi.feishu.cn/wiki/Zsp2wxsKEiRTEjkajJFc7FBGnh3",
-      "sourceName": "WayToAGI 飞书 CLI 案例",
-      "featured": false,
-      "sortWeight": 0,
-      "publishedAt": "2026-07-14T09:52:00.000Z",
-      "updatedAt": "2026-07-14T09:22:07.000Z",
-      "copyBlocks": [
-        {
-          "id": "recvpkSweEEiYa",
-          "title": "近 3 天会议转行动表",
-          "type": "Prompt",
-          "language": "text",
-          "content": "查找我近 3 天参加过且有纪要的会议。逐场读取后输出表格：会议、时间、关键决定、待办、负责人、截止时间、未决问题、纪要链接。不要猜负责人和日期，缺失项写“待确认”。先只生成行动表，不创建任务；等我确认后再把明确待办写入飞书任务。",
-          "order": 1,
-          "note": "适合周一复盘；先读纪要、后建任务，避免错误分派。"
-        }
-      ]
-    },
-    {
       "id": "recvpl0Doh2epV",
       "slug": "lark-cli-wiki-restructure",
       "title": "用飞书 CLI 重组知识库：先盘点节点，再按用户任务归类",
@@ -309,6 +265,50 @@
           "content": "请读取【知识库节点】下的全部一级节点，只做审计，不要移动或删除。输出：1. 节点清单与文档数量；2. 平铺、重复、命名和重点埋没问题；3. 按“用户来这里要完成什么”设计 7-10 个板块；4. 现有节点到新板块的迁移映射；5. 需要人工判断的条目；6. 迁移后的链接与数量验证清单。等我确认方案后再执行移动。",
           "order": 1,
           "note": "先审计后迁移，移动、删除和改权限必须人工确认。"
+        }
+      ]
+    },
+    {
+      "id": "recvpl0DKg7J5i",
+      "slug": "lark-cli-meeting-decisions-tasks",
+      "title": "用飞书 CLI 把近 3 天会议纪要整理成决定与待办",
+      "type": "Case",
+      "category": "协作方法",
+      "summary": "先检索指定时间范围内的会议，再读取纪要，按会议输出关键决定、待办、负责人、截止时间和未决问题；缺失信息必须标为待确认。",
+      "recommendationReason": "它不是泛化总结，而是把会议信息转成可检查的行动清单；适合周一复盘、项目推进和跨团队协作。",
+      "recommendationTrack": "团队实践",
+      "timeToValue": "10 分钟",
+      "adoptionLevel": "需要配置",
+      "networkRequirement": "无需 VPN",
+      "takeaway": "获得一张会议行动表，并在人工确认后把明确待办写入飞书任务。",
+      "coverImage": "/images/content/recvpl0DKg7J5i/recvpl0DKg7J5i.png",
+      "tags": [
+        "飞书",
+        "自动化",
+        "团队协作",
+        "Agent"
+      ],
+      "audience": [
+        "运营团队",
+        "市场团队",
+        "管理者"
+      ],
+      "scenario": "会议较多、行动项容易遗漏，需要按时间范围汇总会议、决定、负责人和截止时间。",
+      "originalUrl": "https://waytoagi.feishu.cn/wiki/Zsp2wxsKEiRTEjkajJFc7FBGnh3",
+      "sourceName": "WayToAGI 飞书 CLI 案例",
+      "featured": false,
+      "sortWeight": 0,
+      "publishedAt": "2026-07-14T09:52:00.000Z",
+      "updatedAt": "2026-07-14T09:22:07.000Z",
+      "copyBlocks": [
+        {
+          "id": "recvpkSweEEiYa",
+          "title": "近 3 天会议转行动表",
+          "type": "Prompt",
+          "language": "text",
+          "content": "查找我近 3 天参加过且有纪要的会议。逐场读取后输出表格：会议、时间、关键决定、待办、负责人、截止时间、未决问题、纪要链接。不要猜负责人和日期，缺失项写“待确认”。先只生成行动表，不创建任务；等我确认后再把明确待办写入飞书任务。",
+          "order": 1,
+          "note": "适合周一复盘；先读纪要、后建任务，避免错误分派。"
         }
       ]
     },
@@ -396,7 +396,52 @@
           "language": "shell",
           "content": "npx chengfeng-videocut-skills install --target codex",
           "order": 1,
-          "note": "安装后在 Codex 中使用 chengfeng-videocut-skills 下的剪口播、字幕和口播成片 Skills；实际触发语法以安装后的 SKILL.md 为准。"
+          "note": "安装后在Codex中使用chengfeng-videocut-skills下的剪口播、字幕和口播成片Skills；实际触发语法以安装后的SKILL.md为准。"
+        }
+      ]
+    },
+    {
+      "id": "recvpl0FflYBSW",
+      "slug": "codex-office-five-step-loop",
+      "title": "Codex 办公五步法：接工具、写规则、执行、验收、沉淀",
+      "type": "Collaboration",
+      "category": "协作方法",
+      "summary": "统一采用五步循环：连接最小必要工具、把规则与来源写进工作区、明确输入输出和验收、到真实系统检查结果、把有效提示和清单沉淀为下次可复用资产。",
+      "recommendationReason": "把 Codex 从一次性聊天工具变成可复用工作台，同时保留来源、审批和真实场景验收，适合非研发团队低风险起步。",
+      "recommendationTrack": "团队实践",
+      "timeToValue": "1 小时",
+      "adoptionLevel": "需要配置",
+      "networkRequirement": "需要 VPN",
+      "takeaway": "选一个真实任务跑完五步循环，并沉淀 rules、来源清单、输出模板和审核清单。",
+      "coverImage": "/images/content/recvpl0FflYBSW/recvpl0FflYBSW.png",
+      "tags": [
+        "Codex",
+        "飞书",
+        "自动化",
+        "团队协作"
+      ],
+      "audience": [
+        "内容团队",
+        "运营团队",
+        "市场团队",
+        "管理者"
+      ],
+      "scenario": "调研简报、会议总结、周报、产品上线方案、内容审核和多来源信息汇总。",
+      "originalUrl": "https://waytoagi.feishu.cn/docx/B2G5dajXho10HXxiNwAcaBzEn0f",
+      "sourceName": "WayToAGI / Gorden Sun",
+      "featured": false,
+      "sortWeight": 0,
+      "publishedAt": "2026-07-14T09:52:00.000Z",
+      "updatedAt": "2026-07-14T09:22:07.000Z",
+      "copyBlocks": [
+        {
+          "id": "recvpl12F18vXX",
+          "title": "办公任务五步执行模板",
+          "type": "Prompt",
+          "language": "text",
+          "content": "我要完成【具体成果】。\n来源：【飞书文档/消息/本地文件/数据链接】；只使用我有权限访问的资料。\n输出：【文档、表格、方案或审核队列】。\n要求：准确优先；重要事实附来源链接；区分源材料事实、你的推断和待确认项；发送、删除、修改外部系统前先确认。\n开工前先回答：还缺什么信息、你做了哪些假设、验收标准是什么。完成后到成果实际使用的位置检查，并列出可沉淀到 rules、模板和检查清单的内容。",
+          "order": 1,
+          "note": "先选低风险、真实、可检查的任务跑一轮，再考虑自动化。"
         }
       ]
     },
@@ -445,47 +490,267 @@
       ]
     },
     {
-      "id": "recvpl0FflYBSW",
-      "slug": "codex-office-five-step-loop",
-      "title": "Codex 办公五步法：接工具、写规则、执行、验收、沉淀",
+      "id": "recvpmnnYQjzeS",
+      "slug": "feishu-content-comment-loop",
+      "title": "飞书内容闭环：从群聊选题到评论驱动改稿",
       "type": "Collaboration",
       "category": "协作方法",
-      "summary": "统一采用五步循环：连接最小必要工具、把规则与来源写进工作区、明确输入输出和验收、到真实系统检查结果、把有效提示和清单沉淀为下次可复用资产。",
-      "recommendationReason": "把 Codex 从一次性聊天工具变成可复用工作台，同时保留来源、审批和真实场景验收，适合非研发团队低风险起步。",
+      "summary": "汇总飞书群聊、云文档与公开趋势形成选题和框架，再读取正文划词评论逐条改稿并回复修改说明。",
+      "recommendationReason": "把电商内容的找资料、生成、审稿和修改放回同一份飞书文档，过程可追溯，编辑仍掌握最终判断。",
       "recommendationTrack": "团队实践",
       "timeToValue": "1 小时",
       "adoptionLevel": "需要配置",
-      "networkRequirement": "需要 VPN",
-      "takeaway": "选一个真实任务跑完五步循环，并沉淀 rules、来源清单、输出模板和审核清单。",
-      "coverImage": "/images/content/recvpl0FflYBSW/recvpl0FflYBSW.png",
+      "networkRequirement": "部分资源需要 VPN",
+      "takeaway": "5个带证据选题、一份文章框架，以及按评论完成修改并保留说明的飞书文档。",
+      "coverImage": "/images/content/recvpmnnYQjzeS/recvpmnnYQjzeS.png",
       "tags": [
         "Codex",
         "飞书",
-        "自动化",
+        "内容工作流",
         "团队协作"
       ],
       "audience": [
         "内容团队",
         "运营团队",
+        "市场团队"
+      ],
+      "scenario": "新品上架、大促专题、达人种草素材和竞品热点解读。",
+      "originalUrl": "https://waytoagi.feishu.cn/docx/ZJEId0TKhoAcq9x6RPpcJskgnNg",
+      "sourceName": "飞书 CLI 企业级案例",
+      "featured": false,
+      "sortWeight": 0,
+      "publishedAt": "2026-07-14T16:06:42.000Z",
+      "updatedAt": "2026-07-14T16:06:42.000Z",
+      "copyBlocks": [
+        {
+          "id": "recvpmnS09vJ71",
+          "title": "选题到评论改稿的飞书任务模板",
+          "type": "Prompt",
+          "language": "text",
+          "content": "检索最近30天飞书群聊、相关云文档及公开网页中与【品类/产品】有关的讨论，产出5个内容选题；每个包含受众、切入角度、证据来源和风险点，写入新飞书文档。确认第【N】个选题后，基于【文风样本文档】生成文章框架；读取该文档未解决的划词评论，逐条修改正文，并在评论中回复改动说明。",
+          "order": 1,
+          "note": "会写入文档和评论；先限定群聊、文档、时间范围，并由编辑复核后执行。"
+        }
+      ]
+    },
+    {
+      "id": "recvpmnolxTwte",
+      "slug": "feishu-content-asset-dashboard",
+      "title": "用飞书 CLI 建内容资产台账和产出仪表盘",
+      "type": "Case",
+      "category": "团队案例",
+      "summary": "扫描本人创建的飞书文档，按文章、方案、培训资料和笔记分类，写入标题、时间、字数与链接并生成趋势仪表盘。",
+      "recommendationReason": "把内容供给、复用和节奏问题变成可见数据，适合电商与培训团队替代长期失真的人工台账。",
+      "recommendationTrack": "团队实践",
+      "timeToValue": "半天",
+      "adoptionLevel": "需要配置",
+      "networkRequirement": "无需 VPN",
+      "takeaway": "一张可点击的内容资产多维表格、一套分类规则和数量/字数/趋势仪表盘。",
+      "coverImage": "/images/content/recvpmnolxTwte/recvpmnolxTwte.png",
+      "tags": [
+        "飞书",
+        "自动化",
+        "内容工作流",
+        "团队协作"
+      ],
+      "audience": [
+        "内容团队",
+        "运营团队",
+        "管理者"
+      ],
+      "scenario": "月度内容复盘、商品内容资产盘点、培训资料治理与选题排期。",
+      "originalUrl": "https://waytoagi.feishu.cn/docx/ZJEId0TKhoAcq9x6RPpcJskgnNg",
+      "sourceName": "飞书 CLI 企业级案例",
+      "featured": false,
+      "sortWeight": 0,
+      "publishedAt": "2026-07-14T16:06:42.000Z",
+      "updatedAt": "2026-07-14T16:06:42.000Z",
+      "copyBlocks": [
+        {
+          "id": "recvpmnSiIDpM3",
+          "title": "内容资产盘点与仪表盘任务模板",
+          "type": "Prompt",
+          "language": "text",
+          "content": "检索【时间范围/目录】内我创建的飞书文档，按文章、方案、培训资料、笔记分类；记录标题、创建时间、字数、文档链接和更新时间，写入一个多维表格。基于该表创建仪表盘，展示各分类总字数、月度创作数量、月度创作字数趋势和内容分类分布；无法分类的文档标为“待人工确认”。先生成10条样本供我校准分类，确认后再处理全部范围。",
+          "order": 1,
+          "note": "正式运行前限制时间或目录；先样本校准，避免错误分类污染全量台账。"
+        }
+      ]
+    },
+    {
+      "id": "recvpmnoBliNau",
+      "slug": "creative-production-campaign-board",
+      "title": "Creative Production：先收敛商品创意方向，再生成 Campaign Board",
+      "type": "Tool",
+      "category": "产品设计",
+      "summary": "先用结构化选项确认受众、卖点、平台、品牌规则与禁用项，再产出两个方向的Campaign Board和素材制作清单。",
+      "recommendationReason": "把反复补提示词改成先选方向、后生产，适合品牌、电商运营和设计多人协作时减少视觉漂移。",
+      "recommendationTrack": "工作提效",
+      "timeToValue": "1 小时",
+      "adoptionLevel": "需要配置",
+      "networkRequirement": "需要 VPN",
+      "takeaway": "一份商品创意intake模板、两个可比较的视觉方向，以及主图/场景图/卖点图制作清单。",
+      "coverImage": "/images/content/recvpmnoBliNau/recvpmnoBliNau.png",
+      "tags": [
+        "Codex",
+        "AI",
+        "产品设计",
+        "内容工作流"
+      ],
+      "audience": [
+        "内容团队",
+        "运营团队",
+        "市场团队",
+        "设计团队"
+      ],
+      "scenario": "新品上架、活动主视觉、详情页方向和投放素材A/B方案。",
+      "originalUrl": "https://waytoagi.feishu.cn/docx/KZvxdsIhWouLMUxbUBicdVwinWc",
+      "sourceName": "WayToAGI Codex 专区",
+      "featured": false,
+      "sortWeight": 0,
+      "publishedAt": "2026-07-14T16:06:42.000Z",
+      "updatedAt": "2026-07-14T16:06:42.000Z",
+      "copyBlocks": [
+        {
+          "id": "recvpmnSxFyFJf",
+          "title": "商品 Campaign Board intake 模板",
+          "type": "Prompt",
+          "language": "text",
+          "content": "请使用 Creative Production 为以下SKU制作电商Campaign Board。先不要出图，先用结构化选项确认：目标人群与使用场景、核心卖点排序、平台与画幅、品牌调性、必须出现的产品/文案/Logo、禁止元素与竞品避让、可用素材和品牌手册、本次要测试的两个创意方向。我确认后，输出方向A/B的一句话主张、色彩/构图/场景/镜头/文案规则、Campaign Board，以及主图、场景图、卖点图、细节图的制作清单和品牌一致性自检项。",
+          "order": 1,
+          "note": "复杂品牌以品牌手册为最高约束；不确定的功效、参数和商标要求必须标为待确认。"
+        }
+      ]
+    },
+    {
+      "id": "recvpmnoUpCIUD",
+      "slug": "hyperframes-product-video-preview",
+      "title": "HyperFrames：商品页先预览再渲染的短视频 SOP",
+      "type": "Skill",
+      "category": "视频工作流",
+      "summary": "把商品页或文章转成20至30秒短视频，固定脚本分镜、预览、按时间点标注修改、确认后再渲染的生产闭环。",
+      "recommendationReason": "直接减少电商短视频首版等待和无效渲染，同时用同一内容结构维护横竖屏版本。",
+      "recommendationTrack": "工作提效",
+      "timeToValue": "1 小时",
+      "adoptionLevel": "需要配置",
+      "networkRequirement": "需要 VPN",
+      "takeaway": "一条9:16和一条16:9可审预览，以及按时间码整理的修改清单。",
+      "coverImage": "/images/content/recvpmnoUpCIUD/recvpmnoUpCIUD.png",
+      "tags": [
+        "Codex",
+        "Skills",
+        "视频生成",
+        "内容工作流"
+      ],
+      "audience": [
+        "内容团队",
+        "运营团队",
+        "市场团队"
+      ],
+      "scenario": "商品详情页转宣传片、上新预告、卖点讲解和教程内容。",
+      "originalUrl": "https://waytoagi.feishu.cn/docx/XPjxdp6IYoSP2FxghwfcjkJJnvc",
+      "sourceName": "WayToAGI Codex 专区",
+      "featured": false,
+      "sortWeight": 0,
+      "publishedAt": "2026-07-14T16:06:42.000Z",
+      "updatedAt": "2026-07-14T16:06:42.000Z",
+      "copyBlocks": [
+        {
+          "id": "recvpmnSMB325k",
+          "title": "商品页转双画幅短视频模板",
+          "type": "Prompt",
+          "language": "text",
+          "content": "请使用 HyperFrames 为以下商品做两版25秒短视频。开始前先确认目标受众、发布平台、时长与画幅、可用素材和希望用户看完后的行动。确认后提炼商品页3个核心卖点，输出分镜、旁白/字幕和镜头时间表，制作9:16与16:9两个项目；先打开预览，不要渲染MP4。结构：3秒钩子 -> 3个卖点 -> 产品界面或细节 -> 明确行动。收到我按“时间点 + 问题 + 修改目标”的反馈并确认前，只迭代预览。",
+          "order": 1,
+          "note": "产品参数和素材版权先核验；预览通过后再渲染，避免无效算力和返工。"
+        }
+      ]
+    },
+    {
+      "id": "recvpmnpa02ouh",
+      "slug": "chatgpt-work-cross-app-research",
+      "title": "ChatGPT Work：用内置 Codex 完成跨应用研究与内容交付",
+      "type": "AI Signal",
+      "category": "产品信号",
+      "summary": "OpenAI将Codex能力扩展到跨应用长任务，可读取获授权的应用、文件和网页并持续生成文档、表格、幻灯片、分析或网站。",
+      "recommendationReason": "对市场研究、电商策划和销售材料有直接价值，但套餐开放状态、连接器范围与公司数据授权必须先核对。",
+      "recommendationTrack": "前沿信号",
+      "timeToValue": "10 分钟",
+      "adoptionLevel": "需要配置",
+      "networkRequirement": "需要 VPN",
+      "takeaway": "一份带来源的新品研究简报、行动表和待验证风险清单。",
+      "coverImage": "/images/content/recvpmnpa02ouh/recvpmnpa02ouh.png",
+      "tags": [
+        "Codex",
+        "AI",
+        "Agent",
+        "内容工作流"
+      ],
+      "audience": [
+        "运营团队",
         "市场团队",
         "管理者"
       ],
-      "scenario": "调研简报、会议总结、周报、产品上线方案、内容审核和多来源信息汇总。",
-      "originalUrl": "https://waytoagi.feishu.cn/docx/B2G5dajXho10HXxiNwAcaBzEn0f",
-      "sourceName": "WayToAGI / Gorden Sun",
+      "scenario": "新品调研、竞品比较、活动Brief、销售会议准备与周期数据复盘。",
+      "originalUrl": "https://openai.com/index/chatgpt-for-your-most-ambitious-work/",
+      "sourceName": "AI HOT / OpenAI",
       "featured": false,
       "sortWeight": 0,
-      "publishedAt": "2026-07-14T09:52:00.000Z",
-      "updatedAt": "2026-07-14T09:22:07.000Z",
+      "publishedAt": "2026-07-14T16:06:42.000Z",
+      "updatedAt": "2026-07-14T16:06:42.000Z",
       "copyBlocks": [
         {
-          "id": "recvpl12F18vXX",
-          "title": "办公任务五步执行模板",
+          "id": "recvpmnT2SUBO9",
+          "title": "跨应用新品研究简报模板",
           "type": "Prompt",
           "language": "text",
-          "content": "我要完成【具体成果】。\n来源：【飞书文档/消息/本地文件/数据链接】；只使用我有权限访问的资料。\n输出：【文档、表格、方案或审核队列】。\n要求：准确优先；重要事实附来源链接；区分源材料事实、你的推断和待确认项；发送、删除、修改外部系统前先确认。\n开工前先回答：还缺什么信息、你做了哪些假设、验收标准是什么。完成后到成果实际使用的位置检查，并列出可沉淀到 rules、模板和检查清单的内容。",
+          "content": "读取我提供的新品资料、历史销售表和指定竞品页面，制作一份中国电商首发简报。输出：目标人群、核心卖点、竞品价格带、内容主题、首周行动表和待验证风险。每条事实标注来源；区分源材料事实、你的推断和待确认项；信息不足时不得补写数据。只生成草稿，不发布、不发送，也不写入未明确授权的外部系统。",
           "order": 1,
-          "note": "先选低风险、真实、可检查的任务跑一轮，再考虑自动化。"
+          "note": "先确认套餐是否开放对应能力，以及每个连接器的数据授权范围；官方未声明飞书原生连接。"
+        }
+      ]
+    },
+    {
+      "id": "recvpmnppekHqJ",
+      "slug": "seedream-5-pro-ecommerce-editing",
+      "title": "Seedream 5.0 Pro：电商主图与信息图进入可控编辑",
+      "type": "AI Signal",
+      "category": "产品信号",
+      "summary": "字节Seed的新图像模型强化复杂信息图、多语种排版、局部编辑、图层分离和多图融合，可直接用于电商主图与促销海报。",
+      "recommendationReason": "官方案例覆盖促销海报和电商首屏，局部修改与图层分离能减少整图重生成的返工成本。",
+      "recommendationTrack": "前沿信号",
+      "timeToValue": "10 分钟",
+      "adoptionLevel": "直接使用",
+      "networkRequirement": "无需 VPN",
+      "takeaway": "一张可人工复核文案与参数、并便于继续拆分加工的电商主图或活动海报。",
+      "coverImage": "/images/content/recvpmnppekHqJ/recvpmnppekHqJ.png",
+      "tags": [
+        "AI",
+        "产品设计",
+        "内容工作流"
+      ],
+      "audience": [
+        "运营团队",
+        "市场团队",
+        "设计团队",
+        "内容团队"
+      ],
+      "scenario": "SKU主图、节日促销、产品卖点图、多语言海报和页面视觉原型。",
+      "originalUrl": "https://seed.bytedance.com/seedream5_0_pro",
+      "sourceName": "AI HOT / 字节 Seed",
+      "featured": false,
+      "sortWeight": 0,
+      "publishedAt": "2026-07-14T16:06:42.000Z",
+      "updatedAt": "2026-07-14T16:06:42.000Z",
+      "copyBlocks": [
+        {
+          "id": "recvpmnTisudPu",
+          "title": "可复核的电商主图生成模板",
+          "type": "Prompt",
+          "language": "text",
+          "content": "为【品牌】的【SKU】生成一张1:1电商主图。主体占画面约60%，完整展示包装与核心材质；主标题逐字使用“【主标题】”，副文案为“【卖点1】｜【卖点2】”；价格只使用占位符“¥XXX”，不得编造参数、功效或认证。背景简洁、对比清晰，预留右下角活动标识区，并采用便于后续拆分文字、商品和背景的分层构图。",
+          "order": 1,
+          "note": "价格、参数、文字和商标必须人工复核；上传人物、包装或品牌素材前确认授权。"
         }
       ]
     }

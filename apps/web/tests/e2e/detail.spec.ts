@@ -25,10 +25,11 @@ test("all public dataset items have static detail routes and unknown slugs retur
 test("detail page renders maintained fields and preserves the original source", async ({ page }) => {
   await page.goto(`/content/${sourceItem.slug}`);
 
+  const detailHero = page.locator(".detail-hero");
   await expect(page.getByRole("heading", { level: 1, name: sourceItem.title })).toBeVisible();
   await expect(page.getByRole("img", { name: `${sourceItem.title}封面` })).toHaveAttribute("src", sourceItem.coverImage);
-  await expect(page.getByText(sourceItem.type, { exact: true })).toBeVisible();
-  await expect(page.getByText(sourceItem.category, { exact: true })).toBeVisible();
+  await expect(detailHero.getByText(sourceItem.type, { exact: true })).toBeVisible();
+  await expect(detailHero.getByText(sourceItem.category, { exact: true })).toBeVisible();
   await expect(page.locator(".detail-hero__summary")).toHaveText(sourceItem.summary);
   await expect(page.getByText(sourceItem.recommendationReason, { exact: true })).toBeVisible();
   await expect(page.getByText(sourceItem.scenario, { exact: true })).toBeVisible();
