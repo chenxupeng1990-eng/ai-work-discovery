@@ -1,6 +1,8 @@
 ---
 import { CATEGORY_DEFINITIONS } from "../lib/categories";
 
+const feedbackFormUrl = "https://my.feishu.cn/share/base/form/shrcnd0nYB9wha2pnDlUDx3Cief";
+
 const navigation = [
   { label: "Codex 方法", href: "/discover" },
   ...CATEGORY_DEFINITIONS.map((category) => ({
@@ -30,8 +32,8 @@ const navigation = [
       <a class="icon-button" href="/discover?focus=search" aria-label="搜索 Codex 方法" title="搜索 Codex 方法">
         <span class="search-icon" aria-hidden="true"></span>
       </a>
-      <button class="submit-link button-primary" type="button" aria-disabled="true" title="提交入口即将开放">
-        提交内容
+      <button class="feedback-trigger button-primary" type="button" data-feedback-open>
+        想看什么
       </button>
 
       <div class="mobile-menu">
@@ -48,11 +50,38 @@ const navigation = [
         </button>
         <nav id="mobile-navigation" class="mobile-navigation" aria-label="移动端主导航" hidden>
           {navigation.map((item) => <a href={item.href}>{item.label}</a>)}
+          <button type="button" data-feedback-open>想看什么</button>
         </nav>
       </div>
     </div>
   </div>
 </header>
+
+<dialog class="feedback-dialog" data-feedback-dialog aria-labelledby="feedback-dialog-title">
+  <div class="feedback-dialog__header">
+    <div>
+      <p class="feedback-dialog__eyebrow">内容需求</p>
+      <h2 id="feedback-dialog-title">你想看什么？</h2>
+      <p>告诉我们你希望解决的问题，后续更新会优先参考真实需求。</p>
+    </div>
+    <button class="feedback-dialog__close" type="button" aria-label="关闭反馈弹窗" title="关闭" data-feedback-close>
+      <span aria-hidden="true">×</span>
+    </button>
+  </div>
+  <div class="feedback-dialog__body">
+    <iframe
+      title="飞书内容需求反馈表单"
+      data-feedback-frame
+      data-src={feedbackFormUrl}
+      loading="lazy"
+      referrerpolicy="strict-origin-when-cross-origin"
+    ></iframe>
+  </div>
+  <div class="feedback-dialog__fallback">
+    <span>表单未显示？</span>
+    <a href={feedbackFormUrl} target="_blank" rel="noreferrer">在飞书中打开 ↗</a>
+  </div>
+</dialog>
 
 <style>
   .site-header {
@@ -145,14 +174,116 @@ const navigation = [
     background: var(--color-ash);
   }
 
-  .submit-link {
+  .feedback-trigger {
     min-height: 36px;
     padding-inline: var(--spacing-16);
     font-size: 14px;
+    cursor: pointer;
   }
 
-  .submit-link[aria-disabled="true"] {
-    cursor: not-allowed;
+  .feedback-dialog {
+    width: min(760px, calc(100% - 48px));
+    height: min(760px, calc(100dvh - 48px));
+    max-width: none;
+    max-height: none;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--color-divider) 82%, transparent);
+    border-radius: var(--radius-card);
+    color: var(--ink);
+    background: color-mix(in srgb, var(--color-pure-white) 94%, transparent);
+    backdrop-filter: saturate(180%) blur(24px);
+  }
+
+  .feedback-dialog::backdrop {
+    background: color-mix(in srgb, var(--color-apple-ink) 34%, transparent);
+    backdrop-filter: blur(8px);
+  }
+
+  .feedback-dialog[open] {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+  }
+
+  .feedback-dialog__header {
+    padding: var(--spacing-24);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--spacing-24);
+    border-bottom: 1px solid var(--color-divider);
+  }
+
+  .feedback-dialog__eyebrow {
+    margin-bottom: var(--spacing-8);
+    color: var(--color-link-blue);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .feedback-dialog h2 {
+    margin-bottom: var(--spacing-8);
+    font-size: 28px;
+    line-height: 1.18;
+  }
+
+  .feedback-dialog__header p:last-child {
+    max-width: 520px;
+    margin-bottom: 0;
+    color: var(--color-graphite);
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .feedback-dialog__close {
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--color-divider);
+    border-radius: 50%;
+    color: var(--ink);
+    background: color-mix(in srgb, var(--color-pure-white) 78%, transparent);
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .feedback-dialog__close:hover {
+    color: var(--color-pure-white);
+    border-color: var(--color-apple-ink);
+    background: var(--color-apple-ink);
+  }
+
+  .feedback-dialog__body {
+    min-height: 0;
+    background: var(--color-fog-canvas);
+  }
+
+  .feedback-dialog__body iframe {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border: 0;
+    background: var(--color-pure-white);
+  }
+
+  .feedback-dialog__fallback {
+    min-height: 48px;
+    padding-inline: var(--spacing-24);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--spacing-8);
+    border-top: 1px solid var(--color-divider);
+    color: var(--color-graphite);
+    font-size: 13px;
+  }
+
+  .feedback-dialog__fallback a {
+    color: var(--color-link-blue);
   }
 
   .search-icon {
@@ -234,6 +365,16 @@ const navigation = [
     font-size: 14px;
   }
 
+  .mobile-navigation button {
+    min-height: 44px;
+    padding: 0 12px;
+    border: 0;
+    color: var(--color-link-blue);
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+  }
+
   .mobile-navigation a:last-child {
     border-bottom: 0;
   }
@@ -295,7 +436,7 @@ const navigation = [
       font-size: 14px;
     }
 
-    .submit-link {
+    .feedback-trigger {
       min-height: 36px;
       padding-inline: 12px;
       font-size: 14px;
@@ -312,14 +453,48 @@ const navigation = [
       display: none;
     }
 
-    .submit-link {
+    .feedback-trigger {
       padding-inline: 8px;
     }
   }
 
   @media (max-width: 360px) {
-    .submit-link {
+    .feedback-trigger {
       display: none;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .feedback-dialog {
+      width: calc(100% - 24px);
+      height: calc(100dvh - 24px);
+      border-radius: 20px;
+    }
+
+    .feedback-dialog__header {
+      padding: var(--spacing-20);
+      gap: var(--spacing-16);
+    }
+
+    .feedback-dialog h2 {
+      font-size: 24px;
+    }
+
+    .feedback-dialog__fallback {
+      padding-inline: var(--spacing-20);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .feedback-dialog[open] {
+      animation: feedback-dialog-in 180ms var(--motion-apple);
+    }
+  }
+
+  @keyframes feedback-dialog-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px) scale(0.985);
     }
   }
 </style>
@@ -327,6 +502,11 @@ const navigation = [
 <script>
   const menuButton = document.querySelector<HTMLButtonElement>("[data-mobile-menu-button]");
   const mobileNavigation = document.querySelector<HTMLElement>("#mobile-navigation");
+  const feedbackDialog = document.querySelector<HTMLDialogElement>("[data-feedback-dialog]");
+  const feedbackFrame = document.querySelector<HTMLIFrameElement>("[data-feedback-frame]");
+  const feedbackOpenButtons = document.querySelectorAll<HTMLButtonElement>("[data-feedback-open]");
+  const feedbackCloseButton = document.querySelector<HTMLButtonElement>("[data-feedback-close]");
+  let feedbackInvoker: HTMLButtonElement | null = null;
 
   const setMenuExpanded = (expanded: boolean) => {
     menuButton?.setAttribute("aria-expanded", String(expanded));
@@ -337,6 +517,31 @@ const navigation = [
 
   menuButton?.addEventListener("click", () => {
     setMenuExpanded(menuButton.getAttribute("aria-expanded") !== "true");
+  });
+
+  feedbackOpenButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      if (!feedbackDialog) return;
+      feedbackInvoker = button;
+      if (!feedbackFrame?.src) {
+        const source = feedbackFrame?.dataset.src;
+        if (feedbackFrame && source) feedbackFrame.src = source;
+      }
+      setMenuExpanded(false);
+      feedbackDialog.showModal();
+      feedbackCloseButton?.focus();
+    });
+  });
+
+  feedbackCloseButton?.addEventListener("click", () => feedbackDialog?.close());
+
+  feedbackDialog?.addEventListener("click", (event) => {
+    if (event.target === feedbackDialog) feedbackDialog.close();
+  });
+
+  feedbackDialog?.addEventListener("close", () => {
+    feedbackInvoker?.focus();
+    feedbackInvoker = null;
   });
 
   document.addEventListener("keydown", (event) => {

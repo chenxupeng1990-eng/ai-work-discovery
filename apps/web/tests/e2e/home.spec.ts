@@ -128,7 +128,8 @@ test("homepage exposes shared navigation and one main landmark", async ({ page }
     "/discover?focus=search",
   );
   await expect(page.locator('a[href="/updates"]')).toHaveCount(3);
-  await expect(page.getByRole("button", { name: "提交内容" })).toHaveAttribute("aria-disabled", "true");
+  await expect(page.locator(".feedback-trigger")).toHaveText("想看什么");
+  await expect(page.locator(".feedback-trigger")).toBeEnabled();
   await expect(page.locator('a[href="#discover"], a[href="#ready"], a[href="#submit"]')).toHaveCount(0);
   await expect(page.getByRole("contentinfo")).toBeVisible();
 });
@@ -234,6 +235,46 @@ test("homepage recommends three verified AI sources between quick match and disc
   expect(discoveryBox).not.toBeNull();
   expect(recommendationsBox!.y).toBeGreaterThanOrEqual(quickMatchBox!.y + quickMatchBox!.height);
   expect(discoveryBox!.y).toBeGreaterThanOrEqual(recommendationsBox!.y + recommendationsBox!.height);
+  await expectNoHorizontalOverflow(page);
+});
+
+test("recommended sites heading keeps a readable two-column layout", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Responsive heading checkpoints run once.");
+
+  for (const [width, expectedColumns] of [[1050, 2], [390, 1]] as const) {
+    await page.setViewportSize({ width, height: 920 });
+    await page.goto("/");
+    const header = page.locator(".recommended-sites__header");
+    const description = header.locator(":scope > p");
+    const columns = await header.evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(" ").length);
+    expect(columns).toBe(expectedColumns);
+    await expect(description).toContainText("三个经过筛选");
+    expect(await description.evaluate((element) => element.getBoundingClientRect().width)).toBeLessThanOrEqual(440);
+    await expectNoHorizontalOverflow(page);
+  }
+});
+
+test("feedback modal opens the published Feishu form and restores focus when closed", async ({ page }) => {
+  await page.goto("/");
+
+  const trigger = page.locator(".feedback-trigger");
+  const dialog = page.getByRole("dialog", { name: "你想看什么？" });
+  const form = dialog.locator('iframe[title="飞书内容需求反馈表单"]');
+  await trigger.click();
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "关闭反馈弹窗" })).toBeFocused();
+  await expect(form).toHaveAttribute(
+    "src",
+    "https://my.feishu.cn/share/base/form/shrcnd0nYB9wha2pnDlUDx3Cief",
+  );
+  await expect(dialog.getByRole("link", { name: "在飞书中打开 ↗" })).toHaveAttribute(
+    "href",
+    "https://my.feishu.cn/share/base/form/shrcnd0nYB9wha2pnDlUDx3Cief",
+  );
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(trigger).toBeFocused();
   await expectNoHorizontalOverflow(page);
 });
 
@@ -660,12 +701,16 @@ test("header controls support Tab, Enter, focus visibility, and mobile menu dism
   }
 
   await page.goto("/");
-  const submit = page.getByRole("button", { name: "提交内容" });
-  await tabUntil(submit);
-  await expectFocusVisible(submit);
-  const beforeSubmit = page.url();
+  const feedback = page.locator(".feedback-trigger");
+  await tabUntil(feedback);
+  await expectFocusVisible(feedback);
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(beforeSubmit);
+  const feedbackDialog = page.getByRole("dialog", { name: "你想看什么？" });
+  await expect(feedbackDialog).toBeVisible();
+  await expect(feedbackDialog.getByRole("button", { name: "关闭反馈弹窗" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(feedbackDialog).toBeHidden();
+  await expect(feedback).toBeFocused();
 
   if (testInfo.project.name === "mobile") {
     const menu = page.locator("[data-mobile-menu-button]");
