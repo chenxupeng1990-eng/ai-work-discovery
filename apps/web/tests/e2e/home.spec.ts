@@ -163,6 +163,32 @@ test("homepage quick match updates recommendations and links the selected goal t
   await expect(page.getByRole("navigation", { name: "发现方向" })).toHaveCount(0);
 });
 
+test("desktop quick-match cards align their information rows and omit terminal full stops", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Three-column quick-match alignment only applies to desktop.");
+  await page.setViewportSize({ width: 1050, height: 920 });
+  await page.goto("/");
+
+  const cards = page.locator(".starter-result");
+  await expect(cards).toHaveCount(3);
+  const rowMetrics = await cards.evaluateAll((elements) => elements.map((card) => {
+    const top = (selector: string) => card.querySelector(selector)!.getBoundingClientRect().top;
+    return {
+      reason: top(":scope > p"),
+      takeaway: top(".starter-result__takeaway"),
+      action: top(".starter-result__link"),
+    };
+  }));
+
+  for (const key of ["reason", "takeaway", "action"] as const) {
+    const values = rowMetrics.map((metrics) => metrics[key]);
+    expect(Math.max(...values) - Math.min(...values), `${key} rows should align`).toBeLessThanOrEqual(1);
+  }
+
+  const cardText = await cards.locator(":scope > p, .starter-result__takeaway strong").allTextContents();
+  expect(cardText.length).toBeGreaterThan(0);
+  for (const text of cardText) expect(text.trim()).not.toMatch(/[。.]+$/u);
+});
+
 test("homepage recommends three verified AI sources between quick match and discovery", async ({ page }) => {
   await page.goto("/");
 

@@ -8,6 +8,7 @@ import {
   TIME_TO_VALUE_OPTIONS,
   type DiscoveryPreferences,
 } from "../lib/discovery-recommendation";
+import { withoutTerminalFullStops } from "../lib/card-text";
 import type { ContentItem } from "../lib/schema";
 import "./QuickMatch.css";
 
@@ -90,10 +91,10 @@ export function QuickMatch({ items }: { items: ContentItem[] }) {
                   <em>{item.recommendationTrack}</em>
                 </div>
                 <h3><a href={`/content/${item.slug}`}>{item.title}</a></h3>
-                <p>{item.recommendationReason}</p>
+                <p>{withoutTerminalFullStops(item.recommendationReason)}</p>
                 <div className="starter-result__takeaway">
                   <span>可以带走</span>
-                  <strong>{item.takeaway}</strong>
+                  <strong>{withoutTerminalFullStops(item.takeaway)}</strong>
                 </div>
                 <a className="starter-result__link" href={`/content/${item.slug}`}>查看实践</a>
               </article>
