@@ -4,6 +4,7 @@ import { expectFocusVisible, tabUntil } from "./release-assertions";
 
 const dataset = generatedDataset;
 const sourceItem = dataset.items.find((item) => item.originalUrl && item.copyBlocks.length > 0)!;
+const sourceOnlyItem = dataset.items.find((item) => item.originalUrl && !item.feishuDocumentUrl)!;
 const copyBlock = [...sourceItem.copyBlocks].sort((left, right) => left.order - right.order)[0]!;
 const relatedItem = dataset.items.find((item) => dataset.items.some((candidate) => (
   candidate.id !== item.id
@@ -31,14 +32,19 @@ test("detail page renders maintained fields and preserves the original source", 
   await expect(detailHero.getByText(sourceItem.type, { exact: true })).toBeVisible();
   await expect(detailHero.getByText(sourceItem.category, { exact: true })).toBeVisible();
   await expect(page.locator(".detail-hero__summary")).toHaveText(sourceItem.summary);
+  await expect(page.locator(".detail-hero__outcome")).toContainText(sourceItem.takeaway);
+  await expect(page.locator(".detail-hero__scenario")).toContainText(sourceItem.scenario);
   await expect(page.getByText(sourceItem.recommendationReason, { exact: true })).toBeVisible();
-  await expect(page.getByText(sourceItem.scenario, { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "它能帮你解决什么" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "这些工作场景最适合" })).toBeVisible();
   for (const audience of sourceItem.audience) await expect(page.getByText(audience, { exact: true })).toBeVisible();
   for (const tag of sourceItem.tags) await expect(page.getByText(tag, { exact: true }).first()).toBeVisible();
 
   const sourceLinks = page.locator("[data-source-actions] a");
-  await expect(sourceLinks).toHaveCount(1);
-  await expect(sourceLinks.first()).toHaveAttribute("href", sourceItem.originalUrl!);
+  const expectedSourceUrls = [sourceItem.feishuDocumentUrl, sourceItem.originalUrl].filter(Boolean);
+  await expect(sourceLinks).toHaveCount(expectedSourceUrls.length);
+  expect(await sourceLinks.evaluateAll((links) => links.map((link) => link.getAttribute("href"))))
+    .toEqual(expect.arrayContaining(expectedSourceUrls));
   for (const link of await sourceLinks.all()) {
     await expect(link).toHaveAttribute("target", "_blank");
     expect((await link.getAttribute("rel"))?.split(/\s+/)).toEqual(
@@ -51,12 +57,12 @@ test("detail page renders maintained fields and preserves the original source", 
 });
 
 test("Feishu document card is omitted without an explicitly public URL", async ({ page }) => {
-  await page.goto(`/content/${sourceItem.slug}`);
+  await page.goto(`/content/${sourceOnlyItem.slug}`);
 
   await expect(page.locator("[data-feishu-document-card]")).toHaveCount(0);
-  await expect(page.getByRole("link", { name: `打开原始来源：${sourceItem.sourceName}` })).toHaveAttribute(
+  await expect(page.getByRole("link", { name: `打开原始来源：${sourceOnlyItem.sourceName}` })).toHaveAttribute(
     "href",
-    sourceItem.originalUrl!,
+    sourceOnlyItem.originalUrl!,
   );
 });
 

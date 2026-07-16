@@ -211,9 +211,10 @@ describe("enrichDraft", () => {
     expect(messages[0]?.content).toContain("工作发现站");
     expect(messages[0]?.content).toContain("四个轨道按价值分类");
     expect(messages[0]?.content).toContain("summary");
-    expect(messages[0]?.content).toContain("对象、方法和适用场景");
+    expect(messages[0]?.content).toContain("工作结果");
     expect(messages[0]?.content).toContain("recommendationReason");
-    expect(messages[0]?.content).toContain("为什么值得尝试");
+    expect(messages[0]?.content).toContain("学了有什么用");
+    expect(messages[0]?.content).toContain("具体工作场景");
     expect(messages[0]?.content).toContain("timeToValue");
     expect(messages[0]?.content).toContain("首次得到可用结果");
     expect(messages[0]?.content).toContain("adoptionLevel");

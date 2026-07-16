@@ -31,6 +31,14 @@ const copyBlocks = [...item.copyBlocks].sort((left, right) => left.order - right
           </div>
           <h1>{item.title}</h1>
           <p class="detail-hero__summary">{item.summary}</p>
+          <div class="detail-hero__outcome">
+            <span>学完你能做到</span>
+            <strong>{item.takeaway}</strong>
+          </div>
+          <div class="detail-hero__scenario">
+            <span>适合用在</span>
+            <p>{item.scenario}</p>
+          </div>
           <div class="detail-tags" aria-label="内容标签">
             {item.tags.map((tag) => <span>{tag}</span>)}
           </div>
@@ -49,14 +57,14 @@ const copyBlocks = [...item.copyBlocks].sort((left, right) => left.order - right
     <div class="container detail-body">
       <div class="detail-main">
         <section class="detail-section" aria-labelledby="recommendation-title">
-          <p>为什么推荐</p>
-          <h2 id="recommendation-title">推荐理由</h2>
+          <p>直接价值</p>
+          <h2 id="recommendation-title">它能帮你解决什么</h2>
           <div class="detail-section__lead">{item.recommendationReason}</div>
         </section>
 
         <section class="detail-section" aria-labelledby="fit-title">
-          <p>适合谁使用</p>
-          <h2 id="fit-title">适用人群与场景</h2>
+          <p>什么时候拿出来用</p>
+          <h2 id="fit-title">这些工作场景最适合</h2>
           <dl class="detail-fit">
             <div>
               <dt>人群</dt>
@@ -179,6 +187,44 @@ const copyBlocks = [...item.copyBlocks].sort((left, right) => left.order - right
     margin-bottom: 24px;
     color: var(--steel);
     font-size: 18px;
+  }
+
+  .detail-hero__outcome {
+    max-width: 720px;
+    margin-bottom: 16px;
+    padding: 18px 20px;
+    display: grid;
+    gap: 6px;
+    border-left: 3px solid var(--indigo);
+    background: var(--canvas);
+  }
+
+  .detail-hero__outcome span,
+  .detail-hero__scenario > span {
+    color: var(--indigo);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .detail-hero__outcome strong {
+    color: var(--ink);
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+
+  .detail-hero__scenario {
+    max-width: 720px;
+    margin-bottom: 24px;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .detail-hero__scenario p {
+    margin: 0;
+    color: var(--steel);
   }
 
   .detail-tags {
@@ -426,6 +472,15 @@ const copyBlocks = [...item.copyBlocks].sort((left, right) => left.order - right
 
     .detail-hero__summary {
       font-size: 16px;
+    }
+
+    .detail-hero__outcome strong {
+      font-size: 16px;
+    }
+
+    .detail-hero__scenario {
+      grid-template-columns: 1fr;
+      gap: 4px;
     }
 
     .detail-body {
