@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-15T11:21:00.772Z",
+  "generatedAt": "2026-07-16T10:34:55.460Z",
   "items": [
     {
       "id": "recvprdxsgplb1",
@@ -904,6 +904,266 @@
           "content": "我要完成【具体成果】。\n来源：【飞书文档/消息/本地文件/数据链接】；只使用我有权限访问的资料。\n输出：【文档、表格、方案或审核队列】。\n要求：准确优先；重要事实附来源链接；区分源材料事实、你的推断和待确认项；发送、删除、修改外部系统前先确认。\n开工前先回答：还缺什么信息、你做了哪些假设、验收标准是什么。完成后到成果实际使用的位置检查，并列出可沉淀到 rules、模板和检查清单的内容。",
           "order": 1,
           "note": "先选低风险、真实、可检查的任务跑一轮，再考虑自动化。"
+        }
+      ]
+    },
+    {
+      "id": "recvpwJsat6tra",
+      "slug": "ai-recruiting-copilot-agent-workflow",
+      "title": "AI 招聘副驾：把搜人、筛简历、约面试和日报串成一条工作流",
+      "type": "Case",
+      "category": "团队案例",
+      "summary": "把分散在招聘平台、邮箱、候选人台账和飞书里的机械操作交给 Agent，让招聘人员把时间留给岗位标准和候选人判断",
+      "recommendationReason": "能减少跨平台搜索、筛选、记录、约面和汇报的重复劳动，避免候选人信息断层，同时保留人工确认和最终判断",
+      "recommendationTrack": "工作提效",
+      "timeToValue": "半天",
+      "adoptionLevel": "需要配置",
+      "networkRequirement": "部分资源需要 VPN",
+      "takeaway": "搭建一个可持续读取岗位标准和候选人台账的招聘工作区，跑通从需求澄清到招聘日报或面试日程的闭环",
+      "coverImage": "/images/content/recvpwJsat6tra/recvpwJsat6tra.webp",
+      "tags": [
+        "Codex",
+        "Agent",
+        "自动化",
+        "飞书"
+      ],
+      "audience": [
+        "运营团队",
+        "管理者"
+      ],
+      "scenario": "岗位需求澄清、Boss 与猎聘寻源、邮箱简历评估、人才 mapping、视频面试安排和招聘日报",
+      "originalUrl": "https://github.com/Viy1204/recruiting-copilot",
+      "sourceName": "Recruiting Copilot",
+      "featured": false,
+      "sortWeight": 0,
+      "publishedAt": "2026-07-16T09:52:00.000Z",
+      "updatedAt": "2026-07-16T09:52:00.000Z",
+      "copyBlocks": [
+        {
+          "id": "recvpwJTFuePLo",
+          "title": "直接复制给 Codex",
+          "type": "Prompt",
+          "language": "text",
+          "content": "请作为招聘副驾，先读取项目说明和当前工作区文件，检查依赖并初始化岗位标准、候选人台账和面试记录结构。先输出准备清单与风险边界，不自动淘汰候选人，不在未经确认时外联或创建面试。完成后用一个测试岗位演示从需求澄清、候选人记录到日报生成的完整闭环",
+          "order": 1,
+          "note": "先复制给 Codex，再按实际工作资料补充输入"
+        }
+      ]
+    },
+    {
+      "id": "recvpwJUCKlEvT",
+      "slug": "ai-xunjian-human-in-loop-video-editing",
+      "title": "AI 驯剪：先自动完成口播粗剪，再在时间线上人工定剪",
+      "type": "Tool",
+      "category": "视频工作流",
+      "summary": "把剪气口、提速、响度、逐字字幕和章节动效自动铺到可编辑时间线，让剪辑人员从重复处理转向节奏与表达判断",
+      "recommendationReason": "适合口播、知识解读、商品讲解和课程切片，既能缩短首版等待时间，又保留逐字修改和动效微调能力",
+      "recommendationTrack": "工作提效",
+      "timeToValue": "半天",
+      "adoptionLevel": "需要配置",
+      "networkRequirement": "部分资源需要 VPN",
+      "takeaway": "完成一条可人工继续修改的口播粗剪，得到对齐字幕、章节结构和可编辑时间线",
+      "coverImage": "/images/content/recvpwJUCKlEvT/recvpwJUCKlEvT.webp",
+      "tags": [
+        "AI",
+        "视频生成",
+        "内容工作流",
+        "开源"
+      ],
+      "audience": [
+        "内容团队",
+        "运营团队"
+      ],
+      "scenario": "达人口播、商品讲解、知识短视频、课程切片和批量内容初剪",
+      "originalUrl": "https://github.com/fxl1209739475-fxl/ai-xunjian",
+      "sourceName": "AI 驯剪",
+      "featured": false,
+      "sortWeight": 0,
+      "publishedAt": "2026-07-16T09:52:00.000Z",
+      "updatedAt": "2026-07-16T09:52:00.000Z",
+      "copyBlocks": [
+        {
+          "id": "recvpwKbyZPi9U",
+          "title": "直接复制给 Codex",
+          "type": "Prompt",
+          "language": "text",
+          "content": "请检查这个 AI 驯剪仓库的当前安装说明和本机依赖，重点确认 Node.js、FFmpeg、可选转写与 AI 能力。先给出最短可运行路径，再用一条本地口播视频跑通初剪、字幕、时间线预览和导出验证。遇到缺失依赖只报告并给出安装命令，不修改无关环境",
+          "order": 1,
+          "note": "先复制给 Codex，再按实际工作资料补充输入"
+        }
+      ]
+    },
+    {
+      "id": "recvpwKcdRqk23",
+      "slug": "doudian-review-exporter-customer-voice",
+      "title": "抖店评价导出：把商品评价变成可分析的客户之声素材",
+      "type": "Tool",
+      "category": "开源项目",
+      "summary": "把自己店铺后台难以批量导出的商品评价采集成 CSV，让运营可以直接做卖点提炼、差评归因和内容选题",
+      "recommendationReason": "能替代逐条手抄评价，把零散反馈变成可筛选的数据资产，特别适合新品复盘、详情页优化和客服问题归类",
+      "recommendationTrack": "工作提效",
+      "timeToValue": "10 分钟",
+      "adoptionLevel": "直接使用",
+      "networkRequirement": "部分资源需要 VPN",
+      "takeaway": "导出一份可用 Excel 或 AI 分析的商品评价表，并形成高频好评点、差评原因和内容机会清单",
+      "coverImage": "/images/content/recvpwKcdRqk23/recvpwKcdRqk23.webp",
+      "tags": [
+        "自动化",
+        "内容工作流",
+        "开源"
+      ],
+      "audience": [
+        "运营团队",
+        "市场团队",
+        "内容团队"
+      ],
+      "scenario": "新品上市复盘、商品卖点提炼、差评归因、详情页优化、客服话术和短视频选题",
+      "originalUrl": "https://github.com/fxl1209739475-fxl/doudian-review-exporter",
+      "sourceName": "抖店评价导出采集器",
+      "featured": false,
+      "sortWeight": 0,
+      "publishedAt": "2026-07-16T09:52:00.000Z",
+      "updatedAt": "2026-07-16T09:52:00.000Z",
+      "copyBlocks": [
+        {
+          "id": "recvpwKdr4aN2a",
+          "title": "直接复制给 Codex",
+          "type": "Prompt",
+          "language": "text",
+          "content": "请根据这份抖店评价 CSV 做客户之声分析，先检查字段与数据质量，再输出高频好评点、主要差评原因、可验证的产品改进项、详情页表达建议和短视频选题。所有结论附上评价数量或原文证据，不把个别评价扩大成普遍结论",
+          "order": 1,
+          "note": "先复制给 Codex，再按实际工作资料补充输入"
+        }
+      ]
+    },
+    {
+      "id": "recvpwKe5AUliE",
+      "slug": "feishu-base-custom-api-batch-ai",
+      "title": "飞书多维表格批量调用 AI：先单行验证，再批量生成文案或图片",
+      "type": "Tool",
+      "category": "工作区配置",
+      "summary": "让多维表格按每一行的商品信息调用自选大模型或生图 API，把生成结果直接写回文本列或附件列",
+      "recommendationReason": "适合几百个 SKU 的标题、卖点、文案和主图批量生产，通过单行测试、失败重试和跳过已填行降低返工风险",
+      "recommendationTrack": "工作提效",
+      "timeToValue": "1 小时",
+      "adoptionLevel": "需要配置",
+      "networkRequirement": "部分资源需要 VPN",
+      "takeaway": "搭建一个从表格输入列到 AI 输出列的批处理流程，先验证一行，再稳定扩展到整批 SKU",
+      "coverImage": "/images/content/recvpwKe5AUliE/recvpwKe5AUliE.webp",
+      "tags": [
+        "飞书",
+        "AI",
+        "自动化",
+        "内容工作流"
+      ],
+      "audience": [
+        "运营团队",
+        "内容团队",
+        "研发团队"
+      ],
+      "scenario": "SKU 标题与卖点生成、商品描述改写、主图批量生成、内容分类和运营表格补全",
+      "originalUrl": "https://github.com/fxl1209739475-fxl/feishu-base-custom-api",
+      "sourceName": "飞书多维表格自定义 API 插件",
+      "featured": false,
+      "sortWeight": 0,
+      "publishedAt": "2026-07-16T09:52:00.000Z",
+      "updatedAt": "2026-07-16T09:52:00.000Z",
+      "copyBlocks": [
+        {
+          "id": "recvpwKfgcwCWn",
+          "title": "直接复制给 Codex",
+          "type": "Prompt",
+          "language": "text",
+          "content": "请帮我设计一个飞书多维表格批量调用 AI 的任务。先列出输入列、输出列、提示词模板、模型参数和失败处理规则，再用单行数据验证输出质量。只有我确认单行结果后才扩大到批量，并默认跳过已有结果的行",
+          "order": 1,
+          "note": "先复制给 Codex，再按实际工作资料补充输入"
+        }
+      ]
+    },
+    {
+      "id": "recvpwKfT3n1nF",
+      "slug": "douyin-creator-data-collector-jsonl",
+      "title": "抖音经营数据采集：把自己后台的内容、投放和评价数据落成 JSONL",
+      "type": "Tool",
+      "category": "开源项目",
+      "summary": "在正常浏览自己账号的创作者中心、巨量千川和抖店后台时捕获页面数据，落成可长期分析的 JSONL 文件",
+      "recommendationReason": "能把播放、完播率、粉丝画像、投放和评价数据汇到同一分析入口，减少重复导表，为内容与投放复盘保留连续数据",
+      "recommendationTrack": "工作提效",
+      "timeToValue": "1 小时",
+      "adoptionLevel": "需要配置",
+      "networkRequirement": "部分资源需要 VPN",
+      "takeaway": "建立一份属于自己的抖音经营数据流水，能够按内容、日期和投放维度持续复盘",
+      "coverImage": "/images/content/recvpwKfT3n1nF/recvpwKfT3n1nF.webp",
+      "tags": [
+        "自动化",
+        "内容工作流",
+        "开源"
+      ],
+      "audience": [
+        "运营团队",
+        "市场团队",
+        "管理者"
+      ],
+      "scenario": "短视频表现复盘、直播与投放诊断、粉丝画像分析、商品评价跟踪和周报自动化",
+      "originalUrl": "https://github.com/fxl1209739475-fxl/douyin-creator-data-collector",
+      "sourceName": "抖音经营数据采集器",
+      "featured": false,
+      "sortWeight": 0,
+      "publishedAt": "2026-07-16T09:52:00.000Z",
+      "updatedAt": "2026-07-16T09:52:00.000Z",
+      "copyBlocks": [
+        {
+          "id": "recvpwKQgMIVYk",
+          "title": "直接复制给 Codex",
+          "type": "Prompt",
+          "language": "text",
+          "content": "请检查这份抖音经营数据采集器的安装方式和数据字段，先用本地接收器跑通一条测试数据并确认数据只写入本机。随后设计按日期、内容、投放和评价维度的分析结构，输出可复用的周报指标与异常检查清单",
+          "order": 1,
+          "note": "先复制给 Codex，再按实际工作资料补充输入"
+        }
+      ]
+    },
+    {
+      "id": "recvpwKR5mVA76",
+      "slug": "feishu-meeting-real-time-decision-agent",
+      "title": "飞书会议实时提醒：会前锁定判断，会中补追问，会后沉淀证据",
+      "type": "Collaboration",
+      "category": "协作方法",
+      "summary": "让 AI 在面试、周会和需求评审的关键时刻提醒缺失证据、责任人和截止时间，而不是只在会后生成纪要",
+      "recommendationReason": "能降低会议主持人的认知负荷，避免重要问题没问透、假共识和行动项无人负责，适合高决策密度会议",
+      "recommendationTrack": "团队实践",
+      "timeToValue": "半天",
+      "adoptionLevel": "需要开发",
+      "networkRequirement": "部分资源需要 VPN",
+      "takeaway": "搭建一个围绕单一核心判断的会议助手，得到会前判断点、会中追问和可追溯的会后证据草稿",
+      "coverImage": "/images/content/recvpwKR5mVA76/recvpwKR5mVA76.webp",
+      "tags": [
+        "飞书",
+        "Agent",
+        "团队协作",
+        "AI"
+      ],
+      "audience": [
+        "管理者",
+        "运营团队",
+        "研发团队"
+      ],
+      "scenario": "招聘面试、需求评审、项目周会、方案决策和跨团队复盘",
+      "originalUrl": "https://atourgroup.feishu.cn/wiki/Znpawd3OTi7BlmkBSvDckjhxnsg?from=from_copylink",
+      "sourceName": "飞书会议智能体实践",
+      "featured": false,
+      "sortWeight": 0,
+      "publishedAt": "2026-07-16T09:52:00.000Z",
+      "updatedAt": "2026-07-16T09:52:00.000Z",
+      "copyBlocks": [
+        {
+          "id": "recvpwKSdD78gF",
+          "title": "直接复制给 Codex",
+          "type": "Prompt",
+          "language": "text",
+          "content": "请为一次高决策密度会议设计实时提醒助手。会前只提炼两到三个必须判断的问题；会中只在缺少证据、关键追问、责任人或截止时间时提醒；会后按原始材料和逐字稿整理证据草稿。禁止编造，所有判断必须能追溯到材料或会议原话，最终决策保留给人",
+          "order": 1,
+          "note": "先复制给 Codex，再按实际工作资料补充输入"
         }
       ]
     }
