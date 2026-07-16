@@ -70,7 +70,9 @@ test("copy block reports success without shifting its button", async ({ page, co
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.goto(`/content/${sourceItem.slug}`);
 
-  const button = page.getByRole("button", { name: `复制 ${copyBlock.title}` });
+  const button = page.locator(".copy-block__button");
+  await expect(button).toHaveCount(1);
+  await expect(button).toHaveAccessibleName(`复制 ${copyBlock.title}`);
   await expect(button).toBeEnabled();
   await button.scrollIntoViewIfNeeded();
   const before = await button.boundingBox();
@@ -84,7 +86,9 @@ test("copy block reports success without shifting its button", async ({ page, co
 test("copy block reports clipboard failure without claiming success and can retry", async ({ page }) => {
   await page.goto(`/content/${sourceItem.slug}`);
 
-  const button = page.getByRole("button", { name: `复制 ${copyBlock.title}` });
+  const button = page.locator(".copy-block__button");
+  await expect(button).toHaveCount(1);
+  await expect(button).toHaveAccessibleName(`复制 ${copyBlock.title}`);
   await expect(button).toBeEnabled();
   await page.evaluate(() => {
     let attempts = 0;

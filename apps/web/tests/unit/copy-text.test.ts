@@ -36,4 +36,22 @@ describe("copyText", () => {
     expect(execCommand).toHaveBeenCalledWith("copy");
     expect(document.querySelector("textarea")).toBeNull();
   });
+
+  it("falls back after the Clipboard API is denied", async () => {
+    const writeText = vi.fn().mockRejectedValue(new Error("denied"));
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
+    const execCommand = vi.fn().mockReturnValue(true);
+    Object.defineProperty(document, "execCommand", {
+      configurable: true,
+      value: execCommand,
+    });
+
+    await copyText("embedded fallback");
+
+    expect(writeText).toHaveBeenCalledWith("embedded fallback");
+    expect(execCommand).toHaveBeenCalledWith("copy");
+  });
 });

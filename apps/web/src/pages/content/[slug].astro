@@ -1,6 +1,5 @@
 ---
 import ContentCard from "../../components/ContentCard.astro";
-import { CopyBlockView } from "../../components/CopyBlock";
 import FeishuDocumentCard from "../../components/FeishuDocumentCard.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getRelated } from "../../lib/content";
@@ -82,7 +81,30 @@ const copyBlocks = [...item.copyBlocks].sort((left, right) => left.order - right
             <p>直接复用</p>
             <h2 id="copy-title">可复制内容</h2>
             <div class="detail-copy__list">
-              {copyBlocks.map((block) => <CopyBlockView client:load block={block} />)}
+              {copyBlocks.map((block) => (
+                <section class="copy-block" aria-labelledby={`copy-block-${block.id}`}>
+                  <header class="copy-block__header">
+                    <div>
+                      <p>{block.type}</p>
+                      <h2 id={`copy-block-${block.id}`}>{block.title}</h2>
+                    </div>
+                    <button
+                      type="button"
+                      class="copy-block__button"
+                      aria-label={`复制 ${block.title}`}
+                      data-copy-block-button
+                    >
+                      <span class="copy-block__icon" aria-hidden="true"><span /></span>
+                      <span data-copy-block-label>复制安装与执行</span>
+                    </button>
+                  </header>
+                  <pre><code class={`language-${block.language}`}>{block.content}</code></pre>
+                  <p class="copy-block__note">
+                    {block.note ?? "复制给 Codex 后，将按顺序检查环境、完成安装或接入，并执行任务"}
+                  </p>
+                  <span class="visually-hidden" data-copy-block-feedback aria-live="polite"></span>
+                </section>
+              ))}
             </div>
           </section>
         )}
@@ -142,6 +164,86 @@ const copyBlocks = [...item.copyBlocks].sort((left, right) => left.order - right
       </section>
     )}
   </article>
+
+  <script is:inline>
+    (() => {
+      async function copyText(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          try {
+            await navigator.clipboard.writeText(text);
+            return;
+          } catch {
+            // Embedded Feishu pages may deny the modern Clipboard API.
+          }
+        }
+
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        Object.assign(textarea.style, {
+          position: "fixed",
+          top: "0",
+          left: "0",
+          width: "1px",
+          height: "1px",
+          padding: "0",
+          border: "0",
+          opacity: "0.01",
+          pointerEvents: "none",
+        });
+        document.body.append(textarea);
+        textarea.focus({ preventScroll: true });
+        textarea.select();
+        textarea.setSelectionRange(0, text.length);
+
+        let copied = false;
+        try {
+          copied = document.execCommand("copy");
+        } finally {
+          textarea.remove();
+        }
+
+        if (!copied) throw new Error("Clipboard access is unavailable");
+      }
+
+      document.addEventListener("click", async (event) => {
+        const target = event.target;
+        const button = target instanceof Element
+          ? target.closest("[data-copy-block-button]")
+          : null;
+        if (!(button instanceof HTMLButtonElement)) return;
+
+        const block = button.closest(".copy-block");
+        const code = block && block.querySelector("code");
+        const label = button.querySelector("[data-copy-block-label]");
+        const feedback = block && block.querySelector("[data-copy-block-feedback]");
+        const title = block && block.querySelector("h2")
+          ? block.querySelector("h2").textContent.trim()
+          : "可复制内容";
+        if (!code || !label || !feedback) return;
+
+        button.disabled = true;
+        try {
+          await copyText(code.textContent || "");
+          label.textContent = "已复制";
+          button.setAttribute("aria-label", `已复制 ${title}`);
+          feedback.setAttribute("role", "status");
+          feedback.textContent = `已复制 ${title}`;
+          window.setTimeout(() => {
+            label.textContent = "复制安装与执行";
+            button.setAttribute("aria-label", `复制 ${title}`);
+            feedback.textContent = "";
+          }, 1600);
+        } catch {
+          label.textContent = "重新复制";
+          button.setAttribute("aria-label", `复制 ${title}`);
+          feedback.setAttribute("role", "alert");
+          feedback.textContent = "复制失败，请重试";
+        } finally {
+          button.disabled = false;
+        }
+      });
+    })();
+  </script>
 </BaseLayout>
 
 <style>

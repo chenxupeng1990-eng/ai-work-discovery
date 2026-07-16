@@ -54,7 +54,6 @@
 ```powershell
 cd apps/web
 $env:MIAODA_APP_ID = "app_17a5paexd1j"
-$env:MIAODA_PUBLIC_ORIGIN = "https://g2b5dhmahw.aiforce.cloud"
 npm run build:miaoda
 lark-cli apps +html-publish --app-id app_17a5paexd1j --path ./dist --as user
 ```

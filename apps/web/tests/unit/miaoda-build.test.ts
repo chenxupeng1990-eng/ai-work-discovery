@@ -47,12 +47,11 @@ describe("rewriteForMiaoda", () => {
 });
 
 describe("rewriteMiaodaModuleImports", () => {
-  it("routes relative JavaScript dependencies back through the Miaoda app host", () => {
+  it("routes relative JavaScript dependencies through the current Miaoda origin", () => {
     const source = 'import{t as e}from"./react.hash.js";import("./lazy.hash.js")';
-    const moduleBaseUrl = "https://demo.aiforce.cloud/app/app_example";
 
-    expect(rewriteMiaodaModuleImports(source, moduleBaseUrl)).toBe(
-      'import{t as e}from"https://demo.aiforce.cloud/app/app_example/_astro/react.hash.js";import("https://demo.aiforce.cloud/app/app_example/_astro/lazy.hash.js")',
+    expect(rewriteMiaodaModuleImports(source, basePath)).toBe(
+      'import{t as e}from"/app/app_example/_astro/react.hash.js";import("/app/app_example/_astro/lazy.hash.js")',
     );
   });
 
