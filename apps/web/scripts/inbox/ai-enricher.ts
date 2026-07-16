@@ -34,7 +34,17 @@ const CopyBlockProposalSchema = z.object({
   language: z.string().min(1).max(30),
   content: z.string().min(1).max(12_000),
   note: z.string().min(1).max(200).optional(),
-}).strict();
+}).strict().superRefine((block, context) => {
+  for (const section of ["【准备与安装】", "【执行任务】", "【完成标准】"]) {
+    if (!block.content.includes(section)) {
+      context.addIssue({
+        code: "custom",
+        message: `copy block must include ${section}`,
+        path: ["content"],
+      });
+    }
+  }
+});
 
 export const DraftProposalSchema = z.object({
   title: z.string().min(1).max(80),
@@ -181,6 +191,8 @@ async function performEnrichment(
               "adoptionLevel 按真实依赖选择直接使用、需要配置或需要开发.",
               "networkRequirement 按公司无 VPN 环境下的实际可用性选择无需 VPN、部分资源需要 VPN 或需要 VPN.",
               "来源页不是最终交付物；不要只复述或推荐外链，要从来源中筛出一个具体方法，拆成同事可直接执行的步骤、复制块和可验证产物.",
+              "每个 copyBlocks.content 都必须是复制给 Codex 后可直接执行的完整包，并严格包含【准备与安装】【执行任务】【完成标准】三个小节；需要工具时给出来自来源证据的安装命令、依赖、启动和验证方式，不得猜命令；不需要额外工具时明确写无需安装，并说明使用入口和所需材料.",
+              "安装或授权失败时要求 Codex 停止并报告阻塞项；不得静默跳过依赖、权限、登录或安全确认，也不得在未验证时声称完成.",
               "takeaway 必须写成可验证的具体产物或完成动作，使用完成、得到、生成、搭建等结果动词，说明用户学完后可以复制、安装或完成什么.",
               "在 recommendationReason 或 takeaway 中至少给出两个具体工作场景，例如招聘初筛、会议追问、电商短视频剪辑、经营数据复盘；场景必须来自来源证据，不得泛化虚构.",
               "summary、recommendationReason 和 takeaway 用于卡片展示，结尾不使用句号（。或 .）.",

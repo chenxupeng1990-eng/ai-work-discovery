@@ -88,6 +88,10 @@ test("copy block reports clipboard failure without claiming success and can retr
   await expect(button).toBeEnabled();
   await page.evaluate(() => {
     let attempts = 0;
+    Object.defineProperty(document, "execCommand", {
+      configurable: true,
+      value: () => false,
+    });
     Object.defineProperty(navigator.clipboard, "writeText", {
       configurable: true,
       value: async () => {

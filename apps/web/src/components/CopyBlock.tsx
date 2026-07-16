@@ -48,11 +48,13 @@ export function CopyBlockView({ block }: { block: CopyBlock }) {
           onClick={copy}
         >
           <span className="copy-block__icon" aria-hidden="true"><span /></span>
-          <span>{copied ? "已复制" : "复制"}</span>
+          <span>{copied ? "已复制" : "复制安装与执行"}</span>
         </button>
       </header>
       <pre><code className={`language-${block.language}`}>{block.content}</code></pre>
-      {block.note && <p className="copy-block__note">{block.note}</p>}
+      <p className="copy-block__note">
+        {block.note ?? "复制给 Codex 后，将按顺序检查环境、完成安装或接入，并执行任务"}
+      </p>
       <span
         className="visually-hidden"
         role={state === "error" ? "alert" : "status"}

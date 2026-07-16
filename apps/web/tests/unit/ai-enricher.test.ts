@@ -25,7 +25,7 @@ const validProposal = {
     title: "Run checks",
     type: "Command",
     language: "shell",
-    content: "npm test",
+    content: "【准备与安装】\n无需安装额外工具，确认 Node.js 和 npm 可用\n\n【执行任务】\nnpm test\n\n【完成标准】\n测试命令成功退出并输出通过结果",
     note: "Run before review.",
   }],
 } as const;
@@ -47,6 +47,19 @@ describe("DraftProposalSchema", () => {
   it("accepts a strict bounded draft proposal", () => {
     expect(DraftProposalSchema.parse(validProposal)).toEqual(validProposal);
   });
+
+  it.each(["【准备与安装】", "【执行任务】", "【完成标准】"])(
+    "rejects copy blocks missing %s",
+    (section) => {
+      const content = validProposal.copyBlocks[0].content.replace(`${section}\n`, "");
+      const candidate = {
+        ...validProposal,
+        copyBlocks: [{ ...validProposal.copyBlocks[0], content }],
+      };
+
+      expect(DraftProposalSchema.safeParse(candidate).success).toBe(false);
+    },
+  );
 
   it.each([
     ["unknown field", { ...validProposal, admin: true }],
@@ -224,6 +237,10 @@ describe("enrichDraft", () => {
     expect(messages[0]?.content).toContain("可直接执行");
     expect(messages[0]?.content).toContain("复制");
     expect(messages[0]?.content).toContain("安装");
+    expect(messages[0]?.content).toContain("【准备与安装】");
+    expect(messages[0]?.content).toContain("【执行任务】");
+    expect(messages[0]?.content).toContain("【完成标准】");
+    expect(messages[0]?.content).toContain("不得猜命令");
     expect(messages[0]?.content).toContain("完成");
     expect(messages[0]?.content).toContain("结尾不使用句号");
     expect(messages[0]?.content).toContain("禁止虚构");
