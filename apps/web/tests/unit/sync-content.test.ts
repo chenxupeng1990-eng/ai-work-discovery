@@ -72,7 +72,7 @@ function publishedRecord(overrides: Record<string, unknown> = {}): RawFeishuReco
     [CONTENT.auditDecision]: "通过",
     [CONTENT.auditNote]: "已按当前官方来源完成核验。",
     [CONTENT.auditedAt]: "2026-07-14T07:00:00.000Z",
-    [CONTENT.nextReviewAt]: "2026-07-21T08:00:00.000Z",
+    [CONTENT.nextReviewAt]: "2099-07-21T08:00:00.000Z",
     ...overrides,
   });
 }

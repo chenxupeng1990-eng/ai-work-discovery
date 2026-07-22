@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-16T11:10:59.955Z",
+  "generatedAt": "2026-07-22T03:57:24.536Z",
   "items": [
     {
       "id": "recvprdxsgplb1",
@@ -1164,6 +1164,141 @@
           "content": "【准备与安装】\n在 Windows PowerShell 执行 `npm install -g @larksuite/cli` 安装飞书 CLI\n执行 `npx skills add larksuite/cli -g -y` 安装官方飞书 Skills\n执行 `lark-cli doctor` 和 `lark-cli whoami` 检查连接、授权身份与权限；未授权时按终端链接完成用户授权\n确认 Codex 已识别 `lark-vc-agent` 会议 Skill；该能力无需另装独立项目，但机器人加入会议、读取会中事件和发送提醒前必须完成飞书应用权限与会议授权\n\n【执行任务】\n请为一次高决策密度会议设计实时提醒助手。会前只提炼两到三个必须判断的问题；会中只在缺少证据、关键追问、责任人或截止时间时提醒；会后按原始材料和逐字稿整理证据草稿。禁止编造，所有判断必须能追溯到材料或会议原话，最终决策保留给人\n\n【完成标准】\n搭建一个围绕单一核心判断的会议助手，得到会前判断点、会中追问和可追溯的会后证据草稿。安装、登录、权限或依赖未通过时停止并列出阻塞项，不得跳过验证或声称已完成",
           "order": 1,
           "note": "一次复制包含准备、安装或接入、执行和验收；账号登录、授权与外部写入仍需人工确认"
+        }
+      ]
+    },
+    {
+      "id": "recvq4pdcxsuyC",
+      "slug": "codex-subagents-parallel-research-review",
+      "title": "Codex 子代理：把竞品研究和内容审核拆成并行任务",
+      "type": "Skill",
+      "category": "协作方法",
+      "summary": "让 Codex 把互相独立的调研、审核和测试任务交给多个子代理并行完成，主任务只负责统一判断和汇总",
+      "recommendationReason": "适合竞品研究、批量内容审核和多项验证同时推进，能显著减少主对话中的搜索日志与中间噪声；但任务边界必须清楚，多个代理不要同时修改同一文件",
+      "recommendationTrack": "工作提效",
+      "timeToValue": "10 分钟",
+      "adoptionLevel": "直接使用",
+      "networkRequirement": "需要 VPN",
+      "takeaway": "复制三个可直接使用的多代理任务模板，并学会限制范围、输出格式和写入冲突",
+      "coverImage": "/images/content/recvq4pdcxsuyC/recvq4pdcxsuyC.webp",
+      "tags": [
+        "Codex",
+        "Agent",
+        "自动化",
+        "团队协作"
+      ],
+      "audience": [
+        "内容团队",
+        "运营团队",
+        "市场团队",
+        "研发团队"
+      ],
+      "scenario": "竞品并行调研、商品内容批量审核、代码测试、资料核验和多方案比较",
+      "originalUrl": "https://learn.chatgpt.com/docs/agent-configuration/subagents",
+      "sourceName": "OpenAI Codex 官方文档",
+      "featured": false,
+      "sortWeight": 96,
+      "publishedAt": "2026-07-22T04:00:00.000Z",
+      "updatedAt": "2026-07-22T04:00:00.000Z",
+      "copyBlocks": [
+        {
+          "id": "recvq4qwj7nmyw",
+          "title": "直接复制给 Codex",
+          "type": "Prompt",
+          "language": "text",
+          "content": "【准备与安装】\n无需安装额外工具。先确认当前 Codex 客户端支持子代理，并准备需要并行处理的来源、范围和统一输出格式。子代理会增加 token 消耗，不要让多个代理同时修改同一文件\n\n【执行任务】\n请把【目标任务】拆成 3 个互相独立的子任务并行执行：\n1. 子代理 A：研究【对象一】，只输出事实、来源和不确定项\n2. 子代理 B：研究【对象二】，使用与 A 相同的输出结构\n3. 子代理 C：检查两组结果的事实冲突、时效和遗漏\n\n要求：\n- 每个代理只能处理自己的范围，不修改项目文件\n- 每条关键结论附来源与核验日期\n- 等全部代理完成后再统一汇总\n- 汇总表包含：结论、证据、适用场景、风险、下一步动作\n- 搜索或访问失败必须明确标注，不得补写\n\n【完成标准】\n得到一份结构统一、来源可追溯的并行研究结果，并列出冲突项、待确认项和建议动作",
+          "order": 1,
+          "note": "无需安装；适合竞品调研、内容审核和多项只读验证，写操作需避免文件冲突"
+        }
+      ]
+    },
+    {
+      "id": "recvq4pdcxuEh8",
+      "slug": "lark-cli-1-0-74-batch-update-slides-check",
+      "title": "飞书 CLI v1.0.74：批量改表与幻灯片质检一次完成",
+      "type": "Tool",
+      "category": "工作区配置",
+      "summary": "飞书 CLI 新增按记录批量更新多维表格，并强化幻灯片历史回滚、文字溢出和遮挡检测",
+      "recommendationReason": "内容运营可以一次修改多条记录的不同字段，汇报材料也能在交付前自动检查版式问题，减少逐条改表和人工翻页质检",
+      "recommendationTrack": "工作提效",
+      "timeToValue": "10 分钟",
+      "adoptionLevel": "需要配置",
+      "networkRequirement": "部分资源需要 VPN",
+      "takeaway": "完成 CLI 版本检查与升级，并复制批量改表和幻灯片质检的执行模板",
+      "coverImage": "/images/content/recvq4pdcxuEh8/recvq4pdcxuEh8.webp",
+      "tags": [
+        "飞书",
+        "自动化",
+        "内容工作流",
+        "团队协作"
+      ],
+      "audience": [
+        "内容团队",
+        "运营团队",
+        "研发团队",
+        "管理者"
+      ],
+      "scenario": "内容中心批量维护、灵感收件箱审核、汇报材料质检和误改版本回滚",
+      "originalUrl": "https://github.com/larksuite/cli/releases",
+      "sourceName": "飞书 CLI 官方 GitHub",
+      "featured": false,
+      "sortWeight": 95,
+      "publishedAt": "2026-07-22T04:00:00.000Z",
+      "updatedAt": "2026-07-22T04:00:00.000Z",
+      "copyBlocks": [
+        {
+          "id": "recvq4qwj7ujEI",
+          "title": "复制安装与执行给 Codex",
+          "type": "Command",
+          "language": "powershell",
+          "content": "【准备与安装】\n在 Windows PowerShell 先做只读检查：\n\nlark-cli update --check --json\nlark-cli whoami\nlark-cli doctor\n\n只有确认版本、身份和权限无误后，才执行：\n\nlark-cli update\n\n升级后重新运行 lark-cli doctor，并查看目标命令帮助，不要猜参数\n\n【执行任务】\n请使用当前飞书 CLI 完成以下工作：\n1. 运行 lark-cli base +record-batch-update --help，确认当前版本支持的批量更新 JSON 结构\n2. 读取【多维表格链接】的表与字段，只处理我指定的记录\n3. 先生成 dry-run 请求，展示每条记录将修改哪些字段\n4. 等我确认后再执行批量更新\n5. 如果还要检查汇报材料，读取目标飞书幻灯片并执行文字溢出、遮挡和历史版本检查；发现问题只生成修复清单，不自动覆盖\n\n【完成标准】\n输出升级前后版本、当前授权身份、dry-run 变更清单、实际更新结果和幻灯片问题清单；任何字段、权限或命令不确定时停止，不得猜测",
+          "order": 1,
+          "note": "先检查再升级；GitHub 页面可能需要 VPN，但飞书 CLI 访问国内飞书通常无需 VPN"
+        }
+      ]
+    },
+    {
+      "id": "recvq4pdcxTPdD",
+      "slug": "openshorts-ai-ugc-ecommerce-video-pipeline",
+      "title": "OpenShorts：把商品信息变成 AI UGC 短视频流水线",
+      "type": "Tool",
+      "category": "视频工作流",
+      "summary": "从商品描述或网页生成 UGC 脚本、演员视频、配音、字幕和多平台成片，也能把长视频切成竖屏内容",
+      "recommendationReason": "它把商品短视频从脚本到发布的主要模块放进一条可拆解流水线，适合团队先验证哪个环节值得接入现有生产流程，而不是把它当成无需配置的一键成片工具",
+      "recommendationTrack": "灵感实验",
+      "timeToValue": "半天",
+      "adoptionLevel": "需要开发",
+      "networkRequirement": "需要 VPN",
+      "takeaway": "在测试机跑起 Docker 项目，完成一条商品 UGC 样片，并拿到 API 成本、中文效果和人工审核清单",
+      "coverImage": "/images/content/recvq4pdcxTPdD/recvq4pdcxTPdD.webp",
+      "tags": [
+        "AI",
+        "视频生成",
+        "内容工作流",
+        "开源"
+      ],
+      "audience": [
+        "内容团队",
+        "运营团队",
+        "市场团队",
+        "研发团队"
+      ],
+      "scenario": "商品 UGC 样片、直播切片、竖屏重构、字幕配音和多平台内容装配",
+      "originalUrl": "https://github.com/mutonby/openshorts",
+      "sourceName": "OpenShorts GitHub",
+      "featured": false,
+      "sortWeight": 90,
+      "publishedAt": "2026-07-22T04:00:00.000Z",
+      "updatedAt": "2026-07-22T04:00:00.000Z",
+      "copyBlocks": [
+        {
+          "id": "recvq4qwj79iS3",
+          "title": "复制安装与执行给 Codex",
+          "type": "Prompt",
+          "language": "powershell",
+          "content": "【准备与安装】\n先确认 Docker Desktop、Docker Compose、Git 和至少 20GB 可用磁盘空间。外部模型服务需要单独账号、API Key 和费用预算\n\ngit clone https://github.com/mutonby/openshorts.git\ncd openshorts\ndocker compose up --build\n\n启动前先阅读当前 README 与环境变量示例，不要把 API Key 写入 Git，也不要使用未授权的人物、品牌、音乐或竞品素材\n\n【执行任务】\n请先审查 OpenShorts 当前 README、Docker 配置和环境变量模板，不要直接调用付费 API。输出：\n1. 本机 Docker、磁盘、端口和网络环境检查\n2. Gemini、fal.ai、ElevenLabs、Upload-Post 等依赖的用途、费用与是否可替换\n3. 用一个自有商品和授权素材完成最小 UGC 样片的步骤\n4. 记录脚本、人物、配音、字幕、视频和发布各环节的人工审核点\n5. 先生成 15 秒测试片，不自动发布\n\n【完成标准】\n项目可在本机打开，完成一条 15 秒商品 UGC 测试片，并给出实际 API 成本、中文效果、失败环节和是否值得接入现有工作流的结论",
+          "order": 1,
+          "note": "需要 Docker 与多个外部 API，公司网络下大概率需要 VPN；适合作为实验，不应承诺无需配置的一键生产"
         }
       ]
     }
