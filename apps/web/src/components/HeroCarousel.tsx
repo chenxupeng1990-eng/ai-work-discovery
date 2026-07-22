@@ -97,6 +97,7 @@ export function HeroCarousel({ items }: HeroCarouselProps) {
     <section
       className="hero-carousel"
       data-home-section="spotlight"
+      data-hero-carousel
       role="region"
       aria-roledescription="carousel"
       aria-label="精选内容"
@@ -114,6 +115,8 @@ export function HeroCarousel({ items }: HeroCarouselProps) {
             <article
               className={`hero-carousel__slide${isActive ? " is-active" : ""}`}
               key={item.id}
+              data-hero-slide
+              data-slide-index={index}
               role="group"
               aria-roledescription="slide"
               aria-label={`${index + 1} / ${items.length}`}
@@ -155,10 +158,10 @@ export function HeroCarousel({ items }: HeroCarouselProps) {
       {items.length > 1 && (
         <div className="hero-carousel__controls container">
           <div className="hero-carousel__arrows">
-            <button type="button" onClick={showPrevious} aria-label="上一项精选">
+            <button type="button" data-hero-previous onClick={showPrevious} aria-label="上一项精选">
               <span aria-hidden="true">←</span>
             </button>
-            <button type="button" onClick={showNext} aria-label="下一项精选">
+            <button type="button" data-hero-next onClick={showNext} aria-label="下一项精选">
               <span aria-hidden="true">→</span>
             </button>
           </div>
@@ -168,6 +171,8 @@ export function HeroCarousel({ items }: HeroCarouselProps) {
                 type="button"
                 key={item.id}
                 className={index === activeIndex ? "is-active" : ""}
+                data-hero-dot
+                data-slide-index={index}
                 aria-label={`转到第 ${index + 1} 项：${item.title}`}
                 aria-current={index === activeIndex ? "true" : undefined}
                 onClick={() => showItem(index)}
@@ -177,7 +182,13 @@ export function HeroCarousel({ items }: HeroCarouselProps) {
         </div>
       )}
 
-      <p className="visually-hidden" role="status" aria-live="polite" aria-atomic="true">
+      <p
+        className="visually-hidden"
+        data-hero-status
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         第 {activeIndex + 1} 项，共 {items.length} 项
       </p>
 

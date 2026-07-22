@@ -499,16 +499,16 @@ const navigation = [
   }
 </style>
 
-<script>
-  const menuButton = document.querySelector<HTMLButtonElement>("[data-mobile-menu-button]");
-  const mobileNavigation = document.querySelector<HTMLElement>("#mobile-navigation");
-  const feedbackDialog = document.querySelector<HTMLDialogElement>("[data-feedback-dialog]");
-  const feedbackFrame = document.querySelector<HTMLIFrameElement>("[data-feedback-frame]");
-  const feedbackOpenButtons = document.querySelectorAll<HTMLButtonElement>("[data-feedback-open]");
-  const feedbackCloseButton = document.querySelector<HTMLButtonElement>("[data-feedback-close]");
-  let feedbackInvoker: HTMLButtonElement | null = null;
+<script is:inline>
+  const menuButton = document.querySelector("[data-mobile-menu-button]");
+  const mobileNavigation = document.querySelector("#mobile-navigation");
+  const feedbackDialog = document.querySelector("[data-feedback-dialog]");
+  const feedbackFrame = document.querySelector("[data-feedback-frame]");
+  const feedbackOpenButtons = document.querySelectorAll("[data-feedback-open]");
+  const feedbackCloseButton = document.querySelector("[data-feedback-close]");
+  let feedbackInvoker = null;
 
-  const setMenuExpanded = (expanded: boolean) => {
+  const setMenuExpanded = (expanded) => {
     menuButton?.setAttribute("aria-expanded", String(expanded));
     menuButton?.setAttribute("aria-label", expanded ? "关闭导航" : "打开导航");
     menuButton?.setAttribute("title", expanded ? "关闭导航" : "打开导航");

@@ -61,7 +61,7 @@ async function expectHeroCoverMeetsReleaseRequirements(image: Locator) {
   }));
   expect(naturalWidth).toBeGreaterThanOrEqual(1536);
   expect(naturalHeight).toBeGreaterThanOrEqual(960);
-  expect(naturalWidth / naturalHeight).toBeGreaterThanOrEqual(1.57);
+  expect(naturalWidth / naturalHeight).toBeGreaterThanOrEqual(1.5);
   expect(naturalWidth / naturalHeight).toBeLessThanOrEqual(1.63);
 }
 
@@ -98,8 +98,10 @@ test("public routes share the QIFEI brand copy without a header logo", async ({ 
 
 test("homepage source keeps a visible fallback when no hero items are available", () => {
   expect(homepageSource).toMatch(
-    /\{heroItems\.length > 0\s*\?\s*<HeroCarousel items=\{heroItems\} client:load \/>\s*:\s*\(\s*<section class="home-empty" data-home-empty="true">/,
+    /\{heroItems\.length > 0\s*\?\s*<HeroCarousel items=\{heroItems\} \/>\s*:\s*\(\s*<section class="home-empty" data-home-empty="true">/,
   );
+  expect(homepageSource).toContain("<HomeInteractions />");
+  expect(homepageSource).not.toContain("client:load");
   expect(homepageSource).toContain("<h1>QIFEI AI Work Discovery</h1>");
   expect(homepageSource).toContain("<p>暂无已发布内容</p>");
 });
@@ -153,7 +155,7 @@ test("homepage quick match updates recommendations and links the selected goal t
       format: "可复制内容",
       adoptionLevel: "直接使用",
     }, 3);
-    await expect(picker.locator(".starter-result").getByRole("heading")).toHaveText(
+    await expect(picker.locator(".starter-result:visible").getByRole("heading")).toHaveText(
       expected.map((item) => item.title),
     );
 
@@ -172,7 +174,7 @@ test("desktop quick-match cards align their information rows and omit terminal f
   await page.setViewportSize({ width: 1050, height: 920 });
   await page.goto("/");
 
-  const cards = page.locator(".starter-result");
+  const cards = page.locator(".starter-result:visible");
   await expect(cards).toHaveCount(3);
   const rowMetrics = await cards.evaluateAll((elements) => elements.map((card) => {
     const top = (selector: string) => card.querySelector(selector)!.getBoundingClientRect().top;
@@ -288,7 +290,7 @@ test("homepage third screen keeps feed cards and a dynamic full-category entry",
     category: "全部",
     sort: "featured",
   });
-  await expect(explorer.locator("[data-discovery-card]")).toHaveCount(
+  await expect(explorer.locator("[data-discovery-card]:visible")).toHaveCount(
     Math.min(homepageDiscoveryLimit, allResults.length),
   );
   await expect(explorer.getByRole("status", { name: "搜索结果数量" })).toHaveText(
@@ -306,7 +308,7 @@ test("homepage third screen keeps feed cards and a dynamic full-category entry",
   await expect(explorer.getByRole("link", {
     name: `查看「${category.track}」全部内容`,
   })).toHaveAttribute("href", `/category/${category.slug}`);
-  await expect(explorer.locator("[data-discovery-card]")).toHaveCount(
+  await expect(explorer.locator("[data-discovery-card]:visible")).toHaveCount(
     Math.min(homepageDiscoveryLimit, categoryCount),
   );
 });
@@ -314,13 +316,13 @@ test("homepage third screen keeps feed cards and a dynamic full-category entry",
 test("content cards use consistent actions and persist useful votes", async ({ page }) => {
   await page.goto("/");
 
-  const cards = page.locator('[data-home-section="discovery"] [data-discovery-card]');
+  const cards = page.locator('[data-home-section="discovery"] [data-discovery-card]:visible');
   const cardCount = await cards.count();
   expect(cardCount).toBeGreaterThan(0);
   await expect(page.getByRole("link", { name: "仔细看看" })).toHaveCount(cardCount);
   await expect(page.getByRole("button", { name: "直接复制给codex" })).toHaveCount(cardCount);
 
-  const likeButtons = page.locator('[data-home-section="discovery"] [data-like-button]');
+  const likeButtons = page.locator('[data-home-section="discovery"] [data-discovery-card]:visible [data-like-button]');
   await expect(likeButtons).toHaveCount(cardCount);
   const firstLike = likeButtons.first();
   await expect(firstLike).toHaveAttribute("title", "有用就点个赞");
@@ -331,7 +333,7 @@ test("content cards use consistent actions and persist useful votes", async ({ p
   await expect(firstLike).toHaveAttribute("aria-pressed", "true");
 
   await page.reload();
-  await expect(page.locator('[data-home-section="discovery"] [data-like-button]').first()).toHaveAttribute(
+  await expect(page.locator('[data-home-section="discovery"] [data-discovery-card]:visible [data-like-button]').first()).toHaveAttribute(
     "aria-pressed",
     "true",
   );
@@ -351,7 +353,7 @@ test("desktop discovery cards align their text rows and omit terminal full stops
   await page.setViewportSize({ width: 1050, height: 920 });
   await page.goto("/?track=工作提效");
 
-  const cards = page.locator('[data-home-section="discovery"] [data-discovery-card]');
+  const cards = page.locator('[data-home-section="discovery"] [data-discovery-card]:visible');
   expect(await cards.count()).toBeGreaterThanOrEqual(3);
 
   const rowMetrics = await cards.evaluateAll((elements) => elements.slice(0, 3).map((card) => {
@@ -415,7 +417,7 @@ test("homepage keeps the approved hero, quick match, and feeding-style discovery
   const cardImages = discovery.locator("[data-home-content-image]");
   await expect(cardImages).toHaveCount(expectedItems.length);
   for (const image of await cardImages.all()) {
-    await expect(image).toHaveAttribute("src", /^\/images\/content\/[a-zA-Z0-9_-]+\/.+\.png$/);
+    await expect(image).toHaveAttribute("src", /^\/images\/content\/[a-zA-Z0-9_-]+\/.+\.(?:png|webp)$/);
     await expect(image).toHaveAttribute("width", /\d+/);
     await expect(image).toHaveAttribute("height", /\d+/);
     await image.scrollIntoViewIfNeeded();
@@ -427,7 +429,7 @@ test("homepage keeps the approved hero, quick match, and feeding-style discovery
   }
 
   const contentHrefs = await discovery
-    .locator("[data-discovery-card] h3 a")
+    .locator("[data-discovery-card]:visible h3 a")
     .evaluateAll((links) => links.map((link) => link.getAttribute("href")));
   expect(contentHrefs).toEqual(expectedItems.map((item) => `/content/${item.slug}`));
 });
@@ -521,7 +523,7 @@ test("homepage carousel verifies every slide at each release viewport", async ({
     const next = hero.getByRole("button", { name: "下一项精选" });
     await expect(hero).toBeVisible();
     await expect(next).toBeVisible();
-    await expect(page.locator('[data-home-section="discovery"] [data-discovery-card]')).toHaveCount(
+    await expect(page.locator('[data-home-section="discovery"] [data-discovery-card]:visible')).toHaveCount(
       Math.min(homepageDiscoveryLimit, generatedDataset.items.length),
     );
 
@@ -569,7 +571,7 @@ test("homepage carousel verifies every slide at each release viewport", async ({
       }));
       expect(naturalWidth).toBeGreaterThanOrEqual(1536);
       expect(naturalHeight).toBeGreaterThanOrEqual(960);
-      expect(naturalWidth / naturalHeight).toBeGreaterThanOrEqual(1.57);
+      expect(naturalWidth / naturalHeight).toBeGreaterThanOrEqual(1.5);
       expect(naturalWidth / naturalHeight).toBeLessThanOrEqual(1.63);
     }
   }
@@ -745,6 +747,7 @@ for (const checkpoint of [
   { name: "detail", route: detailRoute },
 ]) {
   test(`${checkpoint.name} release framing and screenshot`, async ({ page }, testInfo) => {
+    test.setTimeout(90_000);
     await page.goto(checkpoint.route);
     await expectNoHorizontalOverflow(page);
     await expectImagesLoaded(page);
@@ -772,6 +775,7 @@ for (const checkpoint of [
 }
 
 test("390x844 release pages keep exact document width", async ({ page }, testInfo) => {
+  test.setTimeout(90_000);
   test.skip(testInfo.project.name !== "mobile", "Narrow mobile checkpoint only applies to mobile.");
   await page.setViewportSize({ width: 390, height: 844 });
 

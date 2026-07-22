@@ -22,8 +22,8 @@ const initialPreferences: DiscoveryPreferences = {
 
 export function QuickMatch({ items }: { items: ContentItem[] }) {
   const [preferences, setPreferences] = useState<DiscoveryPreferences>(initialPreferences);
-  const recommendations = useMemo(
-    () => recommendContent(items, preferences, 3),
+  const rankedItems = useMemo(
+    () => recommendContent(items, preferences, items.length),
     [items, preferences],
   );
   const categoryCount = items.filter(
@@ -46,7 +46,7 @@ export function QuickMatch({ items }: { items: ContentItem[] }) {
             </div>
             <div className="starter-picker__summary">
               <p>按投入时间、目标、结果形式和使用门槛实时推荐。</p>
-              <a href={categoryHref}>
+              <a href={categoryHref} data-quick-category-link>
                 查看「{preferences.goal}」全部 {categoryCount} 条
                 <span aria-hidden="true">→</span>
               </a>
@@ -56,39 +56,64 @@ export function QuickMatch({ items }: { items: ContentItem[] }) {
           <div className="starter-picker__controls">
             <PreferenceGroup
               label="多久见效"
+              preferenceKey="timeToValue"
               options={TIME_TO_VALUE_OPTIONS}
               value={preferences.timeToValue}
               onChange={(timeToValue) => setPreferences({ ...preferences, timeToValue })}
             />
             <PreferenceGroup
               label="主要目标"
+              preferenceKey="goal"
               options={DISCOVERY_TRACKS}
               value={preferences.goal}
               onChange={(goal) => setPreferences({ ...preferences, goal })}
+              categoryMeta={Object.fromEntries(DISCOVERY_TRACKS.map((goal) => [
+                goal,
+                {
+                  href: sitePath(`/category/${slugForTrack(goal)}`),
+                  count: items.filter((item) => item.recommendationTrack === goal).length,
+                },
+              ]))}
             />
             <PreferenceGroup
               label="想拿走什么"
+              preferenceKey="format"
               options={DISCOVERY_FORMATS}
               value={preferences.format}
               onChange={(format) => setPreferences({ ...preferences, format })}
             />
             <PreferenceGroup
               label="接受的门槛"
+              preferenceKey="adoptionLevel"
               options={ADOPTION_LEVEL_OPTIONS}
               value={preferences.adoptionLevel}
               onChange={(adoptionLevel) => setPreferences({ ...preferences, adoptionLevel })}
             />
           </div>
 
-          <p className="visually-hidden" role="status" aria-live="polite">
+          <p className="visually-hidden" data-quick-status role="status" aria-live="polite">
             已按{preferences.timeToValue}、{preferences.goal}、{preferences.format}、
-            {preferences.adoptionLevel}更新 {recommendations.length} 项推荐
+            {preferences.adoptionLevel}更新 {Math.min(3, rankedItems.length)} 项推荐
           </p>
-          <div className="starter-results">
-            {recommendations.map((item, index) => (
-              <article className="starter-result" key={item.id}>
+          <div className="starter-results" data-quick-results>
+            {rankedItems.map((item, index) => (
+              <article
+                className="starter-result"
+                key={item.id}
+                hidden={index >= 3}
+                data-quick-result
+                data-content-id={item.id}
+                data-track={item.recommendationTrack}
+                data-time-to-value={item.timeToValue}
+                data-adoption-level={item.adoptionLevel}
+                data-content-type={item.type}
+                data-has-copy={String(item.copyBlocks.length > 0)}
+                data-featured={String(item.featured)}
+                data-sort-weight={item.sortWeight}
+                data-updated-at={item.updatedAt}
+              >
                 <div className="starter-result__meta">
-                  <span>0{index + 1}</span>
+                  <span data-quick-rank>0{index + 1}</span>
                   <em>{item.recommendationTrack}</em>
                 </div>
                 <h3><a href={sitePath(`/content/${item.slug}`)}>{item.title}</a></h3>
@@ -109,17 +134,21 @@ export function QuickMatch({ items }: { items: ContentItem[] }) {
 
 function PreferenceGroup<T extends string>({
   label,
+  preferenceKey,
   options,
   value,
   onChange,
+  categoryMeta,
 }: {
   label: string;
+  preferenceKey: keyof DiscoveryPreferences;
   options: readonly T[];
   value: T;
   onChange: (value: T) => void;
+  categoryMeta?: Record<string, { href: string; count: number }>;
 }) {
   return (
-    <fieldset className="preference-group">
+    <fieldset className="preference-group" data-preference-key={preferenceKey}>
       <legend>{label}</legend>
       <div>
         {options.map((option) => (
@@ -127,6 +156,9 @@ function PreferenceGroup<T extends string>({
             key={option}
             type="button"
             aria-pressed={value === option}
+            data-preference-value={option}
+            data-category-href={categoryMeta?.[option]?.href}
+            data-category-count={categoryMeta?.[option]?.count}
             onClick={() => onChange(option)}
           >
             {option}

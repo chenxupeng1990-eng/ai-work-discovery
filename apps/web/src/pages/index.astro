@@ -2,6 +2,7 @@
 import { DiscoveryExplorer } from "../components/DiscoveryExplorer";
 import { HeroCarousel } from "../components/HeroCarousel";
 import { QuickMatch } from "../components/QuickMatch";
+import HomeInteractions from "../components/HomeInteractions.astro";
 import RecommendedSites from "../components/RecommendedSites.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { selectHeroItems } from "../lib/home-content";
@@ -16,20 +17,21 @@ const heroItems = selectHeroItems(items);
   description="发现可直接应用于工作的 AI 灵感、协作方式、案例与工具。"
 >
   {heroItems.length > 0
-    ? <HeroCarousel items={heroItems} client:load />
+    ? <HeroCarousel items={heroItems} />
     : (
       <section class="home-empty" data-home-empty="true">
         <h1>QIFEI AI Work Discovery</h1>
         <p>暂无已发布内容</p>
       </section>
     )}
-  <QuickMatch items={items} client:load />
+  <QuickMatch items={items} />
   <RecommendedSites />
   <section class="home-discovery" data-home-section="discovery">
     <div class="container">
-      <DiscoveryExplorer items={items} limit={18} showMoreLink client:load />
+      <DiscoveryExplorer items={items} limit={18} showMoreLink />
     </div>
   </section>
+  <HomeInteractions />
 </BaseLayout>
 
 <style>

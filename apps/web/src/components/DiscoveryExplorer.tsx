@@ -40,9 +40,7 @@ export function DiscoveryExplorer({
       ? queried
       : queried.filter((item) => item.recommendationTrack === track);
   }, [items, options, track]);
-  const visibleResults = limit === undefined
-    ? results
-    : results.slice(0, Math.max(0, limit));
+  const visibleLimit = limit === undefined ? results.length : Math.max(0, limit);
   const moreHref = sitePath(track === "全部" ? "/updates" : `/category/${slugForTrack(track)}`);
   const moreLabel = track === "全部" ? "查看最近更新" : `查看「${track}」全部内容`;
 
@@ -90,12 +88,18 @@ export function DiscoveryExplorer({
   };
 
   return (
-    <section className="discovery-explorer" aria-labelledby="discovery-results-title">
+    <section
+      className="discovery-explorer"
+      data-discovery-explorer
+      data-discovery-limit={limit}
+      aria-labelledby="discovery-results-title"
+    >
       <div className="discovery-controls" data-discovery-controls>
         <label className="discovery-search">
           <span className="visually-hidden">搜索内容</span>
           <span className="discovery-search__icon" aria-hidden="true" />
           <input
+            data-discovery-search
             type="search"
             value={options.query}
             placeholder="搜索方法、可带走结果、标签或来源"
@@ -111,6 +115,10 @@ export function DiscoveryExplorer({
                 key={itemTrack}
                 type="button"
                 aria-pressed={track === itemTrack}
+                data-discovery-track={itemTrack}
+                data-category-href={itemTrack === "全部"
+                  ? sitePath("/updates")
+                  : sitePath(`/category/${slugForTrack(itemTrack)}`)}
                 onClick={() => selectTrack(itemTrack)}
               >
                 {itemTrack}
@@ -122,6 +130,7 @@ export function DiscoveryExplorer({
             <button
               type="button"
               aria-pressed={options.sort === "featured"}
+              data-discovery-sort="featured"
               onClick={() => setOptions({ ...options, sort: "featured" })}
             >
               精选
@@ -129,6 +138,7 @@ export function DiscoveryExplorer({
             <button
               type="button"
               aria-pressed={options.sort === "latest"}
+              data-discovery-sort="latest"
               onClick={() => setOptions({ ...options, sort: "latest" })}
             >
               最新
@@ -138,25 +148,49 @@ export function DiscoveryExplorer({
       </div>
 
       <div className="discovery-results-heading">
-        <h2 id="discovery-results-title">{track === "全部" ? "全部发现" : track}</h2>
+        <h2 id="discovery-results-title" data-discovery-title>{track === "全部" ? "全部发现" : track}</h2>
         <div className="discovery-results-heading__actions">
-          <div role="status" aria-label="搜索结果数量" aria-live="polite">
+          <div data-discovery-status role="status" aria-label="搜索结果数量" aria-live="polite">
             找到 {results.length} 项内容
           </div>
           {showMoreLink && (
-            <a className="discovery-more" href={moreHref}>
+            <a className="discovery-more" data-discovery-more href={moreHref}>
               {moreLabel}<span aria-hidden="true"> →</span>
             </a>
           )}
         </div>
       </div>
 
-      {results.length > 0 ? (
-        <div className="discovery-grid">
-          {visibleResults.map((item) => {
+      <div className="discovery-grid" data-discovery-grid hidden={results.length === 0}>
+          {results.map((item, index) => {
             const status = copyStatus[item.id];
+            const searchText = [
+              item.title,
+              item.summary,
+              item.recommendationReason,
+              item.recommendationTrack,
+              item.timeToValue,
+              item.adoptionLevel,
+              item.networkRequirement,
+              item.takeaway,
+              item.sourceName,
+              ...item.tags,
+              ...item.copyBlocks.map((block) => block.title),
+            ].join(" ").trim().toLocaleLowerCase("zh-CN");
+            const firstCopyBlock = [...item.copyBlocks].sort((left, right) => left.order - right.order)[0];
             return (
-            <article className="discovery-card" data-discovery-card key={item.id}>
+            <article
+              className="discovery-card"
+              data-discovery-card
+              data-content-id={item.id}
+              data-track={item.recommendationTrack}
+              data-search-text={searchText}
+              data-sort-weight={item.sortWeight}
+              data-updated-at={item.updatedAt}
+              data-content-slug={item.slug}
+              hidden={index >= visibleLimit}
+              key={item.id}
+            >
               <div className="discovery-card__visual">
                 <a href={sitePath(`/content/${item.slug}`)}>
                   <img
@@ -165,7 +199,7 @@ export function DiscoveryExplorer({
                     width="640"
                     height="400"
                     loading="lazy"
-                    data-home-content-image={showMoreLink ? "true" : undefined}
+                    data-home-content-image={showMoreLink && index < visibleLimit ? "true" : undefined}
                   />
                 </a>
                 <button
@@ -207,6 +241,8 @@ export function DiscoveryExplorer({
                           : status === "error"
                             ? "重新复制"
                             : "直接复制给codex"}
+                        data-discovery-copy
+                        data-copy-text={firstCopyBlock?.content}
                         onClick={() => void copyFirstBlock(item)}
                       >
                         {status === "success" ? "已复制给codex" : status === "error" ? "重新复制" : "直接复制给codex"}
@@ -227,15 +263,13 @@ export function DiscoveryExplorer({
             );
           })}
         </div>
-      ) : (
-        <div className="discovery-empty">
+        <div className="discovery-empty" data-discovery-empty hidden={results.length > 0}>
           <h2>没有找到匹配内容</h2>
           <p>试试缩短关键词，或清除筛选查看全部内容。</p>
-          <button type="button" className="button-secondary" onClick={resetOptions}>
+          <button type="button" className="button-secondary" data-discovery-reset onClick={resetOptions}>
             清除筛选
           </button>
         </div>
-      )}
     </section>
   );
 }

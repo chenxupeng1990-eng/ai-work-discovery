@@ -60,7 +60,7 @@
   }
 </style>
 
-<script>
+<script is:inline>
   const storageKey = "qifei-ai-liked-content";
 
   const readLikes = () => {
@@ -68,11 +68,11 @@
       const stored = JSON.parse(localStorage.getItem(storageKey) ?? "[]");
       return new Set(Array.isArray(stored) ? stored.filter((item) => typeof item === "string") : []);
     } catch {
-      return new Set<string>();
+      return new Set();
     }
   };
 
-  const writeLikes = (likes: Set<string>) => {
+  const writeLikes = (likes) => {
     try {
       localStorage.setItem(storageKey, JSON.stringify([...likes]));
     } catch {
@@ -80,7 +80,7 @@
     }
   };
 
-  const updateButton = (button: HTMLButtonElement, likes: Set<string>) => {
+  const updateButton = (button, likes) => {
     const id = button.dataset.contentId;
     if (!id) return;
     const liked = likes.has(id);
@@ -89,9 +89,9 @@
     button.setAttribute("aria-label", liked ? `取消点赞 ${title}` : `点赞 ${title}`);
   };
 
-  const syncButtons = (root: ParentNode = document) => {
+  const syncButtons = (root = document) => {
     const likes = readLikes();
-    root.querySelectorAll<HTMLButtonElement>("[data-like-button]").forEach((button) => {
+    root.querySelectorAll("[data-like-button]").forEach((button) => {
       updateButton(button, likes);
     });
   };
@@ -100,7 +100,7 @@
 
   document.addEventListener("click", (event) => {
     if (!(event.target instanceof Element)) return;
-    const button = event.target.closest<HTMLButtonElement>("[data-like-button]");
+    const button = event.target.closest("[data-like-button]");
     if (!button) return;
     const id = button.dataset.contentId;
     if (!id) return;
@@ -109,7 +109,7 @@
     if (likes.has(id)) likes.delete(id);
     else likes.add(id);
     writeLikes(likes);
-    document.querySelectorAll<HTMLButtonElement>("[data-like-button]").forEach((candidate) => {
+    document.querySelectorAll("[data-like-button]").forEach((candidate) => {
       if (candidate.dataset.contentId === id) updateButton(candidate, likes);
     });
   });

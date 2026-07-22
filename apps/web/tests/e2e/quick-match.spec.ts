@@ -4,7 +4,8 @@ import { generatedDataset } from "../fixtures/generated-dataset";
 import { expectFocusVisible } from "./release-assertions";
 
 const waitForPicker = async (page: Page, picker: Locator) => {
-  await expect(page.locator("astro-island:not([ssr])").filter({ has: picker })).toHaveCount(1);
+  await expect(page.locator("astro-island").filter({ has: picker })).toHaveCount(0);
+  await expect(picker.locator("[data-quick-results]")).toBeVisible();
 };
 
 test("preference picker reranks recommendations and supports keyboard input", async ({ page }) => {
@@ -26,7 +27,7 @@ test("preference picker reranks recommendations and supports keyboard input", as
     adoptionLevel: "需要开发",
   }, 3);
   await expect(time).toHaveAttribute("aria-pressed", "true");
-  await expect(picker.locator(".starter-result").getByRole("heading")).toHaveText(
+  await expect(picker.locator(".starter-result:visible").getByRole("heading")).toHaveText(
     expected.map((item) => item.title),
   );
 });
@@ -59,7 +60,7 @@ test("quick-match recommendations do not clip text at the middle breakpoint", as
   await page.setViewportSize({ width: 1024, height: 1000 });
   await page.goto("/");
   const clippedText = await page.locator(
-    ".starter-result > p, .starter-result__takeaway",
+    ".starter-result:visible > p, .starter-result:visible .starter-result__takeaway",
   ).evaluateAll((elements) => elements.filter((element) => (
     element.scrollHeight > element.clientHeight + 1
   )).length);
@@ -69,7 +70,7 @@ test("quick-match recommendations do not clip text at the middle breakpoint", as
 test("mobile recommendation links stay inside their headings", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
-  const escapedLinks = await page.locator(".starter-result h3").evaluateAll((headings) => headings.filter((heading) => {
+  const escapedLinks = await page.locator(".starter-result:visible h3").evaluateAll((headings) => headings.filter((heading) => {
     const headingBox = heading.getBoundingClientRect();
     const linkBox = heading.querySelector("a")!.getBoundingClientRect();
     return linkBox.bottom > headingBox.bottom + 1;

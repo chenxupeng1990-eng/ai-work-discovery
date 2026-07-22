@@ -1,0 +1,296 @@
+<script is:inline>
+  (() => {
+    const carousel = document.querySelector("[data-hero-carousel]");
+    if (carousel) {
+      const slides = [...carousel.querySelectorAll("[data-hero-slide]")];
+      const dots = [...carousel.querySelectorAll("[data-hero-dot]")];
+      const status = carousel.querySelector("[data-hero-status]");
+      const motionQuery = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+      const pauseReasons = { focus: false, hidden: document.visibilityState === "hidden", hover: false };
+      let activeIndex = Math.max(0, slides.findIndex((slide) => slide.classList.contains("is-active")));
+      let timer = 0;
+
+      const isPaused = () => Object.values(pauseReasons).some(Boolean);
+      const clearTimer = () => {
+        if (timer) window.clearTimeout(timer);
+        timer = 0;
+      };
+      const schedule = () => {
+        clearTimer();
+        if (slides.length < 2 || motionQuery?.matches || isPaused()) return;
+        timer = window.setTimeout(() => show(activeIndex + 1, false), 6000);
+      };
+      const show = (index, manual) => {
+        activeIndex = (index + slides.length) % slides.length;
+        slides.forEach((slide, slideIndex) => {
+          const active = slideIndex === activeIndex;
+          slide.classList.toggle("is-active", active);
+          slide.toggleAttribute("aria-hidden", !active);
+          slide.toggleAttribute("inert", !active);
+        });
+        dots.forEach((dot, dotIndex) => {
+          const active = dotIndex === activeIndex;
+          dot.classList.toggle("is-active", active);
+          dot.toggleAttribute("aria-current", active);
+          if (active) dot.setAttribute("aria-current", "true");
+        });
+        if (status) status.textContent = `第 ${activeIndex + 1} 项，共 ${slides.length} 项`;
+        if (manual || !isPaused()) schedule();
+      };
+      const setPaused = (reason, value) => {
+        pauseReasons[reason] = value;
+        if (isPaused()) clearTimer();
+        else schedule();
+      };
+
+      carousel.addEventListener("click", (event) => {
+        const target = event.target instanceof Element ? event.target : null;
+        if (!target) return;
+        if (target.closest("[data-hero-previous]")) show(activeIndex - 1, true);
+        if (target.closest("[data-hero-next]")) show(activeIndex + 1, true);
+        const dot = target.closest("[data-hero-dot]");
+        if (dot) show(Number(dot.dataset.slideIndex || 0), true);
+      });
+      carousel.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowLeft") {
+          event.preventDefault();
+          show(activeIndex - 1, true);
+        }
+        if (event.key === "ArrowRight") {
+          event.preventDefault();
+          show(activeIndex + 1, true);
+        }
+      });
+      carousel.addEventListener("mouseenter", () => setPaused("hover", true));
+      carousel.addEventListener("mouseleave", () => setPaused("hover", false));
+      carousel.addEventListener("focusin", () => setPaused("focus", true));
+      carousel.addEventListener("focusout", (event) => {
+        if (!carousel.contains(event.relatedTarget)) setPaused("focus", false);
+      });
+      document.addEventListener("visibilitychange", () => {
+        setPaused("hidden", document.visibilityState === "hidden");
+      });
+      motionQuery?.addEventListener("change", schedule);
+      schedule();
+    }
+
+    const quickMatch = document.querySelector("[data-home-section='quick-match']");
+    if (quickMatch) {
+      const results = [...quickMatch.querySelectorAll("[data-quick-result]")];
+      const resultsContainer = quickMatch.querySelector("[data-quick-results]");
+      const status = quickMatch.querySelector("[data-quick-status]");
+      const categoryLink = quickMatch.querySelector("[data-quick-category-link]");
+
+      const preferences = () => Object.fromEntries(
+        [...quickMatch.querySelectorAll("[data-preference-key]")].map((group) => [
+          group.dataset.preferenceKey,
+          group.querySelector('[aria-pressed="true"]')?.dataset.preferenceValue || "",
+        ]),
+      );
+      const formatMatches = (item, format) => {
+        if (format === "可复制内容") return item.dataset.hasCopy === "true";
+        if (format === "团队案例") return ["Case", "Collaboration"].includes(item.dataset.contentType);
+        if (format === "Skill 与工具") {
+          return ["Skill", "Tool", "Getting Started"].includes(item.dataset.contentType);
+        }
+        return item.dataset.contentType === "AI Signal";
+      };
+      const renderQuickMatch = () => {
+        const selected = preferences();
+        const ranked = [...results].sort((left, right) => {
+          const score = (item) => (
+            (item.dataset.track === selected.goal ? 16 : 0)
+            + (item.dataset.timeToValue === selected.timeToValue ? 5 : 0)
+            + (formatMatches(item, selected.format) ? 4 : 0)
+            + (item.dataset.adoptionLevel === selected.adoptionLevel ? 3 : 0)
+            + (item.dataset.featured === "true" ? 1 : 0)
+          );
+          return score(right) - score(left)
+            || Number(right.dataset.sortWeight) - Number(left.dataset.sortWeight)
+            || Date.parse(right.dataset.updatedAt) - Date.parse(left.dataset.updatedAt)
+            || (left.dataset.contentId || "").localeCompare(right.dataset.contentId || "");
+        });
+
+        ranked.forEach((item, index) => {
+          item.hidden = index >= 3;
+          const rank = item.querySelector("[data-quick-rank]");
+          if (rank) rank.textContent = String(index + 1).padStart(2, "0");
+          resultsContainer?.append(item);
+        });
+
+        const goalButton = quickMatch.querySelector(
+          `[data-preference-key="goal"] [data-preference-value="${CSS.escape(selected.goal)}"]`,
+        );
+        if (categoryLink && goalButton) {
+          categoryLink.href = goalButton.dataset.categoryHref || categoryLink.href;
+          categoryLink.firstChild.textContent =
+            `查看「${selected.goal}」全部 ${goalButton.dataset.categoryCount || 0} 条`;
+        }
+        if (status) {
+          status.textContent =
+            `已按${selected.timeToValue}、${selected.goal}、${selected.format}、${selected.adoptionLevel}更新 ${Math.min(3, ranked.length)} 项推荐`;
+        }
+      };
+
+      quickMatch.addEventListener("click", (event) => {
+        const button = event.target instanceof Element
+          ? event.target.closest("[data-preference-value]")
+          : null;
+        if (!(button instanceof HTMLButtonElement)) return;
+        const group = button.closest("[data-preference-key]");
+        group?.querySelectorAll("[data-preference-value]").forEach((candidate) => {
+          candidate.setAttribute("aria-pressed", String(candidate === button));
+        });
+        renderQuickMatch();
+      });
+    }
+
+    const explorer = document.querySelector("[data-discovery-explorer]");
+    if (explorer) {
+      const grid = explorer.querySelector("[data-discovery-grid]");
+      const empty = explorer.querySelector("[data-discovery-empty]");
+      const search = explorer.querySelector("[data-discovery-search]");
+      const title = explorer.querySelector("[data-discovery-title]");
+      const status = explorer.querySelector("[data-discovery-status]");
+      const more = explorer.querySelector("[data-discovery-more]");
+      const cards = [...explorer.querySelectorAll("[data-discovery-card]")];
+      const limit = Number(explorer.dataset.discoveryLimit || cards.length);
+      let selectedTrack = "全部";
+      let selectedSort = "featured";
+
+      const normalize = (value) => value.trim().toLocaleLowerCase("zh-CN");
+      const compareText = (left, right) => left < right ? -1 : left > right ? 1 : 0;
+      const renderDiscovery = () => {
+        const query = normalize(search?.value || "");
+        const matches = cards
+          .filter((card) => selectedTrack === "全部" || card.dataset.track === selectedTrack)
+          .filter((card) => !query || (card.dataset.searchText || "").includes(query))
+          .sort((left, right) => {
+            const date = () => Date.parse(right.dataset.updatedAt) - Date.parse(left.dataset.updatedAt);
+            const weight = () => Number(right.dataset.sortWeight) - Number(left.dataset.sortWeight);
+            return (selectedSort === "latest" ? date() || weight() : weight() || date())
+              || compareText(left.dataset.contentSlug || "", right.dataset.contentSlug || "")
+              || compareText(left.dataset.contentId || "", right.dataset.contentId || "");
+          });
+
+        cards.forEach((card) => {
+          card.hidden = true;
+        });
+        matches.forEach((card, index) => {
+          card.hidden = index >= limit;
+          grid?.append(card);
+        });
+        if (grid) grid.hidden = matches.length === 0;
+        if (empty) empty.hidden = matches.length > 0;
+        if (title) title.textContent = selectedTrack === "全部" ? "全部发现" : selectedTrack;
+        if (status) status.textContent = `找到 ${matches.length} 项内容`;
+
+        explorer.querySelectorAll("[data-discovery-track]").forEach((button) => {
+          button.setAttribute("aria-pressed", String(button.dataset.discoveryTrack === selectedTrack));
+        });
+        explorer.querySelectorAll("[data-discovery-sort]").forEach((button) => {
+          button.setAttribute("aria-pressed", String(button.dataset.discoverySort === selectedSort));
+        });
+
+        const trackButton = explorer.querySelector(
+          `[data-discovery-track="${CSS.escape(selectedTrack)}"]`,
+        );
+        if (more && trackButton) {
+          more.href = trackButton.dataset.categoryHref || more.href;
+          more.textContent = selectedTrack === "全部"
+            ? "查看最近更新 →"
+            : `查看「${selectedTrack}」全部内容 →`;
+        }
+      };
+      const selectTrack = (track) => {
+        selectedTrack = track;
+        const url = new URL(window.location.href);
+        if (track === "全部") url.searchParams.delete("track");
+        else url.searchParams.set("track", track);
+        window.history.replaceState(null, "", url);
+        renderDiscovery();
+      };
+      const copyText = async (text) => {
+        if (navigator.clipboard?.writeText) {
+          try {
+            await navigator.clipboard.writeText(text);
+            return;
+          } catch {
+            // Embedded Feishu pages may deny the modern Clipboard API.
+          }
+        }
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        Object.assign(textarea.style, {
+          position: "fixed",
+          top: "0",
+          left: "0",
+          width: "1px",
+          height: "1px",
+          opacity: "0.01",
+        });
+        document.body.append(textarea);
+        textarea.focus({ preventScroll: true });
+        textarea.select();
+        textarea.setSelectionRange(0, text.length);
+        const copied = document.execCommand("copy");
+        textarea.remove();
+        if (!copied) throw new Error("Clipboard access is unavailable");
+      };
+
+      explorer.addEventListener("click", async (event) => {
+        const target = event.target instanceof Element ? event.target : null;
+        if (!target) return;
+        const copyButton = target.closest("[data-discovery-copy]");
+        if (copyButton instanceof HTMLButtonElement) {
+          const original = "直接复制给codex";
+          copyButton.disabled = true;
+          try {
+            await copyText(copyButton.dataset.copyText || "");
+            copyButton.textContent = "已复制给codex";
+            copyButton.setAttribute("aria-label", "已复制给codex");
+            window.setTimeout(() => {
+              copyButton.textContent = original;
+              copyButton.setAttribute("aria-label", original);
+            }, 1600);
+          } catch {
+            copyButton.textContent = "重新复制";
+            copyButton.setAttribute("aria-label", "重新复制");
+          } finally {
+            copyButton.disabled = false;
+          }
+          return;
+        }
+        const trackButton = target.closest("[data-discovery-track]");
+        if (trackButton) {
+          selectTrack(trackButton.dataset.discoveryTrack || "全部");
+          return;
+        }
+        const sortButton = target.closest("[data-discovery-sort]");
+        if (sortButton) {
+          selectedSort = sortButton.dataset.discoverySort || "featured";
+          renderDiscovery();
+          return;
+        }
+        if (target.closest("[data-discovery-reset]")) {
+          if (search) search.value = "";
+          selectedSort = "featured";
+          selectTrack("全部");
+        }
+      });
+      search?.addEventListener("input", renderDiscovery);
+
+      const requestedTrack = new URL(window.location.href).searchParams.get("track");
+      const requestedButton = requestedTrack
+        ? explorer.querySelector(`[data-discovery-track="${CSS.escape(requestedTrack)}"]`)
+        : null;
+      selectedTrack = requestedButton ? requestedTrack : "全部";
+      if (requestedTrack && !requestedButton) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("track");
+        window.history.replaceState(null, "", url);
+      }
+      renderDiscovery();
+    }
+  })();
+</script>

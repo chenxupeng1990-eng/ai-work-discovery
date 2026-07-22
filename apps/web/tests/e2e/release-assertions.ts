@@ -1,10 +1,10 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 const CARD_SELECTOR = [
-  "[data-content-card]",
-  ".discovery-card",
-  "[data-feishu-document-card]",
-  ".copy-block",
+  "[data-content-card]:visible",
+  ".discovery-card:visible",
+  "[data-feishu-document-card]:visible",
+  ".copy-block:visible",
 ].join(",");
 
 export async function expectNoHorizontalOverflow(page: Page) {
