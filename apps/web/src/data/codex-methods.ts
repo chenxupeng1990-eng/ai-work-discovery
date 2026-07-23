@@ -1,13 +1,15 @@
 import { z } from "zod";
+import {
+  CODEX_METHOD_CATEGORIES,
+  queryCodexMethods,
+  type CodexMethodCategory,
+} from "../lib/codex-method-query";
 
-export const CODEX_METHOD_CATEGORIES = [
-  "电脑维护",
-  "资料处理",
-  "飞书协作",
-  "网页流程",
-  "内容生产",
-  "开发与测试",
-] as const;
+export {
+  CODEX_METHOD_CATEGORIES,
+  queryCodexMethods,
+  type CodexMethodCategory,
+};
 
 const HttpsSourceSchema = z.object({
   label: z.string().min(1),
@@ -23,7 +25,13 @@ export const CodexMethodSchema = z.object({
   outcome: z.string().min(1).max(160),
   prompt: z.string().min(40).max(1000),
   timeToValue: z.enum(["10 分钟", "1 小时", "半天"]),
-  networkRequirement: z.enum(["无需 VPN", "部分资源需要 VPN", "需要 VPN"]),
+  networkRequirement: z.enum([
+    "无需 VPN",
+    "部分资源需要 VPN",
+    "需要 VPN",
+    "无需额外配置",
+    "网络条件待确认",
+  ]),
   riskLevel: z.enum(["低风险", "需确认", "高风险"]),
   caseSource: HttpsSourceSchema.optional(),
   capabilitySource: HttpsSourceSchema,
@@ -33,7 +41,6 @@ export const CodexMethodSchema = z.object({
 }).strict();
 
 export type CodexMethod = z.infer<typeof CodexMethodSchema>;
-export type CodexMethodCategory = CodexMethod["category"];
 
 const rawMethods = [
   {
@@ -246,24 +253,12 @@ export const codexMethods = parsedMethods
   .filter((method) => method.status === "published")
   .sort((left, right) => right.sortWeight - left.sortWeight || left.number - right.number);
 
-export function queryCodexMethods(
-  methods: readonly CodexMethod[],
-  query: string,
-  category: "全部" | CodexMethodCategory,
-): CodexMethod[] {
-  const normalized = query.trim().toLocaleLowerCase("zh-CN");
-  return methods.filter((method) => {
-    if (category !== "全部" && method.category !== category) return false;
-    if (!normalized) return true;
-    const searchable = [
-      method.title,
-      method.problem,
-      method.outcome,
-      method.prompt,
-      method.category,
-      method.caseSource?.label ?? "",
-      method.capabilitySource.label,
-    ].join(" ").toLocaleLowerCase("zh-CN");
-    return searchable.includes(normalized);
-  });
+export function buildMiaodaSafeCodexMethods(methods: readonly CodexMethod[]): CodexMethod[] {
+  return methods.map((method) => ({
+    ...method,
+    networkRequirement: method.networkRequirement === "无需 VPN"
+      ? "无需额外配置"
+      : "网络条件待确认",
+    caseSource: undefined,
+  }));
 }

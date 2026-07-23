@@ -27,6 +27,8 @@ export const NETWORK_REQUIREMENTS = [
   "无需 VPN",
   "部分资源需要 VPN",
   "需要 VPN",
+  "无需额外配置",
+  "网络条件待确认",
 ] as const;
 
 export const CopyBlockSchema = z.object({

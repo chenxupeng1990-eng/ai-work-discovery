@@ -2,9 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   CODEX_METHOD_CATEGORIES,
   queryCodexMethods,
-  type CodexMethod,
   type CodexMethodCategory,
-} from "../data/codex-methods";
+} from "../lib/codex-method-query";
+import type { CodexMethod } from "../data/codex-methods";
 import "./CodexMethodsExplorer.css";
 
 type CategoryFilter = "全部" | CodexMethodCategory;

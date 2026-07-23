@@ -2,6 +2,7 @@
 import { CATEGORY_DEFINITIONS } from "../lib/categories";
 
 const feedbackFormUrl = "https://my.feishu.cn/share/base/form/shrcnd0nYB9wha2pnDlUDx3Cief";
+const embedFeedbackForm = import.meta.env.PUBLIC_MIAODA_SAFE !== "true";
 
 const navigation = [
   { label: "Codex 方法", href: "/discover" },
@@ -69,13 +70,22 @@ const navigation = [
     </button>
   </div>
   <div class="feedback-dialog__body">
-    <iframe
-      title="飞书内容需求反馈表单"
-      data-feedback-frame
-      data-src={feedbackFormUrl}
-      loading="lazy"
-      referrerpolicy="strict-origin-when-cross-origin"
-    ></iframe>
+    {embedFeedbackForm ? (
+      <iframe
+        title="飞书内容需求反馈表单"
+        data-feedback-frame
+        data-src={feedbackFormUrl}
+        loading="lazy"
+        referrerpolicy="strict-origin-when-cross-origin"
+      ></iframe>
+    ) : (
+      <div class="feedback-dialog__safe-link">
+        <p>反馈表将在飞书中打开，请填写你希望新增的工作场景或问题</p>
+        <a class="button-primary" href={feedbackFormUrl} target="_blank" rel="noreferrer">
+          打开反馈表
+        </a>
+      </div>
+    )}
   </div>
   <div class="feedback-dialog__fallback">
     <span>表单未显示？</span>
@@ -268,6 +278,16 @@ const navigation = [
     display: block;
     border: 0;
     background: var(--color-pure-white);
+  }
+
+  .feedback-dialog__safe-link {
+    min-height: 220px;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 20px;
+    padding: 32px;
+    text-align: center;
   }
 
   .feedback-dialog__fallback {

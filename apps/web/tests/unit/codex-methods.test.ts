@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   CODEX_METHOD_CATEGORIES,
   CodexMethodSchema,
+  buildMiaodaSafeCodexMethods,
   codexMethods,
   queryCodexMethods,
 } from "../../src/data/codex-methods";
@@ -32,6 +33,14 @@ describe("Codex methods", () => {
 
   it("covers every fixed category", () => {
     expect(new Set(codexMethods.map(({ category }) => category))).toEqual(new Set(CODEX_METHOD_CATEGORIES));
+  });
+
+  it("creates a neutral Miaoda-safe method list without case-study links", () => {
+    const safe = buildMiaodaSafeCodexMethods(codexMethods);
+
+    expect(safe).toHaveLength(codexMethods.length);
+    expect(JSON.stringify(safe)).not.toMatch(/\bVPN\b|x\.com/iu);
+    expect(safe.every(({ caseSource }) => caseSource === undefined)).toBe(true);
   });
 
   it("requires explicit confirmation language for every high-risk method", () => {

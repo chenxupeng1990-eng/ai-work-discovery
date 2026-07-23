@@ -18,7 +18,11 @@ const command = process.platform === "win32" ? (process.env.ComSpec ?? "cmd.exe"
 const args = process.platform === "win32" ? ["/d", "/s", "/c", "npm run build"] : ["run", "build"];
 const build = spawnSync(command, args, {
   cwd: projectRoot,
-  env: { ...process.env, PUBLIC_BASE_PATH: basePath },
+  env: {
+    ...process.env,
+    PUBLIC_BASE_PATH: basePath,
+    PUBLIC_MIAODA_SAFE: "true",
+  },
   stdio: "inherit",
 });
 
